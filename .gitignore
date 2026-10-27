@@ -1,0 +1,58 @@
+# Credentials and local environment settings.
+.env
+.env.*
+!.env.example
+.envrc
+.secrets/
+.aws/
+.ssh/
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore
+id_rsa
+id_ecdsa
+id_ed25519
+credentials.json
+service-account*.json
+
+# Local Python environments and caches.
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+pytest-cache-files-*/
+.ruff_cache/
+.uv-cache/
+.mypy_cache/
+.tox/
+.nox/
+*.egg-info/
+
+# Frontend dependencies and generated builds.
+node_modules/
+dist/
+build/
+
+# Runtime repositories, worktrees, reports, and local databases live here.
+/.research/
+/data/
+
+# Test coverage and runtime logs.
+.coverage
+.coverage.*
+htmlcov/
+coverage/
+*.log
+
+# Operating system files and temporary editor files.
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
+
+# Keep source, documentation, dependency manifests/lockfiles, and .env.example included.
