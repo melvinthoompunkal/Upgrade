@@ -17,6 +17,7 @@ dev = ["pytest>=8.3,<10", "ruff>=0.13,<1"]
 
 [project.scripts]
 graft-meta-smoke = "app.smoke:main"
+graft-crawler-baseline = "app.baseline:main"
 
 [build-system]
 requires = ["hatchling>=1.27,<2"]
@@ -35,3 +36,6 @@ line-length = 100
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "ASYNC"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app", "crawler"]

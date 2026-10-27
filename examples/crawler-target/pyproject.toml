@@ -1,0 +1,10 @@
+[project]
+name = "graft-crawler-target"
+version = "0.1.0"
+description = "Small HTTPX crawler baseline for feature adaptation"
+requires-python = ">=3.12,<3.13"
+dependencies = ["httpx==0.28.1"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

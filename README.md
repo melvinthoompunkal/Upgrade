@@ -2,7 +2,7 @@
 
 Adapt one small feature from a source repository into a target project, with Muse Spark planning and code-backed red-to-green evidence. The approved design is in [tech_breakdown.md](tech_breakdown.md).
 
-Phase one implements the **first coding milestone in section 11**: the backend and Meta integration foundation. It includes settings, strict evidence/snapshot/plan contracts, `/health`, an asynchronous Meta adapter, and a CLI that checks structured output and a real read-only tool round trip. Repo ingestion, crawler execution, agents, and the UI follow in later milestones.
+Phase one implements the **first coding milestone in section 11**: the backend and Meta integration foundation. Phase two adds the HTTPX crawler fixture and an offline Docker runner that records ordinary-green and missing-retry assertion-red evidence. Repository ingestion, source tracing, feature adaptation, and the UI follow in later milestones.
 
 ## Setup
 
@@ -10,7 +10,9 @@ Requires Python 3.12 and [uv](https://docs.astral.sh/uv/). From the repository r
 
 ```powershell
 uv sync --project backend --locked
-Copy-Item backend/.env.example backend/.env
+if (-not (Test-Path -LiteralPath 'backend/.env')) {
+    Copy-Item -LiteralPath 'backend/.env.example' -Destination 'backend/.env'
+}
 ```
 
 Enter your Meta key in `backend/.env` locally, or provide `MODEL_API_KEY` through your environment. Environment variables take precedence. The `.env` file, virtual environments, caches, research clones, and runtime artifacts are ignored by Git. The example file contains no credentials.
@@ -35,17 +37,49 @@ This command makes three small model requests: validate a `RunPlan` using a synt
 
 A successful command prints JSON with `status: "passed"`, the validated plan, and each call's returned model ID, response ID, token usage, stage, and elapsed time. A missing key, API error, malformed/truncated output, unsupported tool, or incorrect token exits with status 1. Provider error bodies and credentials are excluded from diagnostic output. This is a connectivity/contract check, not the final feature implementation demo.
 
-**Current verification boundary:** offline tests can validate request construction and failure behavior. Live model access remains unverified until this command succeeds with your configured key.
+**Live verification:** passed on October 27, 2026 using `muse-spark-1.3`. Three authenticated requests validated a structured plan and the read-only tool round trip. Returned response IDs, token usage, and timings are recorded locally in `data/artifacts/meta-smoke.json` (ignored by Git). The plan used the declared synthetic inventory; this verifies the API foundation, not repository analysis or feature implementation. Rerun the check when credentials, model access, or adapter behavior changes.
+
+## Verify the crawler baseline (Phase 2)
+
+Requires Docker Desktop running Linux containers. Build the reviewed runner once (network access
+is needed to obtain its pinned base image and hash-locked wheels), then run the offline check:
+
+```powershell
+uv run --project backend --locked python scripts/build_runner.py
+uv run --project backend --locked graft-crawler-baseline
+```
+
+Expected result: **6 isolation checks pass, 8 baseline tests pass, and 4 of 7 retry acceptance
+cases fail by assertion**. The other 3 acceptance cases pass. The CLI exits 0 only when this
+exact missing-feature result is recorded and the input hashes remain unchanged. This establishes
+the red baseline; retry adaptation has not been implemented yet.
+
+Each run prints its unique `data/artifacts/crawler-baseline-<id>/report.json` path. The directory
+contains exported input files, frozen acceptance tests, and per-suite `capture.json`, stdout,
+stderr, and JUnit XML. The report records image identity and hashes of inputs, runner definitions,
+and captures. No API key or model request is needed.
+
+To exercise runner error handling in Docker:
+
+```powershell
+uv run --project backend --locked python scripts/check_runner.py
+```
+
+See [the runner boundary and Phase 2 scope](sandbox/README.md) for restrictions and audit follow-up.
 
 ## Development checks
 
 ```powershell
 uv run --project backend --locked pytest backend/tests
-uv run --project backend --locked ruff check backend
-uv run --project backend --locked ruff format --check backend
+uv run --project backend --locked ruff check --config backend/pyproject.toml backend scripts sandbox examples
+uv run --project backend --locked ruff format --check --config backend/pyproject.toml backend scripts sandbox examples
 ```
 
-Tests use HTTPX's in-memory mock transport; they make no external model requests and need no API key. They check schema/tool request compatibility, full tool message replay, token consumption, bounded/validated tool execution, rejection of invalid evidence paths and outputs, and credential-safe errors.
+Backend tests make no external model requests, need no API key or Docker, and never execute the
+crawler on the host. They cover provider contracts and credential-safe errors, file containment,
+image-receipt validation, and result classification. The crawler tests run through the Docker
+commands above. If your environment restricts the system temporary folder, add
+`--basetemp=data/pytest-<unique-id>` to the backend pytest command.
 
 ## Integration references
 

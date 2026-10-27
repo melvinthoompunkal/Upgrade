@@ -1,0 +1,5 @@
+*
+!Dockerfile.python-demo
+!requirements.lock
+!pytest.ini
+!test_isolation.py

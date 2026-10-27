@@ -56,3 +56,5 @@ Desktop.ini
 *~
 
 # Keep source, documentation, dependency manifests/lockfiles, and .env.example included.
+skills/
+audit/
