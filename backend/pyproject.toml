@@ -18,6 +18,7 @@ dev = ["pytest>=8.3,<10", "ruff>=0.13,<1"]
 [project.scripts]
 graft-meta-smoke = "app.smoke:main"
 graft-crawler-baseline = "app.baseline:main"
+graft-pinned-baseline = "app.pinned_baseline:main"
 graft-source-trace = "app.source_trace:main"
 
 [build-system]

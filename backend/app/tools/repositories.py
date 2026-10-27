@@ -78,6 +78,17 @@ class PinnedRepository:
             raise EvidenceError("Pinned file no longer matches its inventory hash.")
         return data.decode("utf-8")
 
+    def export(self, paths: tuple[str, ...], destination: Path) -> dict[str, str]:
+        """Export approved Git blob bytes, never the original checkout or its dirty files."""
+        content = {path: self.read(path).encode("utf-8") for path in paths}
+        physical_root(destination.parent)
+        destination.mkdir(exist_ok=False)
+        for relative, data in content.items():
+            target = destination / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(data)
+        return {path: hashlib.sha256(data).hexdigest() for path, data in content.items()}
+
     def verify(self) -> None:
         actual = self.git.run("rev-parse", "HEAD", cwd=self.storage).decode().strip()
         if actual != self.snapshot.commit_sha:

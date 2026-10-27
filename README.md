@@ -95,6 +95,23 @@ from the smaller smoke output allowance. It never imports source/target code, ru
 or applies a patch. The separate Docker baseline remains the target execution check.
 See [Phase 3 details](docs/phase3.md) for limits, artifacts, verification, and audit resolutions.
 
+## Test the pinned target (Stage 4, W1)
+
+```powershell
+uv run --project backend --locked graft-pinned-baseline
+```
+
+This command clones the registered crawler's committed HEAD, exports its exact Git bytes,
+and runs the existing offline Docker suites. It records the target SHA and monorepo prefix,
+input hashes, image identity, and hash-verified captures in a unique run directory. Dirty
+local changes are excluded and disclosed. The original target is checked for preservation.
+
+The ordinary baseline must pass. The separate retry diagnostic records either the expected
+missing-retry assertions or `already_present` when all frozen retry cases pass. Changes to
+inputs, capture evidence, or original target fail the run. The existing `graft-crawler-baseline`
+command continues to test local fixture files. See [Stage 4 W1 details](docs/stage4-w1.md).
+Target profiling, selection, and patching remain subsequent work.
+
 ## Development checks
 
 ```powershell

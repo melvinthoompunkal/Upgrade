@@ -55,6 +55,28 @@ def test_registered_monorepo_prefix_and_unknown_target(committed_repo, tmp_path)
         registered_target(root, "arbitrary-path")
 
 
+def test_pinned_export_preserves_git_bytes_and_rejects_unapproved_paths(committed_repo, tmp_path):
+    root, git = committed_repo
+    content = b"# UTF-8: \xc3\xa9\r\nimport time\r\n"
+    (root / "src/retry.py").write_bytes(content)
+    git.run("add", "--", "src/retry.py", cwd=root)
+    git.run("-c", "commit.gpgSign=false", "commit", "-m", "exact bytes", cwd=root)
+    manager = RepositoryManager(tmp_path / "managed")
+    repo, _ = manager.local_target(Registration("fixture", root))
+    (root / "src/retry.py").write_text("dirty replacement")
+    destination = tmp_path / "export"
+    hashes = repo.export(("src/retry.py",), destination)
+    assert (destination / "src/retry.py").read_bytes() == content
+    assert hashes["src/retry.py"] == next(
+        f.sha256 for f in repo.inventory.files if f.path == "src/retry.py"
+    )
+    with pytest.raises(EvidenceError):
+        repo.export((".env",), tmp_path / "denied")
+    assert not (tmp_path / "denied").exists()
+    with pytest.raises(FileExistsError):
+        repo.export(("src/retry.py",), destination)
+
+
 def test_inventory_limits_are_reported(committed_repo, tmp_path):
     root, _ = committed_repo
     manager = RepositoryManager(tmp_path / "managed")
