@@ -16,10 +16,21 @@ class RunnerError(GraftError):
     code = "runner_failed"
 
 
+def physical_root(root: Path) -> Path:
+    """Reject redirection in the supplied root and every ancestor before resolving it."""
+    root = root.absolute()
+    for part in (root, *root.parents):
+        if part.is_symlink() or part.is_junction():
+            raise RunnerError(
+                "Inputs must not contain links or junctions, including root ancestors."
+            )
+    return root.resolve(strict=True)
+
+
 def read_regular_file(root: Path, relative: str) -> bytes:
     """Reject traversal, links/junctions, special files, and unexpectedly large inputs."""
     validate_repo_path(relative)
-    root = root.resolve(strict=True)
+    root = physical_root(root)
     path = root
     for part in Path(relative).parts:
         path = path / part

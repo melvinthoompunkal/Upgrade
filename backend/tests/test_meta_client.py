@@ -8,7 +8,7 @@ from app.config import Settings
 from app.contracts import RunPlan
 from app.errors import ConfigurationError, MetaRequestError, ModelOutputError, SmokeCheckError
 from app.models.meta_client import MetaClient
-from app.smoke import run_smoke
+from app.smoke import probe_tool_round_trip, run_smoke
 
 TEST_KEY = "offline-secret-do-not-print"
 PLAN = {
@@ -194,7 +194,7 @@ def test_tool_probe_refuses_unproven_or_unregistered_execution(failure: str) -> 
     async def run():
         transport = httpx.AsyncClient(transport=httpx.MockTransport(handler))
         async with MetaClient(settings(), http_client=transport) as client:
-            await client.probe_tool_round_trip()
+            await probe_tool_round_trip(client)
 
     with pytest.raises(SmokeCheckError):
         asyncio.run(run())

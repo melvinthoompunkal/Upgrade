@@ -70,3 +70,35 @@ def test_crawl_rejects_non_http_roots() -> None:
     with httpx.Client(transport=httpx.MockTransport(lambda _: httpx.Response(200))) as c:
         with pytest.raises(ValueError, match="HTTP"):
             Crawler(c).crawl("file:///etc/passwd")
+
+
+@pytest.mark.parametrize(
+    "start",
+    [
+        "https://example.test/",
+        "https://EXAMPLE.test/",
+        "https://example.test:443/",
+        "http://EXAMPLE.test:80/",
+        "https://example.test:8443/",
+    ],
+)
+def test_equivalent_origins_share_canonical_visit_identity(start: str) -> None:
+    seen = []
+
+    def respond(request: httpx.Request) -> httpx.Response:
+        seen.append(str(request.url))
+        origin = (
+            str(request.url).rstrip("/")
+            if request.url.path == "/"
+            else str(request.url).removesuffix("/next")
+        )
+        body = (
+            f'<a href="{origin.upper()}/next">next</a><a href="/">root</a>'
+            '<a href="https://example.test:9443/">other port</a>'
+        )
+        return httpx.Response(200, text=body)
+
+    with httpx.Client(transport=httpx.MockTransport(respond)) as client:
+        pages = Crawler(client).crawl(start)
+    assert len(pages) == 2
+    assert [httpx.URL(url).path for url in seen] == ["/", "/next"]

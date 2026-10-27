@@ -21,7 +21,7 @@ def test_health_works_without_credentials_and_does_not_claim_model_verification(
     response = health_response(Settings(_env_file=None, model_api_key=None))
     assert response.status_code == 200
     assert response.json()["model_configured"] is False
-    assert response.json()["phase"] == "meta_foundation"
+    assert response.json()["phase"] == "source_tracing"
 
 
 def test_health_never_returns_the_configured_key() -> None:

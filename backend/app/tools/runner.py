@@ -3,8 +3,10 @@
 import json
 import re
 import subprocess
+from contextlib import ExitStack
 from dataclasses import asdict
 from pathlib import Path
+from queue import SimpleQueue
 from threading import Event, Thread
 from time import perf_counter
 from uuid import uuid4
@@ -65,12 +67,15 @@ def prepared_image(receipt_path: Path) -> str:
 
 
 def _stop_container(name: str) -> None:
-    """A fast-finishing test may have exited before the controller sends its stop request."""
-    try:
-        docker("kill", name)
-    except RunnerError:
-        if docker("inspect", "--format", "{{.State.Running}}", name) != "false":
-            raise
+    """Handle both already-exited containers and startup racing the first kill request."""
+    for _ in range(2):
+        try:
+            docker("kill", name)
+            return
+        except RunnerError:
+            if docker("inspect", "--format", "{{.State.Running}}", name) == "false":
+                return
+    raise RunnerError("Could not stop the owned runner container.")
 
 
 def container_command(
@@ -136,23 +141,46 @@ def container_command(
 
 
 def _attach(name: str, directory: Path, timeout: float) -> tuple[int, str]:
+    # Establish log ownership before Docker can start. A failed open must never race startup.
+    filename = "stdout.txt"
+    try:
+        with ExitStack() as stack:
+            outputs = {}
+            for filename in ("stdout.txt", "stderr.txt"):
+                try:
+                    outputs[filename] = stack.enter_context((directory / filename).open("wb"))
+                except OSError:
+                    return -1, f"Failed to capture {filename}: log open I/O error."
+            return _capture_streams(name, timeout, outputs)
+    except OSError:
+        return -1, "Failed to finalize stdout/stderr: log close I/O error."
+
+
+def _capture_streams(name: str, timeout: float, outputs: dict) -> tuple[int, str]:
     """Bound both captured streams while draining pipes; terminate the container on timeout."""
     overflow = Event()
+    failed = Event()
+    errors: SimpleQueue[str] = SimpleQueue()
     with subprocess.Popen(
         ["docker", "start", "--attach", name], stdout=subprocess.PIPE, stderr=subprocess.PIPE
     ) as process:
 
         def drain(stream, filename: str) -> None:
             written = 0
-            with (directory / filename).open("wb") as output:
+            try:
+                output = outputs[filename]
                 while chunk := stream.read(8192):
                     remaining = max(0, MAX_ARTIFACT_BYTES - written)
                     output.write(chunk[:remaining])
                     written += len(chunk)
                     if written > MAX_ARTIFACT_BYTES:
                         overflow.set()
-                        process.kill()
                         break
+                output.flush()
+            except Exception:
+                # Raw I/O exceptions may contain host paths; retain only the stream identity.
+                errors.put(f"Failed to capture {filename}: stream read/write I/O error.")
+                failed.set()
 
         threads = [
             Thread(target=drain, args=(stream, filename), daemon=True)
@@ -162,17 +190,35 @@ def _attach(name: str, directory: Path, timeout: float) -> tuple[int, str]:
             thread.start()
         diagnostic = ""
         try:
-            process.wait(timeout=timeout)
+            deadline = perf_counter() + timeout
+            while True:
+                if overflow.is_set() or failed.is_set():
+                    _stop_container(name)
+                    process.kill()
+                    process.wait(timeout=10)
+                    break
+                remaining = deadline - perf_counter()
+                if remaining <= 0:
+                    raise subprocess.TimeoutExpired(process.args, timeout)
+                try:
+                    process.wait(timeout=min(0.1, remaining))
+                    break
+                except subprocess.TimeoutExpired:
+                    continue
         except subprocess.TimeoutExpired:
             diagnostic = "Container exceeded the wall-clock timeout."
             _stop_container(name)
             process.kill()
             process.wait(timeout=10)
         finally:
-            if overflow.is_set():
+            if overflow.is_set() or failed.is_set():
                 _stop_container(name)
             for thread in threads:
                 thread.join(timeout=5)
+            if any(thread.is_alive() for thread in threads):
+                diagnostic = "Stream capture did not complete within its drain timeout."
+            if not errors.empty():
+                diagnostic = errors.get()
         if overflow.is_set():
             diagnostic = "Container output exceeded the capture limit."
         return process.returncode, diagnostic
@@ -237,6 +283,9 @@ def run_suite(
             except (RunnerError, OSError, ValueError):
                 status = "error"
                 diagnostic = diagnostic or "Runner artifact is invalid or exceeds the size limit."
+    if not {"stdout.txt", "stderr.txt"} <= artifacts.keys():
+        status = "error"
+        diagnostic = diagnostic or "Runner capture is incomplete: missing stdout/stderr evidence."
     capture = TestCapture(
         suite,
         status,

@@ -23,7 +23,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return HealthResponse(
             status="ok",
             version=__version__,
-            phase="meta_foundation",
+            phase="source_tracing",
             model_provider="meta",
             model_id=settings.meta_model_id,
             model_configured=settings.model_configured,

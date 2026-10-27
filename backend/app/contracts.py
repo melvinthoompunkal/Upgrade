@@ -1,7 +1,11 @@
 from pathlib import PurePosixPath
 from typing import Annotated, Literal
 
-from pydantic import AfterValidator, BaseModel, ConfigDict, Field, model_validator
+from pydantic import AfterValidator, BaseModel, BeforeValidator, ConfigDict, Field, model_validator
+
+type FrozenList[T] = Annotated[
+    tuple[T, ...], BeforeValidator(lambda v: tuple(v) if isinstance(v, list) else v)
+]
 
 
 class Contract(BaseModel):
@@ -9,12 +13,26 @@ class Contract(BaseModel):
 
 
 def validate_repo_path(value: str) -> str:
-    """Validate the spelling only; snapshot membership/containment comes in phase two."""
+    """Validate spelling; repository tools additionally enforce inventory membership."""
     path = PurePosixPath(value)
     if (
         not value
         or "\\" in value
         or ":" in value
+        or any(char in value for char in '<>"|?*')
+        or any(part.endswith((".", " ")) for part in path.parts)
+        or any(
+            part.split(".")[0].upper()
+            in {
+                "CON",
+                "PRN",
+                "AUX",
+                "NUL",
+                *(f"COM{i}" for i in range(10)),
+                *(f"LPT{i}" for i in range(10)),
+            }
+            for part in path.parts
+        )
         or any(ord(char) < 32 for char in value)
         or path.is_absolute()
         or ".." in path.parts
@@ -50,7 +68,7 @@ class RepoSnapshot(Contract):
     origin: NonEmptyString
     commit_sha: CommitSHA
     inventory_artifact_id: NonEmptyString
-    license_refs: list[Ref]
+    license_refs: FrozenList[Ref]
 
     @model_validator(mode="after")
     def matching_license_snapshot(self) -> "RepoSnapshot":
@@ -63,10 +81,10 @@ class RepoSnapshot(Contract):
 
 
 class RunPlan(Contract):
-    source_focus_paths: list[RepoPath] = Field(min_length=1, max_length=15)
-    target_focus_paths: list[RepoPath] = Field(min_length=1, max_length=15)
-    feature_focus: list[NonEmptyString] = Field(min_length=1, max_length=8)
-    analysis_tasks: list[Literal["trace_source", "profile_target"]] = Field(
+    source_focus_paths: FrozenList[RepoPath] = Field(min_length=1, max_length=15)
+    target_focus_paths: FrozenList[RepoPath] = Field(min_length=1, max_length=15)
+    feature_focus: FrozenList[NonEmptyString] = Field(min_length=1, max_length=8)
+    analysis_tasks: FrozenList[Literal["trace_source", "profile_target"]] = Field(
         min_length=2, max_length=2
     )
     rationale: str = Field(min_length=1, max_length=1000)
@@ -98,30 +116,9 @@ class ModelCall(Contract):
     response_id: NonEmptyString
     elapsed_ms: int = Field(ge=0)
     usage: TokenUsage
+    attempts: int = Field(default=1, ge=1)
 
 
 class ModelResult[T: BaseModel](Contract):
     data: T
     call: ModelCall
-
-
-class ProbeArguments(Contract):
-    """The smoke tool takes no arguments and cannot read user files."""
-
-
-class ProbeAcknowledgement(Contract):
-    tool_name: Literal["read_probe"]
-    probe_token: NonEmptyString
-
-
-class ToolProbeResult(Contract):
-    acknowledgement: ProbeAcknowledgement
-    calls: list[ModelCall]
-
-
-class SmokeReport(Contract):
-    status: Literal["passed"]
-    check: Literal["meta_schema_and_tool_round_trip"]
-    plan: RunPlan
-    tool_round_trip: bool
-    calls: list[ModelCall]

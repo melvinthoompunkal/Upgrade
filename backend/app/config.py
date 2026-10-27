@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     meta_timeout_seconds: float = Field(default=45, gt=0, le=120)
     meta_max_retries: int = Field(default=2, ge=0, le=2)
     meta_max_completion_tokens: int = Field(default=4096, ge=256, le=8000)
+    meta_trace_max_completion_tokens: int = Field(default=8000, ge=256, le=8000)
 
     @field_validator("model_api_key", mode="before")
     @classmethod

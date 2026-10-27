@@ -1,0 +1,102 @@
+import asyncio
+import json
+
+import httpx
+import pytest
+from test_evidence import card
+from test_meta_client import completion, settings
+
+from app.contracts import Ref
+from app.errors import EvidenceError
+from app.models.meta_client import MetaClient
+from app.tracer import SourceTracer
+
+
+def test_real_tool_protocol_builds_validated_trace_from_pinned_reads(session, monkeypatch):
+    monkeypatch.setattr(
+        "app.tracer.FOCUS_PATHS", ("src/retry.py", "pyproject.toml", "tests/test_retry.py")
+    )
+    requests = []
+
+    def reference(path, start, end, symbol=None):
+        return Ref(
+            repo_id="source",
+            commit_sha=session.repo.snapshot.commit_sha,
+            path=path,
+            start_line=start,
+            end_line=end,
+            symbol=symbol,
+        )
+
+    def handler(request):
+        body = json.loads(request.content)
+        requests.append(body)
+        assert body["reasoning_effort"] == "medium"
+        assert body["max_completion_tokens"] == 8000
+        assert {t["function"]["name"] for t in body["tools"]} == {
+            "read_range",
+            "python_evidence",
+            "search_symbols",
+        }
+        if len(requests) == 1:
+            calls = []
+            for path, end in [
+                ("src/retry.py", 4),
+                ("pyproject.toml", 3),
+                ("tests/test_retry.py", 2),
+            ]:
+                calls.append(
+                    {
+                        "id": f"read-{len(calls)}",
+                        "type": "function",
+                        "function": {
+                            "name": "read_range",
+                            "arguments": json.dumps(
+                                {"path": path, "start_line": 1, "end_line": end}
+                            ),
+                        },
+                    }
+                )
+            return httpx.Response(200, json=completion(calls=calls))
+        results = [m for m in body["messages"] if m["role"] == "tool"]
+        assert len(results) == 3
+        assert "def retry" in json.loads(results[0]["content"])["text"]
+        c = card(session).model_dump(mode="json")
+        c["implementation"].append(reference("pyproject.toml", 1, 3).model_dump(mode="json"))
+        c["source_tests"] = [
+            reference("tests/test_retry.py", 1, 2, "test_retry").model_dump(mode="json")
+        ]
+        data = {
+            "source_sha": session.repo.snapshot.commit_sha,
+            "features": [c],
+            "coverage": {
+                "examined_paths": [],
+                "excluded_paths": [],
+                "unexamined_areas": [],
+                "limits_reached": [],
+            },
+        }
+        return httpx.Response(200, json=completion(data))
+
+    async def run():
+        transport = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+        async with MetaClient(settings(), http_client=transport) as client:
+            tracer = SourceTracer(client, session)
+            trace = await tracer.trace("bounded retries")
+            assert trace.features[0].evidence_status == "supported"
+            assert len(tracer.events) == 3
+            assert client.budget.requests == 2
+
+    asyncio.run(run())
+
+
+def test_unregistered_tools_and_invalid_ranges_are_never_executed(session):
+    tracer = SourceTracer(None, session)
+    for name, args in [
+        ("shell", '{"command":"echo unsafe"}'),
+        ("read_range", '{"path":"../outside","start_line":1,"end_line":2}'),
+        ("read_range", '{"path":"src/retry.py","start_line":1,"end_line":500}'),
+    ]:
+        with pytest.raises(EvidenceError):
+            tracer.dispatch(name, args)
+    assert session.windows == []

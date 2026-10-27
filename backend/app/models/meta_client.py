@@ -1,7 +1,8 @@
-import json
+"""Meta transport and response validation; tool dispatch belongs to the caller."""
+
+import asyncio
 from time import perf_counter
-from typing import Any, cast
-from uuid import uuid4
+from typing import Any, Literal
 
 import httpx
 from openai import APIConnectionError, APIError, APIStatusError, APITimeoutError, AsyncOpenAI
@@ -9,40 +10,31 @@ from openai.types.chat import ChatCompletion, ChatCompletionMessageParam
 from pydantic import BaseModel, ValidationError
 
 from app.config import META_BASE_URL, Settings
-from app.contracts import (
-    ModelCall,
-    ModelResult,
-    ProbeAcknowledgement,
-    ProbeArguments,
-    TokenUsage,
-    ToolProbeResult,
-)
-from app.errors import ConfigurationError, MetaRequestError, ModelOutputError, SmokeCheckError
-
-
-def response_format(schema: type[BaseModel]) -> dict[str, Any]:
-    return {
-        "type": "json_schema",
-        "json_schema": {
-            "name": schema.__name__,
-            "strict": True,
-            "schema": schema.model_json_schema(),
-        },
-    }
+from app.contracts import ModelCall, ModelResult, TokenUsage
+from app.errors import ConfigurationError, MetaRequestError, ModelOutputError
+from app.models.budget import ModelBudget
+from app.models.schema import response_format
 
 
 class MetaClient:
-    """Bounded, async access to Meta only; no provider or model fallback."""
-
-    def __init__(self, settings: Settings, *, http_client: httpx.AsyncClient | None = None):
+    def __init__(
+        self,
+        settings: Settings,
+        *,
+        http_client: httpx.AsyncClient | None = None,
+        budget: ModelBudget | None = None,
+    ):
         if not settings.model_configured or settings.model_api_key is None:
             raise ConfigurationError("Set MODEL_API_KEY in backend/.env or your local environment.")
         self._settings = settings
+        self.budget = budget if budget is not None else ModelBudget()
+        self.attempts: list[dict[str, Any]] = []
+        self.calls: list[ModelCall] = []
         self._client = AsyncOpenAI(
             base_url=META_BASE_URL,
             api_key=settings.model_api_key.get_secret_value(),
             timeout=settings.meta_timeout_seconds,
-            max_retries=settings.meta_max_retries,
+            max_retries=0,
             http_client=http_client,
         )
 
@@ -52,51 +44,68 @@ class MetaClient:
     async def __aexit__(self, *_: object) -> None:
         await self._client.close()
 
-    async def _request(
+    async def request(
         self,
         *,
         stage: str,
         messages: list[ChatCompletionMessageParam],
+        reasoning: Literal["low", "medium", "high"] = "low",
+        output_tokens: int | None = None,
         **options: Any,
     ) -> tuple[ChatCompletion, ModelCall]:
         started = perf_counter()
-        try:
-            completion = await self._client.chat.completions.create(
-                model=self._settings.meta_model_id,
-                messages=messages,
-                max_completion_tokens=self._settings.meta_max_completion_tokens,
-                reasoning_effort="low",
-                **options,
-            )
-        except APITimeoutError:
-            raise MetaRequestError("Meta API timed out after the configured retry limit.") from None
-        except APIConnectionError:
-            raise MetaRequestError(
-                "Could not connect to Meta API. Check network/proxy settings."
-            ) from None
-        except APIStatusError as exc:
-            raise MetaRequestError(
-                f"Meta API returned HTTP {exc.status_code}. "
-                "Check credentials, quota, and request support."
-            ) from None
-        except APIError:
-            raise MetaRequestError("Meta API returned an invalid or unreadable response.") from None
+        output_limit = (
+            self._settings.meta_max_completion_tokens if output_tokens is None else output_tokens
+        )
+        if not 1 <= output_limit <= 8000:
+            raise ConfigurationError("Model output-token limit must be between 1 and 8000.")
+        for attempt in range(1, self._settings.meta_max_retries + 2):
+            self.budget.reserve()
+            entry = {"stage": stage, "attempt": attempt, "status": "started", "usage": None}
+            self.attempts.append(entry)
+            attempt_started = perf_counter()
+            try:
+                completion = await self._client.chat.completions.create(
+                    model=self._settings.meta_model_id,
+                    messages=messages,
+                    max_completion_tokens=self.budget.output_limit(output_limit),
+                    reasoning_effort=reasoning,
+                    **options,
+                )
+            except APIError as exc:
+                entry["status"] = (
+                    "http_error" if isinstance(exc, APIStatusError) else "transport_error"
+                )
+                status = exc.status_code if isinstance(exc, APIStatusError) else None
+                entry["http_status"] = status
+                retryable = (
+                    isinstance(exc, APIConnectionError)
+                    or status in {408, 409, 429}
+                    or (status is not None and status >= 500)
+                )
+                if retryable and attempt <= self._settings.meta_max_retries:
+                    await asyncio.sleep(0.25 * 2 ** (attempt - 1))
+                    continue
+                if isinstance(exc, APITimeoutError):
+                    detail = "Meta API timed out after the configured retry limit."
+                elif status is not None:
+                    detail = (
+                        f"Meta API returned HTTP {status}. "
+                        "Check credentials, quota, and request support."
+                    )
+                else:
+                    detail = (
+                        "Could not read a valid Meta API response. Check network/proxy settings."
+                    )
+                raise MetaRequestError(detail) from None
+            finally:
+                entry["elapsed_ms"] = round((perf_counter() - attempt_started) * 1000)
+            break
 
         try:
-            # The SDK's normal parser is permissive about missing provider fields.
             completion = ChatCompletion.model_validate(completion.model_dump())
-        except ValidationError:
-            raise ModelOutputError("Meta response is missing required completion fields.") from None
-        if completion.model != self._settings.meta_model_id:
-            raise ModelOutputError("Meta returned a different model than the configured model ID.")
-        if len(completion.choices) != 1 or completion.usage is None:
-            raise ModelOutputError("Meta response must contain one choice and token usage.")
-        choice = completion.choices[0]
-        if choice.finish_reason not in {"stop", "tool_calls"} or choice.message.refusal:
-            raise ModelOutputError(
-                "Meta response was refused, truncated, or did not finish normally."
-            )
-        try:
+            if completion.usage is None:
+                raise ValueError
             call = ModelCall(
                 provider="meta",
                 stage=stage,
@@ -104,14 +113,28 @@ class MetaClient:
                 model_id=completion.model,
                 response_id=completion.id,
                 elapsed_ms=round((perf_counter() - started) * 1000),
+                attempts=attempt,
                 usage=TokenUsage(
                     prompt_tokens=completion.usage.prompt_tokens,
                     completion_tokens=completion.usage.completion_tokens,
                     total_tokens=completion.usage.total_tokens,
                 ),
             )
-        except ValidationError:
+        except (ValidationError, ValueError):
+            entry["status"] = "invalid_metadata"
             raise ModelOutputError("Meta response metadata is missing or inconsistent.") from None
+        self.calls.append(call)
+        self.budget.record(call)
+        entry.update(status="received", response_id=call.response_id, usage=call.usage.model_dump())
+        if completion.model != self._settings.meta_model_id:
+            raise ModelOutputError("Meta returned a different model than configured.", call=call)
+        if len(completion.choices) != 1:
+            raise ModelOutputError("Meta response must contain one choice.", call=call)
+        choice = completion.choices[0]
+        entry["finish_reason"] = choice.finish_reason
+        if choice.finish_reason not in {"stop", "tool_calls"} or choice.message.refusal:
+            raise ModelOutputError("Meta response was refused or truncated.", call=call)
+        self.budget.check()
         return completion, call
 
     async def structured[T: BaseModel](
@@ -120,89 +143,28 @@ class MetaClient:
         stage: str,
         messages: list[ChatCompletionMessageParam],
         schema: type[T],
+        reasoning: Literal["low", "medium", "high"] = "low",
     ) -> ModelResult[T]:
-        completion, call = await self._request(
-            stage=stage, messages=messages, response_format=response_format(schema)
+        completion, call = await self.request(
+            stage=stage,
+            messages=messages,
+            reasoning=reasoning,
+            response_format=response_format(schema),
         )
+        return ModelResult(data=self.parse(completion, call, schema), call=call)
+
+    @staticmethod
+    def parse[T: BaseModel](completion: ChatCompletion, call: ModelCall, schema: type[T]) -> T:
         message = completion.choices[0].message
         if (
             completion.choices[0].finish_reason != "stop"
             or message.tool_calls
             or not message.content
         ):
-            raise ModelOutputError(
-                "Expected a structured response, not an empty reply or tool call."
-            )
+            raise ModelOutputError("Expected a structured response, not a tool call.", call=call)
         try:
-            data = schema.model_validate_json(message.content)
+            return schema.model_validate_json(message.content)
         except ValidationError:
             raise ModelOutputError(
-                "Meta output failed the requested schema or contract validation."
+                "Meta output failed schema or contract validation.", call=call
             ) from None
-        return ModelResult(data=data, call=call)
-
-    async def probe_tool_round_trip(self) -> ToolProbeResult:
-        """Prove a real tool call and consumption of a value only the tool can provide."""
-        messages: list[ChatCompletionMessageParam] = [
-            {
-                "role": "developer",
-                "content": (
-                    "This is a read-only API integration check. "
-                    "Call read_probe with empty arguments "
-                    "to obtain a probe_token, then return the tool_name and exact probe_token. "
-                    "Do not invent the token."
-                ),
-            },
-            {"role": "user", "content": "Read the probe tool and acknowledge its returned token."},
-        ]
-        completion, first_call = await self._request(
-            stage="tool_probe.request",
-            messages=messages,
-            tools=[
-                {
-                    "type": "function",
-                    "function": {
-                        "name": "read_probe",
-                        "description": "Read the harmless in-memory integration probe token.",
-                        "strict": True,
-                        "parameters": {**ProbeArguments.model_json_schema(), "required": []},
-                    },
-                }
-            ],
-            tool_choice="auto",  # Meta rejects required/none/named choices.
-            parallel_tool_calls=False,
-        )
-        message = completion.choices[0].message
-        tool_calls = message.tool_calls or []
-        if completion.choices[0].finish_reason != "tool_calls" or len(tool_calls) != 1:
-            raise SmokeCheckError(
-                "Meta did not make exactly one probe tool call; round trip unproven."
-            )
-        tool_call = tool_calls[0]
-        if tool_call.type != "function" or tool_call.function.name != "read_probe":
-            raise SmokeCheckError("Meta requested an unsupported tool; nothing was executed.")
-        if not 1 <= len(tool_call.id) <= 64:
-            raise SmokeCheckError("Meta returned an invalid probe tool-call ID.")
-        try:
-            ProbeArguments.model_validate_json(tool_call.function.arguments)
-        except ValidationError:
-            raise SmokeCheckError("Probe tool arguments must be an empty JSON object.") from None
-
-        # Created only after the tool call: a correct final reply proves consumption of its result.
-        probe_token = uuid4().hex
-        messages.append(
-            cast(ChatCompletionMessageParam, message.model_dump(mode="json", exclude_none=True))
-        )
-        messages.append(
-            {
-                "role": "tool",
-                "tool_call_id": tool_call.id,
-                "content": json.dumps({"tool_name": "read_probe", "probe_token": probe_token}),
-            }
-        )
-        final = await self.structured(
-            stage="tool_probe.response", messages=messages, schema=ProbeAcknowledgement
-        )
-        if final.data.probe_token != probe_token:
-            raise SmokeCheckError("Meta did not return the token provided by the probe tool.")
-        return ToolProbeResult(acknowledgement=final.data, calls=[first_call, final.call])

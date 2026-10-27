@@ -11,8 +11,8 @@ from uuid import uuid4
 from app.errors import GraftError
 from app.tools.runner import PROJECT_ROOT, SANDBOX, prepared_image, run_suite
 from app.tools.runner_artifacts import RunnerError, TestCapture, export_files, file_hashes
+from app.tools.targets import CRAWLER_FILES as TARGET_FILES
 
-TARGET_FILES = ("pyproject.toml", "src/crawler.py", "tests/test_crawler.py")
 ACCEPTANCE_FILES = ("test_retries.py",)
 EXPECTED_RED = {
     "test_transient_503_recovers[one-503]": "retry recovery missing:",

@@ -2,7 +2,10 @@
 
 Adapt one small feature from a source repository into a target project, with Muse Spark planning and code-backed red-to-green evidence. The approved design is in [tech_breakdown.md](tech_breakdown.md).
 
-Phase one implements the **first coding milestone in section 11**: the backend and Meta integration foundation. Phase two adds the HTTPX crawler fixture and an offline Docker runner that records ordinary-green and missing-retry assertion-red evidence. Repository ingestion, source tracing, feature adaptation, and the UI follow in later milestones.
+The first three coding milestones in section 11 are implemented: the Meta backend foundation,
+the HTTPX crawler and offline Docker baseline, and pinned repositories with a live Meta source
+trace. Feature selection, retry adaptation, final red-to-green verification, and the UI remain
+later work.
 
 ## Setup
 
@@ -49,7 +52,7 @@ uv run --project backend --locked python scripts/build_runner.py
 uv run --project backend --locked graft-crawler-baseline
 ```
 
-Expected result: **6 isolation checks pass, 8 baseline tests pass, and 4 of 7 retry acceptance
+Expected result: **6 isolation checks pass, 13 baseline tests pass, and 4 of 7 retry acceptance
 cases fail by assertion**. The other 3 acceptance cases pass. The CLI exits 0 only when this
 exact missing-feature result is recorded and the input hashes remain unchanged. This establishes
 the red baseline; retry adaptation has not been implemented yet.
@@ -67,6 +70,31 @@ uv run --project backend --locked python scripts/check_runner.py
 
 See [the runner boundary and Phase 2 scope](sandbox/README.md) for restrictions and audit follow-up.
 
+## Trace pinned Scrapy source (Phase 3)
+
+```powershell
+uv run --project backend --locked graft-source-trace
+```
+
+This retrieves Scrapy at `5c7886a3f27dbf8b66f557cc9945dbc4a6aceaac`, clones the registered
+`crawler-demo` target's committed HEAD into independent managed Git storage, and creates a
+clean sparse worktree on a new `graft/source-trace-<id>` branch. Uncommitted target changes are
+excluded and disclosed. No branch is created in your original repository.
+
+The live Muse Spark tracer reads bounded source windows and AST evidence through registered
+tools. The controller validates cited SHAs, inventory membership, line bounds, symbols,
+dependency imports, and license references. A successful command prints the path to
+`data/artifacts/source-trace-<id>/report.json`. Adjacent artifacts include the feature card,
+trace bundle with hashed excerpts and complete source notices, inventories, coverage, and a
+read log. Reports retain model IDs, response IDs, usage, every HTTP attempt, tool events, and
+controller hashes, including on model failure.
+
+This command needs network and the configured Meta key; it makes real inference requests.
+Tracing uses medium reasoning and `META_TRACE_MAX_COMPLETION_TOKENS` (default 8,000), separately
+from the smaller smoke output allowance. It never imports source/target code, runs source tests,
+or applies a patch. The separate Docker baseline remains the target execution check.
+See [Phase 3 details](docs/phase3.md) for limits, artifacts, verification, and audit resolutions.
+
 ## Development checks
 
 ```powershell
@@ -77,7 +105,8 @@ uv run --project backend --locked ruff format --check --config backend/pyproject
 
 Backend tests make no external model requests, need no API key or Docker, and never execute the
 crawler on the host. They cover provider contracts and credential-safe errors, file containment,
-image-receipt validation, and result classification. The crawler tests run through the Docker
+image-receipt validation, result classification, pinned Git repositories, clean managed worktrees,
+AST/citation validation, budget accounting, and reproduced audit defects. The crawler tests run through the Docker
 commands above. If your environment restricts the system temporary folder, add
 `--basetemp=data/pytest-<unique-id>` to the backend pytest command.
 

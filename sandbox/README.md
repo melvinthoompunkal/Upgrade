@@ -10,8 +10,8 @@ The baseline intentionally makes one GET attempt.
 The seven acceptance cases specify recovery after one/two 503 responses, three-attempt
 exhaustion, immediate success, permanent 404, parsing the recovered body, and unchanged
 successful traversal. These are hand-authored Phase 2 tests of the proposed demo behavior.
-They are not yet a source-backed acceptance contract. Phase 3 must corroborate and finalize
-the behavior against pinned source evidence before model-driven implementation starts.
+Phase 3 now supplies a pinned source trace and proposed source-derived acceptance behaviors.
+Contract finalization and model-driven implementation remain later gates.
 
 ## Execution boundary
 
@@ -19,7 +19,7 @@ Only `crawler-demo` is registered. The controller exports exactly its `pyproject
 `src/crawler.py`, and `tests/test_crawler.py`. It checks path containment, rejects links and
 junctions, bounds file reads, and copies acceptance tests to a separate directory. `.git`,
 `.env`, and other project files never enter the snapshot. This is a content-hashed fixture
-export; Git SHA pinning and managed worktrees belong to Phase 3.
+export. The separate Phase 3 CLI now supplies Git SHA pinning and managed worktrees.
 
 The runner builds only this directory's allowlisted Docker context. The Python 3.12 base is
 pinned by registry digest; all 13 Python dependencies are exact versions with SHA-256 hashes.
@@ -73,14 +73,17 @@ Their code is generated into ignored `data/` and executes only in Docker.
 The October 27 Phase 1 audit remains a historical record. Its M1 setup overwrite is fixed in
 the root README by creating `.env` only when absent. The existing `.env` is not rewritten.
 
-M2 (probe orchestration ownership), M3 (failed-call telemetry/attempt accounting), L1 (strict
-schema compatibility), and L2 (mutable collections) remain open. This milestone adds no real
-agent tools, model budgets, or shared locked plans. Resolve those findings at the relevant
-model/controller boundary before those later capabilities depend on them.
+Phase 3 resolves the remaining Phase 1 findings: probe ownership, failed-call telemetry and
+retry accounting, strict schema compatibility, and mutable collections. It also resolves all
+Phase 2 findings: stream I/O errors now fail the gate with owned diagnostics and required logs;
+crawler traversal uses canonical URL identities; and root/ancestor links are rejected.
 
-Phase 3 is pinned repository snapshots, safe evidence reads/AST indexing, a managed target
-worktree, and a real Meta source trace. Feature selection, implementation, and final green
-verification follow afterward. No model calls are made by this milestone.
+`scripts/check_capture_faults.py` reproduces open/write/read errors for both streams through
+the real Docker baseline. Each must fail the overall check with a specific I/O diagnostic.
+
+See [Phase 3 details](../docs/phase3.md) for pinned repositories, safe reads/AST evidence,
+managed worktrees, and the live Meta source trace. Feature selection, implementation, and
+final green verification follow afterward. The Docker baseline itself makes no model calls.
 
 ## References
 

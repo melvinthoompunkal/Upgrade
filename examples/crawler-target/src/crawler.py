@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from html.parser import HTMLParser
-from urllib.parse import urldefrag, urljoin, urlsplit
+from urllib.parse import urldefrag, urljoin
 
 import httpx
 
@@ -43,11 +43,11 @@ class Crawler:
     def crawl(self, start_url: str, *, max_pages: int = 10) -> list[Page]:
         if max_pages < 1:
             raise ValueError("max_pages must be positive")
-        start_url = urldefrag(start_url)[0]
-        origin = urlsplit(start_url)
-        if origin.scheme not in {"http", "https"} or not origin.netloc:
+        start = httpx.URL(urldefrag(start_url)[0])
+        if start.scheme not in {"http", "https"} or not start.host:
             raise ValueError("start_url must be an absolute HTTP(S) URL")
-        pending = [start_url]
+        origin = (start.scheme, start.host, start.port)
+        pending = [str(start)]
         seen: set[str] = set()
         pages: list[Page] = []
         while pending and len(pages) < max_pages:
@@ -58,7 +58,7 @@ class Crawler:
             page = self.fetch(url)
             pages.append(page)
             for link in page.links:
-                parsed = urlsplit(link)
-                if (parsed.scheme, parsed.netloc) == (origin.scheme, origin.netloc):
-                    pending.append(link)
+                parsed = httpx.URL(link)
+                if (parsed.scheme, parsed.host, parsed.port) == origin:
+                    pending.append(str(parsed))
         return pages

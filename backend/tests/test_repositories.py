@@ -1,0 +1,103 @@
+"""Real disposable Git repositories, never imports or executes their contents."""
+
+from pathlib import Path
+
+import pytest
+
+from app.errors import EvidenceError, RepositoryError
+from app.tools.repositories import (
+    Registration,
+    RepositoryManager,
+    registered_target,
+    verify_original,
+)
+
+
+def test_pin_independent_clone_worktree_and_dirty_original(committed_repo, tmp_path):
+    root, git = committed_repo
+    (root / "src/retry.py").write_text("dirty local change")
+    manager = RepositoryManager(tmp_path / "managed")
+    repo, original = manager.local_target(Registration("target", root))
+    assert repo.read("src/retry.py").startswith("import time")
+    assert original["uncommitted_changes_excluded"]
+    assert not (repo.storage / "objects/info/alternates").exists()
+    assert not {".env", "credentials.json", "binary.txt"} & set(repo.objects)
+    assert repo.snapshot.license_refs[0].path == "LICENSE"
+    worktree = manager.worktree(repo, "test-run")
+    assert git.run("status", "--porcelain", cwd=worktree) == b""
+    assert not (worktree / ".env").exists()
+    assert not (worktree / "node_modules").exists()
+    (worktree / "src/retry.py").write_text("managed edit")
+    assert (root / "src/retry.py").read_text() == "dirty local change"
+    assert verify_original(git, original)
+    (root / "src/retry.py").write_text("second dirty change")
+    assert not verify_original(git, original)
+    repo.verify()
+    with pytest.raises(EvidenceError):
+        repo.read(".env")
+    for path in ("../src/retry.py", "/etc/passwd", "C:/secret", "src\\retry.py"):
+        with pytest.raises(ValueError):
+            repo.read(path)
+    gitdir = Path(git.run("rev-parse", "--git-common-dir", cwd=worktree).decode().strip())
+    assert gitdir.resolve() == repo.storage.resolve()
+
+
+def test_registered_monorepo_prefix_and_unknown_target(committed_repo, tmp_path):
+    root, _ = committed_repo
+    manager = RepositoryManager(tmp_path / "managed")
+    repo, _ = manager.local_target(Registration("fixture", root, "src", ("retry.py",)))
+    assert tuple(repo.objects) == ("retry.py",)
+    tree = manager.worktree(repo, "prefixed")
+    assert tree.name == "src"
+    assert (tree / "retry.py").read_text().startswith("import time")
+    assert manager.git.run("status", "--porcelain", cwd=tree) == b""
+    with pytest.raises(RepositoryError, match="Unknown"):
+        registered_target(root, "arbitrary-path")
+
+
+def test_inventory_limits_are_reported(committed_repo, tmp_path):
+    root, _ = committed_repo
+    manager = RepositoryManager(tmp_path / "managed")
+    repo, _ = manager.local_target(Registration("target", root))
+    limited = manager._inventory(
+        repo.storage, "small", "fixture", repo.snapshot.commit_sha, max_entries=1
+    )
+    assert limited.inventory.limits_reached == ("inventory_entries",)
+    limited = manager._inventory(
+        repo.storage, "small", "fixture", repo.snapshot.commit_sha, max_text_bytes=1
+    )
+    assert "analyzed_text_bytes" in limited.inventory.limits_reached
+
+
+@pytest.mark.parametrize(
+    "url,sha",
+    [
+        ("file:///outside", "a" * 40),
+        ("https://token@github.com/org/repo", "a" * 40),
+        ("https://github.com/org/repo", "main"),
+        ("https://evil.test/org/repo", "a" * 40),
+    ],
+)
+def test_public_retrieval_rejects_credentials_protocols_and_unpinned_refs(tmp_path, url, sha):
+    manager = RepositoryManager(tmp_path / "managed")
+    with pytest.raises(RepositoryError):
+        manager.public_source(url, sha)
+
+
+def test_public_fetch_pins_exact_requested_commit(committed_repo, tmp_path, monkeypatch):
+    root, git = committed_repo
+    sha = git.run("rev-parse", "HEAD", cwd=root).decode().strip()
+    manager = RepositoryManager(tmp_path / "managed")
+    original_run = manager.git.run
+
+    def local_transport(*args, **kwargs):
+        args = tuple(
+            str(root) if arg == "https://github.com/example/fixture" else arg for arg in args
+        )
+        return original_run(*args, **kwargs)
+
+    monkeypatch.setattr(manager.git, "run", local_transport)
+    repo = manager.public_source("https://github.com/example/fixture", sha)
+    assert repo.snapshot.commit_sha == sha
+    assert repo.read("src/retry.py").startswith("import time")
+    repo.verify()

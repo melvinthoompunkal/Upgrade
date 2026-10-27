@@ -34,6 +34,10 @@ def reference(**changes: object) -> Ref:
         "./src/retry.py",
         "src/retry.py/",
         "src/\x00key",
+        "src/CON.py",
+        "src/trailing. ",
+        'src/"invalid.py',
+        "src/*.py",
     ],
 )
 def test_references_reject_noncanonical_and_escaping_paths(path: str) -> None:
