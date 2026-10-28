@@ -112,6 +112,11 @@ inputs, capture evidence, or original target fail the run. The existing `graft-c
 command continues to test local fixture files. See [Stage 4 W1 details](docs/stage4-w1.md).
 Target profiling, selection, and patching remain subsequent work.
 
+Stage 4 W2 now provides immutable profile, assessment, gate, score/result, and
+selection-facing baseline-binding contracts. Model proposals exclude controller-owned
+results; final artifacts validate snapshot identity, observed-gap links, score thresholds,
+and selection consistency. See [Stage 4 W2 contracts and handoff](docs/stage4-w2.md).
+
 ## Development checks
 
 ```powershell

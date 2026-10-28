@@ -9,6 +9,7 @@ import pytest
 
 from app import pinned_baseline
 from app.baseline import EXPECTED_PASS, EXPECTED_RED
+from app.baseline_contracts import BaselineBinding
 from app.contracts import RepoSnapshot
 from app.tools.repositories import Registration, RepositoryManager, verify_original
 from app.tools.runner_artifacts import TestCapture as Capture
@@ -101,6 +102,15 @@ def mocked_runner(monkeypatch):
 
 def binding_at(directory):
     return json.loads((directory / "baseline-binding.json").read_text())
+
+
+def test_successful_w1_receipt_is_consumable_by_selection_contract(pinned_target, mocked_runner):
+    report, _ = pinned_baseline.record_pinned_baseline(*pinned_target)
+    assert report["status"] == "passed"
+    binding = BaselineBinding.from_w1(binding_at(pinned_target[2]))
+    assert binding.target_sha == pinned_target[0].snapshot.commit_sha
+    assert binding.target_path_prefix == CRAWLER_PREFIX
+    assert {capture.suite for capture in binding.captures} == set(mocked_runner)
 
 
 def test_dirty_target_is_excluded_and_captures_bind_to_committed_bytes(
