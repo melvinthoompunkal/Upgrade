@@ -109,6 +109,10 @@ def test_profile_tool_protocol_and_capture_binding(baseline_context):
         body = json.loads(request.content)
         requests.append(body)
         assert body["reasoning_effort"] == "medium"
+        assert (
+            json.loads(body["messages"][1]["content"])["required_capability_tests"]
+            == CAPABILITY_TESTS
+        )
         if len(requests) == 1:
             calls = [
                 {

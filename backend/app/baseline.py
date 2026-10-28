@@ -44,10 +44,10 @@ def valid_feature_red(capture: TestCapture) -> bool:
     )
 
 
-def record_baseline(image_receipt: Path) -> tuple[dict, Path]:
+def record_baseline(image_receipt: Path, *, artifact_root: Path | None = None) -> tuple[dict, Path]:
     image_id = prepared_image(image_receipt)
     target = PROJECT_ROOT / "examples" / "crawler-target"
-    run_dir = PROJECT_ROOT / "data" / "artifacts" / f"crawler-baseline-{uuid4().hex}"
+    run_dir = (artifact_root or PROJECT_ROOT / "data/artifacts") / f"crawler-baseline-{uuid4().hex}"
     run_dir.mkdir(parents=True)
     snapshot = run_dir / "snapshot"
     acceptance = run_dir / "acceptance"
@@ -109,7 +109,10 @@ def main() -> int:
     )
     args = parser.parse_args()
     try:
-        report, path = record_baseline(args.image_receipt)
+        from app.execution import ProcessLock
+
+        with ProcessLock(PROJECT_ROOT / "data/execution.lock"):
+            report, path = record_baseline(args.image_receipt)
     except (GraftError, OSError, ValueError) as error:
         detail = str(error) if isinstance(error, RunnerError) else "Unable to prepare runner files."
         print(

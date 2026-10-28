@@ -10,6 +10,7 @@ from typing import Annotated, Literal, get_args
 from pydantic import Field, model_validator
 
 from app.baseline_contracts import ArtifactDigest
+from app.behavior_contracts import RetryBehavior
 from app.contracts import CommitSHA, Contract, FrozenList, NonEmptyString, Ref, RepoPath
 from app.evidence_contracts import Coverage, Dependency
 
@@ -200,6 +201,7 @@ class FitCriteria(Contract):
 
 class AdaptationPlan(Contract):
     rationale: Explanation
+    behavior_contract: RetryBehavior | None
     target_gap_ids: FrozenList[FeatureID]
     integration_points: FrozenList[Ref]
     production_paths: FrozenList[RepoPath]

@@ -13,22 +13,31 @@ export type Artifact = Schemas['Artifact']
 export type ArtifactText = Schemas['ArtifactText']
 export type Event = Schemas['Event']
 export type EventPage = Schemas['EventPage']
+export type Session = Schemas['SessionView']
+export type RepositoryPage = Schemas['RepositoryPage']
 export type Feature = Schemas['FeatureCard']
 export type RunRequest =
   operations['create_run_api_runs_post']['requestBody']['content']['application/json']
 
 export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const headers = new Headers(options.headers)
+  headers.set('Content-Type', 'application/json')
+  if (options.method && !['GET', 'HEAD'].includes(options.method.toUpperCase())) {
+    const session = await api<Session>('/session', { signal: options.signal })
+    if (session.csrf_token) headers.set('X-CSRF-Token', session.csrf_token)
+  }
   let response: Response
   try {
     response = await fetch(`/api${path}`, {
       ...options,
-      headers: { 'Content-Type': 'application/json', ...options.headers },
+      headers,
     })
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') throw error
     throw new Error('Cannot reach the local backend. Start the server on port 8000, then retry.')
   }
   if (!response.ok) {
+    if (response.status === 401) window.dispatchEvent(new window.Event('upgrade:session-expired'))
     const body = await response.json().catch(() => null)
     const message =
       typeof body?.detail === 'string'

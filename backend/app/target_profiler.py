@@ -28,7 +28,7 @@ from app.tools.evidence import EvidenceSession
 from app.tools.targets import CRAWLER_FILES
 
 RETRY_GAP = "retry-503"
-PROFILE_PROMPT_VERSION = "target-profile-v1"
+PROFILE_PROMPT_VERSION = "target-profile-v2"
 CAPABILITY_TESTS = {
     "fetch": "test_fetch_returns_body_and_resolved_unique_links",
     "same-origin": "test_crawl_is_breadth_first_same_origin_and_visits_each_url_once",
@@ -143,6 +143,8 @@ class TargetProfiler:
                     "duplicate-visits,  "
                     "page-limit. Cite implementation and relevant source test for each except "
                     "ownership.  "
+                    "For each capability, cite the exact registered test in "
+                    "required_capability_tests; additional relevant tests are optional. "
                     "Describe client ownership, GET/status/parse order, traversal, seen "
                     "identity, max_pages.  "
                     "Do not infer depth from a page limit. A depth-limit gap is "
@@ -165,6 +167,7 @@ class TargetProfiler:
                     {
                         "goal": goal,
                         "target": self.evidence.repo.snapshot.model_dump(mode="json"),
+                        "required_capability_tests": CAPABILITY_TESTS,
                         "facts": {
                             "python_requirement": self.facts.python_requirement,
                             "dependency": "httpx==0.28.1",
@@ -239,7 +242,8 @@ class TargetProfiler:
                 and cites_symbol(self.evidence, caps[name].refs, "tests/test_crawler.py", test)
             ):
                 raise EvidenceError(
-                    "Capability requires its relevant implementation and test evidence."
+                    f"Capability '{name}' requires '{method}' "
+                    f"and registered test '{test}' evidence."
                 )
         if not cites_symbol(
             self.evidence, caps["client-ownership"].refs, "src/crawler.py", "Crawler"

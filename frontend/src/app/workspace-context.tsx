@@ -1,7 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
-import { api, type Capabilities, type RunPage, type Target } from '../api/client'
+import { api, type Capabilities, type RunPage, type Session, type Target } from '../api/client'
 
 type Workspace = {
+  session: Session | null
   capabilities: Capabilities | null
   targets: Target[]
   history: RunPage | null
@@ -11,6 +12,7 @@ type Workspace = {
 }
 const Context = createContext<Workspace | null>(null)
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
+  const [session, setSession] = useState<Session | null>(null)
   const [capabilities, setCapabilities] = useState<Capabilities | null>(null)
   const [targets, setTargets] = useState<Target[]>([])
   const [history, setHistory] = useState<RunPage | null>(null)
@@ -19,13 +21,40 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [revision, setRevision] = useState(0)
   const refresh = useCallback(() => setRevision((value) => value + 1), [])
   useEffect(() => {
+    const expired = () => {
+      setSession(null)
+      setHistory(null)
+      setTargets([])
+      setCapabilities(null)
+      setLoading(true)
+      refresh()
+    }
+    window.addEventListener('upgrade:session-expired', expired)
+    window.addEventListener('focus', refresh)
+    return () => {
+      window.removeEventListener('upgrade:session-expired', expired)
+      window.removeEventListener('focus', refresh)
+    }
+  }, [refresh])
+  useEffect(() => {
     const controller = new AbortController()
-    Promise.all([
-      api<Capabilities>('/capabilities', { signal: controller.signal }),
-      api<Target[]>('/targets', { signal: controller.signal }),
-      api<RunPage>('/runs', { signal: controller.signal }),
-    ])
-      .then(([cap, projects, runs]) => {
+    api<Session>('/session', { signal: controller.signal })
+      .then(async (current) => {
+        if (controller.signal.aborted) return
+        setSession(current)
+        if (!current.authenticated) {
+          setHistory(null)
+          setTargets([])
+          setCapabilities(null)
+          setError('')
+          return
+        }
+        const [cap, projects, runs] = await Promise.all([
+          api<Capabilities>('/capabilities', { signal: controller.signal }),
+          api<Target[]>('/targets', { signal: controller.signal }),
+          api<RunPage>('/runs', { signal: controller.signal }),
+        ])
+        if (controller.signal.aborted) return
         setCapabilities(cap)
         setTargets(projects)
         setHistory(runs)
@@ -40,7 +69,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     return () => controller.abort()
   }, [revision])
   return (
-    <Context.Provider value={{ capabilities, targets, history, error, loading, refresh }}>
+    <Context.Provider value={{ session, capabilities, targets, history, error, loading, refresh }}>
       {children}
     </Context.Provider>
   )

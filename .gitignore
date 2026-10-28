@@ -61,3 +61,9 @@ Desktop.ini
 # Keep source, documentation, dependency manifests/lockfiles, and .env.example included.
 skills/
 audit/
+
+# Keep historical local audit data ignored, but retain the sanitized foundation receipt.
+!audit/
+audit/**
+!audit/full-feature-foundations/
+!audit/full-feature-foundations/**

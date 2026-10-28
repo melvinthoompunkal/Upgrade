@@ -2,7 +2,6 @@
 
 import asyncio
 import json
-import os
 import threading
 from pathlib import Path
 from uuid import uuid4
@@ -15,6 +14,7 @@ from app.api.storage import RunStore
 from app.baseline import record_baseline
 from app.config import Settings
 from app.errors import GraftError
+from app.execution import ProcessLock
 from app.fit_select import record_fit_selection
 from app.models.meta_client import MetaClient
 from app.pinned_baseline import record_pinned_baseline
@@ -23,7 +23,7 @@ from app.source_trace import record_source_trace
 from app.tools.repositories import RepositoryManager, registered_target
 from app.tools.runner import PROJECT_ROOT
 from app.tools.runner_artifacts import read_regular_file
-from app.workflow_inputs import SelectionInputs, TraceInputs
+from app.workflow_inputs import SelectionInputs, TraceInputs, WorkflowContext
 
 
 class LocalWorker:
@@ -35,26 +35,12 @@ class LocalWorker:
         self.lock = None
 
     def start(self) -> None:
-        self.lock = (self.store.path.parent / "worker.lock").open("a+b")
-        self.lock.seek(0)
-        self.lock.write(b"0")
-        self.lock.flush()
-        self.lock.seek(0)
-        try:
-            if os.name == "nt":
-                import msvcrt
-
-                msvcrt.locking(self.lock.fileno(), msvcrt.LK_NBLCK, 1)
-            else:
-                import fcntl
-
-                fcntl.flock(self.lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except OSError:
-            self.lock.close()
+        self.lock = ProcessLock(self.store.path.parent / "worker.lock")
+        if not self.lock.acquire():
             self.lock = None
             return
         # Holding the OS lock establishes that no prior API worker is still executing.
-        for run in self.store.summaries():
+        for run in self.store.summaries(status="running"):
             if run.status == "running":
                 self.store.transition(
                     run.id,
@@ -80,17 +66,21 @@ class LocalWorker:
 
     async def execute(self, request: RunRequest, progress) -> tuple[dict, Path]:
         receipt = PROJECT_ROOT / "data/runner-image.json"
+        context = WorkflowContext(self.root, self.settings)
         if request.kind == "fit_select":
             return await record_fit_selection(
                 SelectionInputs(**request.model_dump(exclude={"kind"}), image_receipt=receipt),
                 progress=progress,
+                context=context,
             )
         if request.kind == "source_trace":
             progress("analysis", "Pinning repositories and tracing source behavior with Meta.")
-            return await record_source_trace(TraceInputs(**request.model_dump(exclude={"kind"})))
+            return await record_source_trace(
+                TraceInputs(**request.model_dump(exclude={"kind"})), context=context
+            )
         if request.kind == "local_baseline":
             progress("checks", "Testing current working files in the restricted Docker runner.")
-            return await asyncio.to_thread(record_baseline, receipt)
+            return await asyncio.to_thread(record_baseline, receipt, artifact_root=self.root)
         directory = self.root / f"{request.kind.replace('_', '-')}-{uuid4().hex}"
         directory.mkdir(parents=True)
         if request.kind == "pinned_baseline":
@@ -113,44 +103,55 @@ class LocalWorker:
 
     def loop(self) -> None:
         while not self.stop_requested.is_set():
-            row = self.store.claim()
-            if row is None:
+            execution = ProcessLock(self.root.parent / "execution.lock")
+            if not execution.acquire():
                 self.stop_requested.wait(0.5)
                 continue
-            run_id = row["id"]
             try:
-                request = TypeAdapter(RunRequest).validate_json(row["request"])
+                row = self.store.claim(mode=self.settings.auth_mode)
+                if row is None:
+                    execution.close()
+                    self.stop_requested.wait(0.5)
+                    continue
+                self.process(row)
+            finally:
+                execution.close()
 
-                def progress(stage, message, owned_run=run_id):
-                    self.store.transition(owned_run, stage=stage, message=message)
+    def process(self, row) -> None:
+        run_id = row["id"]
+        try:
+            request = TypeAdapter(RunRequest).validate_json(row["request"])
 
-                report, path = asyncio.run(self.execute(request, progress))
-                raw = read_regular_file(self.root, path.relative_to(self.root).as_posix())
-                self.store.attach(run_id, path.relative_to(self.root).as_posix(), digest(raw))
-                result = summary_from_report(run_id, request.kind, report, historical=False)
-                self.store.transition(
-                    run_id,
-                    stage="complete",
-                    message=f"Workflow finished: {result.outcome}.",
-                    status="finished",
-                    outcome=result.outcome,
-                    error=result.error,
-                    analyzed_feature_count=result.analyzed_feature_count,
-                    eligible_feature_count=result.eligible_feature_count,
-                )
-            except Exception as exc:
-                # Never expose provider responses, exception strings, or local paths.
-                code = exc.code if isinstance(exc, GraftError) else "workflow_failed"
-                self.store.transition(
-                    run_id,
-                    stage="complete",
-                    message="Workflow stopped; available results are retained.",
-                    status="finished",
-                    outcome="failed",
-                    error=Problem(
-                        code=code,
-                        message=public_text(str(exc))
-                        if isinstance(exc, GraftError)
-                        else "Execution failed. Check configuration and Docker before retrying.",
-                    ),
-                )
+            def progress(stage, message, owned_run=run_id):
+                self.store.transition(owned_run, stage=stage, message=message)
+
+            report, path = asyncio.run(self.execute(request, progress))
+            raw = read_regular_file(self.root, path.relative_to(self.root).as_posix())
+            self.store.attach(run_id, path.relative_to(self.root).as_posix(), digest(raw))
+            result = summary_from_report(run_id, request.kind, report, historical=False)
+            self.store.transition(
+                run_id,
+                stage="complete",
+                message=f"Workflow finished: {result.outcome}.",
+                status="finished",
+                outcome=result.outcome,
+                error=result.error,
+                analyzed_feature_count=result.analyzed_feature_count,
+                eligible_feature_count=result.eligible_feature_count,
+            )
+        except Exception as exc:
+            # Never expose provider responses, exception strings, or local paths.
+            code = exc.code if isinstance(exc, GraftError) else "workflow_failed"
+            self.store.transition(
+                run_id,
+                stage="complete",
+                message="Workflow stopped; available results are retained.",
+                status="finished",
+                outcome="failed",
+                error=Problem(
+                    code=code,
+                    message=public_text(str(exc))
+                    if isinstance(exc, GraftError)
+                    else "Execution failed. Check configuration and Docker before retrying.",
+                ),
+            )

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { api, type Event, type EventPage, type Run } from '../../api/client'
+import { api, type Event, type EventPage, type Run, type RunSummary } from '../../api/client'
 
 export function useRun(id: string) {
   const [run, setRun] = useState<Run | null>(null)
@@ -12,16 +12,23 @@ export function useRun(id: string) {
     let after = 0
     let failures = 0
     let received = false
+    let latest: Run | null = null
     setRun(null)
     setEvents([])
     setError('')
     setReconnecting(false)
     async function poll() {
       try {
-        const detail = await api<Run>(`/runs/${encodeURIComponent(id)}`, {
-          signal: controller.signal,
-        })
+        const path = `/runs/${encodeURIComponent(id)}`
+        const status = latest
+          ? await api<RunSummary>(`${path}/status`, { signal: controller.signal })
+          : null
+        const detail =
+          !latest || status?.revision !== latest.revision || status?.status !== latest.status
+            ? await api<Run>(path, { signal: controller.signal })
+            : latest
         if (controller.signal.aborted) return
+        latest = detail
         received = true
         setRun(detail)
         setError('')
@@ -33,12 +40,14 @@ export function useRun(id: string) {
         if (controller.signal.aborted) return
         if (page.items.length) {
           after = page.next_cursor
-          setEvents((previous) => [
-            ...previous,
-            ...page.items.filter(
-              (item) => !previous.some((existing) => existing.sequence === item.sequence),
-            ),
-          ])
+          setEvents((previous) =>
+            [
+              ...previous,
+              ...page.items.filter(
+                (item) => !previous.some((existing) => existing.sequence === item.sequence),
+              ),
+            ].slice(-200),
+          )
         }
         if (detail.status !== 'finished' || page.items.length === 100)
           timer = setTimeout(poll, 1000)

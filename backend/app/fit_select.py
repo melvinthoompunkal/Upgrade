@@ -3,6 +3,7 @@
 import argparse
 import asyncio
 import json
+import sys
 from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
@@ -12,12 +13,14 @@ from pydantic import ValidationError
 
 from app.config import Settings
 from app.errors import EvidenceError, GraftError
+from app.execution import ProcessLock
 from app.fit_matcher import MATCH_PROMPT_VERSION, SOURCE_POLICY_VERSION, FitMatcher
 from app.models.budget import ModelBudget
 from app.models.meta_client import MetaClient
 from app.models.schema import strict_schema
 from app.pinned_baseline import record_pinned_baseline
-from app.selection_artifacts import ArtifactStore, feature_refs, read_log
+from app.report_publication import publish_report
+from app.selection_artifacts import ArtifactStore, feature_refs, prepare_directory, read_log
 from app.selection_baseline import SelectionBaseline
 from app.selection_contracts import AssessmentBatch, TargetProfileProposal
 from app.target_profiler import PROFILE_PROMPT_VERSION, TargetProfiler, inspect_target
@@ -32,7 +35,7 @@ from app.tools.repositories import (
 from app.tools.runner import PROJECT_ROOT
 from app.tools.runner_artifacts import file_hashes
 from app.tracer import SourceTracer
-from app.workflow_inputs import SelectionInputs
+from app.workflow_inputs import SelectionInputs, WorkflowContext
 
 REQUIRED_OUTPUTS = (
     "source-trace.json",
@@ -72,7 +75,9 @@ def human_report(report: dict, profile, result) -> str:
         "",
         f"Outcome: **{report['status']}**.",
         "",
-        "Analyzed source features: **1**. Optional broader comparison (4B) is pending.",
+        f"Analyzed source features: **{report['analyzed_feature_count']}**. "
+        f"Eligible features: **{report.get('eligible_feature_count', 0)}**. "
+        "Optional broader comparison (4B) is pending.",
         "",
         "Selection assesses a proposed adaptation. No target patch or post-implementation "
         "verification was performed.",
@@ -127,11 +132,13 @@ def human_report(report: dict, profile, result) -> str:
 
 
 async def record_fit_selection(
-    args: SelectionInputs, *, progress: Callable[[str, str], None] = lambda *_: None
+    args: SelectionInputs,
+    *,
+    progress: Callable[[str, str], None] = lambda *_: None,
+    context: WorkflowContext | None = None,
 ) -> tuple[dict, Path]:
     run_id = f"fit-select-{uuid4().hex}"
-    directory = PROJECT_ROOT / "data" / "artifacts" / run_id
-    directory.mkdir(parents=True)
+    directory = (context.artifact_root if context else PROJECT_ROOT / "data/artifacts") / run_id
     report_path = directory / "report.json"
     report = {
         "schema_version": "1",
@@ -142,6 +149,7 @@ async def record_fit_selection(
         "goal": args.goal,
         "scope": "Stage 4A: one bounded retry candidate, sequential shared-budget analysis.",
         "analyzed_feature_count": 0,
+        "eligible_feature_count": 0,
         "actual_patch_scope_checked": False,
         "post_implementation_verified": False,
         "rubric_version": "fit-v1",
@@ -151,7 +159,7 @@ async def record_fit_selection(
             "target": PROFILE_PROMPT_VERSION,
             "matcher": MATCH_PROMPT_VERSION,
         },
-        "schema_version_selection": "1",
+        "schema_version_selection": "2",
         "original_target_unchanged": None,
         "worktree_unchanged": None,
     }
@@ -161,9 +169,10 @@ async def record_fit_selection(
     source_evidence = target_evidence = tracer = profiler = matcher = baseline = None
     profile = result = None
     try:
+        prepare_directory(directory)
         strict_schema(TargetProfileProposal)
         strict_schema(AssessmentBatch)
-        settings = Settings()
+        settings = context.settings if context else Settings()
         client = MetaClient(settings, budget=budget)
         report["controller_hashes"] = file_hashes(
             PROJECT_ROOT,
@@ -360,15 +369,9 @@ async def record_fit_selection(
                 error_code="invalid_evidence",
                 detail="Final preservation or artifact integrity verification failed.",
             )
-        # Only advertise files that still match their completed published digest.
-        report["artifact_hashes"] = store.verified_hashes()
-        store.publish("report.md", human_report(report, profile, result).encode())
-        report["artifact_hashes"]["report.md"] = store.hashes["report.md"]
-        report["unavailable_artifacts"] = [
-            p for p in REQUIRED_OUTPUTS if p not in report["artifact_hashes"]
-        ]
-        report["stage_completed"] = report["stage"]
-        store.json("report.json", report)
+        publish_report(
+            store, report, REQUIRED_OUTPUTS, lambda: human_report(report, profile, result)
+        )
     return report, report_path
 
 
@@ -381,7 +384,24 @@ def main() -> int:
     parser.add_argument(
         "--image-receipt", type=Path, default=PROJECT_ROOT / "data" / "runner-image.json"
     )
-    report, path = asyncio.run(record_fit_selection(SelectionInputs(**vars(parser.parse_args()))))
+    try:
+        inputs = SelectionInputs(**vars(parser.parse_args()))
+        with ProcessLock(PROJECT_ROOT / "data/execution.lock"):
+            report, path = asyncio.run(record_fit_selection(inputs))
+    except (GraftError, OSError, ValueError, TypeError) as exc:
+        print(
+            json.dumps(
+                {
+                    "status": "failed",
+                    "error_code": exc.code if isinstance(exc, GraftError) else "selection_failed",
+                    "detail": str(exc)
+                    if isinstance(exc, GraftError)
+                    else "Unable to prepare or publish selection evidence.",
+                }
+            ),
+            file=sys.stderr,
+        )
+        return 1
     print(
         json.dumps(
             {

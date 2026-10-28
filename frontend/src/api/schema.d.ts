@@ -4,6 +4,125 @@
  */
 
 export interface paths {
+  '/api/session': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Session */
+    get: operations['session_api_session_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/auth/github/start': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Start */
+    get: operations['start_api_auth_github_start_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/auth/github/callback': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Callback */
+    get: operations['callback_api_auth_github_callback_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/auth/logout': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Logout */
+    post: operations['logout_api_auth_logout_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/auth/disconnect': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Disconnect */
+    post: operations['disconnect_api_auth_disconnect_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/repositories': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** List Repositories */
+    get: operations['list_repositories_api_repositories_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/repositories/sync': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Sync Repositories */
+    post: operations['sync_repositories_api_repositories_sync_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/capabilities': {
     parameters: {
       query?: never
@@ -65,6 +184,23 @@ export interface paths {
     }
     /** Run Detail */
     get: operations['run_detail_api_runs__run_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/runs/{run_id}/status': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Run Status */
+    get: operations['run_status_api_runs__run_id__status_get']
     put?: never
     post?: never
     delete?: never
@@ -179,10 +315,16 @@ export interface paths {
 export type webhooks = Record<string, never>
 export interface components {
   schemas: {
+    /** Account */
+    Account: {
+      /** Login */
+      login: string
+    }
     /** AdaptationPlan */
     AdaptationPlan: {
       /** Rationale */
       rationale: string
+      behavior_contract: components['schemas']['RetryBehavior'] | null
       target_gap_ids: components['schemas']['FrozenList_Annotated_str__FieldInfo_annotation_NoneType__required_True__metadata___PydanticGeneralMetadata_pattern____a-z__a-z0-9_-__0_63________']
       integration_points: components['schemas']['FrozenList_Ref_']
       production_paths: components['schemas']['FrozenList_Annotated_str__AfterValidator__']
@@ -380,6 +522,7 @@ export interface components {
       /** Selection Reason */
       selection_reason: string
     }
+    FrozenList_Annotated_int__FieldInfo_annotation_NoneType__required_True__metadata__Strict_strict_True___Ge_ge_100___Le_le_599_____: number[]
     FrozenList_Annotated_str__AfterValidator__: string[]
     FrozenList_Annotated_str__AfterValidator___MinLen_min_length_1_: string[]
     FrozenList_Annotated_str__FieldInfo_annotation_NoneType__required_True__metadata__MinLen_min_length_1___MaxLen_max_length_2000______MinLen_min_length_1_: string[]
@@ -577,6 +720,87 @@ export interface components {
       inventory_artifact_id: string
       license_refs: components['schemas']['FrozenList_Ref_']
     }
+    /** RepositoryItem */
+    RepositoryItem: {
+      /** Id */
+      id: number
+      /** Full Name */
+      full_name: string
+      owner: components['schemas']['Account']
+      /** Private */
+      private: boolean
+      /** Default Branch */
+      default_branch: string
+      /** Archived */
+      archived: boolean
+      /** Installation Id */
+      installation_id: number
+      /**
+       * Capability
+       * @default browse_index
+       * @constant
+       */
+      capability: 'browse_index'
+      /**
+       * Support Reason
+       * @default Repository access is indexed. An execution adapter is required for analysis.
+       */
+      support_reason: string
+    }
+    /** RepositoryPage */
+    RepositoryPage: {
+      /** Items */
+      items: components['schemas']['RepositoryItem'][]
+      /** Next Cursor */
+      next_cursor: number | null
+      /** Revision */
+      revision: string | null
+      /**
+       * Sync Status
+       * @enum {string}
+       */
+      sync_status:
+        'not_synced' | 'partial' | 'complete' | 'no_installations' | 'expired' | 'limit_reached'
+      /** Discovered Count */
+      discovered_count: number
+      /** Updated At */
+      updated_at: number | null
+    }
+    /** RetryBehavior */
+    RetryBehavior: {
+      /**
+       * Version
+       * @constant
+       */
+      version: 'retry-v1'
+      /**
+       * Method
+       * @enum {string}
+       */
+      method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'HEAD' | 'PATCH'
+      retry_statuses: components['schemas']['FrozenList_Annotated_int__FieldInfo_annotation_NoneType__required_True__metadata__Strict_strict_True___Ge_ge_100___Le_le_599_____']
+      /** Max Total Attempts */
+      max_total_attempts: number
+      /**
+       * Final Error
+       * @enum {string}
+       */
+      final_error: 'raise_for_status' | 'return_response' | 'suppress'
+      /**
+       * Parsing
+       * @enum {string}
+       */
+      parsing: 'after_success' | 'before_status_check'
+      /**
+       * Transport Errors
+       * @enum {string}
+       */
+      transport_errors: 'propagate' | 'retry' | 'suppress'
+      /** Backoff */
+      backoff: boolean
+      /** Retry After */
+      retry_after: boolean
+    }
     /** RunDetail */
     RunDetail: {
       /** Id */
@@ -725,6 +949,35 @@ export interface components {
        * @enum {string}
        */
       kind: 'fit_select'
+    }
+    /** SessionUser */
+    SessionUser: {
+      /** Id */
+      id: string
+      /** Login */
+      login: string
+      /** Name */
+      name: string | null
+    }
+    /** SessionView */
+    SessionView: {
+      /**
+       * Mode
+       * @enum {string}
+       */
+      mode: 'local' | 'github'
+      /** Authenticated */
+      authenticated: boolean
+      user: components['schemas']['SessionUser'] | null
+      /** Csrf Token */
+      csrf_token: string | null
+      /**
+       * Connection
+       * @enum {string}
+       */
+      connection: 'local' | 'signed_out' | 'connected' | 'reconnect_required'
+      /** Install Url */
+      install_url: string | null
     }
     /** Target */
     Target: {
@@ -914,6 +1167,195 @@ export interface components {
 }
 export type $defs = Record<string, never>
 export interface operations {
+  session_api_session_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['SessionView']
+        }
+      }
+    }
+  }
+  start_api_auth_github_start_get: {
+    parameters: {
+      query?: {
+        return_to?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  callback_api_auth_github_callback_get: {
+    parameters: {
+      query?: {
+        state?: string
+        code?: string
+        error?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  logout_api_auth_logout_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+    }
+  }
+  disconnect_api_auth_disconnect_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+    }
+  }
+  list_repositories_api_repositories_get: {
+    parameters: {
+      query?: {
+        cursor?: number
+        q?: string
+        owner?: string
+        visibility?: 'all' | 'public' | 'private'
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RepositoryPage']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  sync_repositories_api_repositories_sync_post: {
+    parameters: {
+      query?: {
+        restart?: boolean
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RepositoryPage']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
   capabilities_api_capabilities_get: {
     parameters: {
       query?: never
@@ -958,6 +1400,8 @@ export interface operations {
     parameters: {
       query?: {
         cursor?: number
+        q?: string
+        kind?: string | null
       }
       header?: never
       path?: never
@@ -1041,6 +1485,37 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['RunDetail']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  run_status_api_runs__run_id__status_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        run_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RunSummary']
         }
       }
       /** @description Validation Error */

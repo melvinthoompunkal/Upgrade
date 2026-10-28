@@ -9,6 +9,37 @@ current implementation separately from proposed work. Creating this plan does no
 implement authentication, close audit findings, register a GitHub App, or certify a
 new live model run.
 
+## Implementation update: October 28, 2026
+
+The first foundation pass is implemented. The remaining sections retain the original
+planning baseline and release criteria; they must not be read as a claim that the full
+product is delivered. Current evidence is in the new
+[foundation receipt](../audit/full-feature-foundations/report.md); original audits remain unchanged.
+
+| Package | Implemented in this pass | Remaining exit work |
+|---|---|---|
+| F0 | S4-A01–A06 fixes and focused reproductions; typed retry-v1 behavior; strict hash-before-decode capture boundary; independent JSON finalization; physical artifact containment; truthful counts; common CLI/API lock and explicit workflow root/settings | See the new closure receipt; concurrent hostile local path replacement is outside this local boundary |
+| F1 | Transactional schema v3, numeric GitHub identity, hashed expiring sessions, browser-bound single-use auth state, encrypted rotating credentials, CSRF, owner checks on every run/evidence route, private legacy ownership and per-owner idempotency | Real account validation is deferred at the user's request to remain in local mode; hosted security/operations are not certified |
+| F2 | Configurable GitHub App authorization preview, bounded resumable user/App repository sync and browser index with global search/visibility filters | Private credential broker/fetch, App installation tokens, signed webhooks, provider revocation, in-flight cancellation and live grant checks |
+| F3 | Role-qualified public snapshots with project-root prefix; typed python-static-v1 preflight; fresh urllib3 source and HTTPX target inventories | General evidence/discovery and project-specific executable adapters; these examples are browse/index only |
+| F4 | Not implemented | Persistent discovered feature catalog and independent corroboration |
+| F5 | History now queries on the server; URL-backed paging/search, compact status polling, bounded 200-event browser window | Feature catalog all/relevant queries, relevance assessments and scale verification |
+| F6 | Shared local execution exclusion, four active jobs per owner and sixteen globally, disconnected queued-work cancellation and cache invalidation | Leases, fairness, private lifecycle/consent, retention, hard-stop cleanup and hosted isolation |
+| F7–F8 | Not implemented | Frozen acceptance, real patches, repairs, verified diff review/download and optional explicit PR action |
+| F9 | Backend/browser/build verification and public-project preflight recorded for this pass | Full connected-analysis and verified-adaptation release receipts |
+
+The chosen independent examples are [urllib3](https://github.com/urllib3/urllib3) as source
+and [HTTPX](https://github.com/encode/httpx) as target. The fresh preflight pins their actual
+commits and reads their manifests without running repository code or making model calls.
+Run `backend/.venv/Scripts/python.exe scripts/check_public_examples.py` to create a new
+bounded inventory receipt. This is not general target execution support.
+
+Actual connection settings and local migration/rotation instructions are in
+[github-setup.md](github-setup.md). The implementation uses `TOKEN_ENCRYPTION_KEYS`
+(newest-first keyring), superseding the singular proposed key name below. Other proposed
+settings are not consumed unless explicitly documented there. Your existing `.env`
+is unchanged; local mode remains active.
+
 ## 1. Product outcome and scope
 
 The intended experience is:
@@ -39,7 +70,7 @@ deliberate boundaries. Cross-language transfers, framework migrations, automatic
 merging, production deployment of generated code, and arbitrary dependency installation
 remain outside the first full release.
 
-## 2. Evidence reviewed and current implementation
+## 2. Evidence reviewed and implementation at the planning baseline
 
 Status here is based on source inspection and existing receipts. Historical test and
 live-run results are identified as such; no new model/Docker verification was performed
@@ -130,7 +161,11 @@ Keep these regression protections when refactoring. Their original findings rema
 historical records in [audit/report.md](../audit/report.md) and
 [the Phase 2 audit](../audit/phase2-audit/report.md).
 
-### Six Stage 4 findings still open
+### Six Stage 4 findings open at the planning baseline
+
+Implementation update: S4-A01–A06 are repaired in the foundation pass, with new regression
+reproductions in [the closure receipt](../audit/full-feature-foundations/report.md).
+The following table preserves the findings and their required completion evidence.
 
 The [Stage 4 review](../audit/stage4-review/report.md) lists four Medium and two Low
 findings. Inspection of the current implementations still shows the reported patterns.

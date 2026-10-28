@@ -114,6 +114,7 @@ def assessment():
         "criteria": criteria(),
         "adaptation": {
             "rationale": "Retry GET/503 at the existing fetch boundary.",
+            "behavior_contract": None,
             "target_gap_ids": ["missing-retries"],
             "integration_points": [TARGET_REF],
             "production_paths": ["src/crawler.py"],

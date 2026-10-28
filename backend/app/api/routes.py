@@ -25,7 +25,10 @@ router = APIRouter(prefix="/api")
 
 
 def artifacts(request: Request, run_id: str) -> RunArtifacts:
-    return RunArtifacts(request.app.state.artifact_root, request.app.state.runs.row(run_id))
+    return RunArtifacts(
+        request.app.state.artifact_root,
+        request.app.state.runs.row(run_id, owner_id=request.state.principal.owner_id),
+    )
 
 
 @router.get("/capabilities", response_model=Capabilities)
@@ -74,10 +77,13 @@ def create_run(
     allowed = {
         f"http://{host}:{port}" for host in ("127.0.0.1", "localhost") for port in (8000, 5173)
     }
+    allowed.add(request.app.state.settings.app_base_url)
     if (origin and origin not in allowed) or request.headers.get("sec-fetch-site") == "cross-site":
         raise HTTPException(403, "Start runs from the local Upgrade application.")
     if not request.app.state.worker.available:
         raise HTTPException(503, "The local worker is unavailable. Start one backend process.")
+    if request.app.state.settings.auth_mode == "github" and not request.state.principal.connected:
+        raise HTTPException(409, "Reconnect GitHub before starting another run.")
     if (
         body.kind in {"fit_select", "source_trace", "meta_smoke"}
         and not request.app.state.settings.model_configured
@@ -85,16 +91,24 @@ def create_run(
         raise HTTPException(
             409, "Configure MODEL_API_KEY in backend/.env before starting a model run."
         )
-    run = request.app.state.runs.enqueue(body, idempotency_key)
+    run = request.app.state.runs.enqueue(
+        body, idempotency_key, owner_id=request.state.principal.owner_id
+    )
     response.headers["Location"] = f"/api/runs/{run.id}"
     return run
 
 
 @router.get("/runs", response_model=RunPage)
-def list_runs(request: Request, cursor: int = Query(0, ge=0)):
-    runs = request.app.state.runs.summaries()
-    items = runs[cursor : cursor + 30]
-    return RunPage(items=items, next_cursor=cursor + 30 if len(runs) > cursor + 30 else None)
+def list_runs(
+    request: Request,
+    cursor: int = Query(0, ge=0, le=1000000),
+    q: str = Query("", max_length=200),
+    kind: str | None = Query(None, max_length=30),
+):
+    items, next_cursor = request.app.state.runs.page(
+        owner_id=request.state.principal.owner_id, cursor=cursor, query=q, kind=kind
+    )
+    return RunPage(items=items, next_cursor=next_cursor)
 
 
 @router.get("/runs/{run_id}", response_model=RunDetail)
@@ -102,9 +116,15 @@ def run_detail(run_id: str, request: Request):
     return artifacts(request, run_id).detail()
 
 
+@router.get("/runs/{run_id}/status", response_model=RunSummary)
+def run_status(run_id: str, request: Request):
+    row = request.app.state.runs.row(run_id, owner_id=request.state.principal.owner_id)
+    return RunSummary.model_validate_json(row["summary"])
+
+
 @router.get("/runs/{run_id}/events", response_model=EventPage)
 def events(run_id: str, request: Request, after: int = Query(0, ge=0)):
-    items = request.app.state.runs.events(run_id, after)
+    items = request.app.state.runs.events(run_id, after, owner_id=request.state.principal.owner_id)
     return EventPage(items=items, next_cursor=items[-1].sequence if items else after)
 
 

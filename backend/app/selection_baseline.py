@@ -5,8 +5,11 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
+from pydantic import ValidationError
+
 from app.baseline import ACCEPTANCE_FILES, EXPECTED_PASS, EXPECTED_RED, valid_feature_red
 from app.baseline_contracts import BaselineBinding
+from app.capture_metadata import decode_capture
 from app.errors import EvidenceError
 from app.pinned_baseline import (
     CONTROLLER_FILES,
@@ -18,7 +21,6 @@ from app.pinned_baseline import (
 from app.tools.repositories import PinnedRepository
 from app.tools.runner import PROJECT_ROOT, SANDBOX
 from app.tools.runner_artifacts import TestCapture as Capture
-from app.tools.runner_artifacts import TestCase as Case
 from app.tools.runner_artifacts import file_hashes, read_regular_file
 from app.tools.targets import CRAWLER_PREFIX
 
@@ -33,12 +35,15 @@ class SelectionBaseline:
     @classmethod
     def from_run(cls, directory: Path, target: PinnedRepository, image_receipt: Path):
         raw = read_regular_file(directory, "baseline-binding.json")
-        evidence = cls(
-            directory,
-            BaselineBinding.from_w1(json.loads(raw)),
-            hashlib.sha256(raw).hexdigest(),
-            image_receipt,
-        )
+        try:
+            evidence = cls(
+                directory,
+                BaselineBinding.from_w1(json.loads(raw)),
+                hashlib.sha256(raw).hexdigest(),
+                image_receipt,
+            )
+        except (ValueError, TypeError, KeyError, ValidationError):
+            raise EvidenceError("Baseline binding does not match the registered schema.") from None
         evidence.verify(target)
         return evidence
 
@@ -75,14 +80,8 @@ class SelectionBaseline:
             raise EvidenceError("Baseline bytes, acceptance, image receipt, or runner changed.")
         captures = {}
         for bound in b.captures:
-            raw = json.loads(read_regular_file(self.directory, bound.artifact_id))
-            capture = Capture(
-                **{
-                    **raw,
-                    "command": tuple(raw["command"]),
-                    "cases": tuple(Case(**case) for case in raw["cases"]),
-                }
-            )
+            raw = read_regular_file(self.directory, bound.artifact_id)
+            capture = decode_capture(raw, bound.sha256)
             actual = bind_capture(
                 capture, bound.suite, b.image_id, self.directory / f"test-captures/{bound.suite}"
             )

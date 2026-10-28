@@ -1,5 +1,14 @@
 # Stage 4A: target profiling and feature selection
 
+The [foundation implementation receipt](../audit/full-feature-foundations/report.md)
+closes the six subsequent Stage 4 audit findings. New assessments carry a typed
+`retry-v1` behavior contract; the fetch file must occur in proposed production scope.
+Capture hashes are checked before decoding, JSON publication survives optional Markdown
+failure, artifact ancestors are checked before writing, and failure counts are recorded.
+This strengthens selection; it does not implement adaptation. Assessment report metadata
+now records `schema_version_selection: "2"`. Older browser receipts remain readable with
+an explicit unknown/null behavior contract; they cannot prove new acceptance readiness.
+
 The selection command analyzes **one** independently traced Scrapy retry slice against
 the registered Python/HTTPX crawler. It produces an evidence-backed `selected` or
 `no_safe_fit` result. It does not implement the selected feature. The optional 4B

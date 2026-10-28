@@ -16,6 +16,14 @@ design and delivery criteria; it is not a completion receipt for every package.
 To open the frontend, start the backend below, then run `npm ci` and `npm run dev` in
 `frontend/`. Open <http://127.0.0.1:5173>. Requires Node 20.19+ or 22.12+.
 
+The [full feature plan](docs/full-feature-development.md) now has a foundation
+implementation pass: the six Stage 4 audit regressions are repaired, CLI/API execution
+is mutually excluded, history search is server-side, and an optional GitHub connection
+preview adds account ownership, sessions, encrypted credentials and repository indexing.
+Local mode remains the default. See [GitHub setup](docs/github-setup.md) and
+[the implementation receipt](audit/full-feature-foundations/report.md) for exact limits.
+General discovery, private Git retrieval and verified adaptations remain pending.
+
 ## Setup
 
 Requires Python 3.12 and [uv](https://docs.astral.sh/uv/). From the repository root:

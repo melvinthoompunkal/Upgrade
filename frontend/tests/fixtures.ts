@@ -165,7 +165,16 @@ export async function mockApi(page: Page, run: Run = structuredClone(fixtureRun)
   await page.route('http://127.0.0.1:5173/api/**', async (route) => {
     const path = new URL(route.request().url()).pathname
     let body: unknown
-    if (path === '/api/capabilities') body = capabilities
+    if (path === '/api/session')
+      body = {
+        mode: 'local',
+        authenticated: true,
+        user: null,
+        csrf_token: null,
+        connection: 'local',
+        install_url: null,
+      }
+    else if (path === '/api/capabilities') body = capabilities
     else if (path === '/api/targets') body = [target]
     else if (path === '/api/runs' && route.request().method() === 'POST') body = run
     else if (path === '/api/runs') body = { items: [run], next_cursor: null }

@@ -136,7 +136,11 @@ async def _run_configured() -> SmokeReport:
 
 def main() -> int:
     try:
-        report = asyncio.run(_run_configured())
+        from app.execution import ProcessLock
+        from app.tools.runner import PROJECT_ROOT
+
+        with ProcessLock(PROJECT_ROOT / "data/execution.lock"):
+            report = asyncio.run(_run_configured())
     except GraftError as exc:
         print(
             json.dumps(
@@ -151,7 +155,7 @@ def main() -> int:
             file=sys.stderr,
         )
         return 1
-    except ValidationError:
+    except (ValidationError, OSError):
         print(
             json.dumps(
                 {

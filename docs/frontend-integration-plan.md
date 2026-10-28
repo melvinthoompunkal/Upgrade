@@ -7,8 +7,11 @@ Implementation update, October 28: the local React workspace, typed run API, SQL
 queue/history, evidence inspector, tests/logs, exports, and diagnostic entry points
 are implemented. See [the browser workspace guide](frontend.md) for startup and exact
 boundaries. The packages and acceptance matrix below remain the original target
-criteria; U0 audit closure, a unified CLI/API execution lock, hard-kill Docker cleanup,
-and Phase 5 patch/verification work are not claimed complete.
+criteria. The subsequent [foundation implementation receipt](../audit/full-feature-foundations/report.md)
+closes U0 and adds shared CLI/API exclusion, owner-aware API/session boundaries and a
+GitHub repository-index preview. Hard-kill Docker cleanup, the general catalog and
+Phase 5 patch/verification remain pending. The [full feature plan](full-feature-development.md)
+supersedes the original account/private-repository exclusions below.
 
 Build one local application where a developer supplies a source repository, chooses a
 target, describes a goal, and follows the evidence through analysis, selection, and,

@@ -1,6 +1,7 @@
 import asyncio
 from contextlib import asynccontextmanager
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
@@ -13,7 +14,14 @@ from app.api.artifacts import import_history
 from app.api.routes import router
 from app.api.storage import RunStore
 from app.api.worker import LocalWorker
+from app.auth.crypto import CredentialCipher
+from app.auth.github import GitHubClient
+from app.auth.middleware import SessionMiddleware
+from app.auth.repositories import router as repository_router
+from app.auth.routes import router as auth_router
+from app.auth.store import AuthStore
 from app.config import Settings
+from app.selection_artifacts import prepare_directory
 from app.tools.runner import PROJECT_ROOT
 
 
@@ -36,9 +44,15 @@ def create_app(
     async def lifespan(app: FastAPI):
         app.state.settings = settings
         app.state.artifact_root = data_root / "artifacts"
-        app.state.artifact_root.mkdir(parents=True, exist_ok=True)
+        prepare_directory(app.state.artifact_root)
         app.state.runs = RunStore(data_root / "web/runs.sqlite3")
-        await asyncio.to_thread(import_history, app.state.runs, app.state.artifact_root)
+        if settings.auth_mode == "local":
+            await asyncio.to_thread(import_history, app.state.runs, app.state.artifact_root)
+        if settings.auth_mode == "github":
+            app.state.auth = AuthStore(
+                app.state.runs, CredentialCipher(settings.token_encryption_keys.get_secret_value())
+            )
+            app.state.github = GitHubClient(settings)
         app.state.worker = LocalWorker(app.state.runs, app.state.artifact_root, settings)
         if start_worker:
             app.state.worker.start()
@@ -46,9 +60,15 @@ def create_app(
         await asyncio.to_thread(app.state.worker.stop)
 
     application = FastAPI(title="Upgrade", version=__version__, lifespan=lifespan)
+    application.add_middleware(SessionMiddleware)
     application.add_middleware(
-        TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "testserver", "test"]
+        TrustedHostMiddleware,
+        allowed_hosts=["127.0.0.1", "localhost", "testserver", "test"]
+        if settings.auth_mode == "local"
+        else [urlsplit(settings.app_base_url).hostname],
     )
+    application.include_router(auth_router)
+    application.include_router(repository_router)
     application.include_router(router)
 
     @application.get("/health", response_model=HealthResponse)
@@ -56,7 +76,7 @@ def create_app(
         return HealthResponse(
             status="ok",
             version=__version__,
-            phase="source_tracing",
+            phase="connected_analysis_foundations",
             model_provider="meta",
             model_id=settings.meta_model_id,
             model_configured=settings.model_configured,
@@ -74,7 +94,7 @@ def create_app(
         def spa(path: str):
             if (
                 path == ""
-                or path in {"runs", "system"}
+                or path in {"runs", "system", "repositories"}
                 or (
                     path.startswith("runs/")
                     and all(part not in {"..", "."} for part in path.split("/"))

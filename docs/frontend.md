@@ -1,6 +1,9 @@
 # Upgrade browser workspace
 
-The local browser application lives in `frontend/`. It uses React 19, TypeScript,
+The local browser application lives in `frontend/`. Optional GitHub sign-in and repository
+indexing are available as a development preview; see [GitHub setup](github-setup.md).
+Local mode remains the default and the full connected-analysis release is not complete.
+The UI uses React 19, TypeScript,
 Vite 7, Tailwind 4, Phosphor icons, locally packaged IBM Plex fonts, and Motion for
 the evidence drawer. Versions are pinned by `frontend/package-lock.json`.
 
@@ -41,9 +44,10 @@ do not bind it to a public interface. No hosted Site was created.
 - **New run:** supply a public GitHub URL, full source SHA, registered target,
   and goal. The explicit Scrapy example fills its reviewed URL and SHA together.
   Editing the URL clears the SHA. Analysis options include source-only tracing.
-- **Runs:** persisted history, search, workflow filters, pagination, stable URLs,
+- **Runs:** persisted history, global server search, workflow filters, bounded pagination, stable URLs,
   and refresh recovery. Existing known CLI report directories are imported at
-  backend startup and labeled recorded CLI runs. Opening a run does not infer
+  backend startup in local mode and labeled recorded CLI runs. GitHub accounts see only
+  their own runs; existing local receipts are not assigned to them. Opening a run does not infer
   again. Press `N` outside a text field to start a new run.
 - **Workspace:** actual feature cards, controller scores/gates/rejections,
   source-to-target comparison, architecture/gaps/style, dependency and license
@@ -56,6 +60,10 @@ do not bind it to a public interface. No hosted Site was created.
   from an actual connectivity check. No model calls happen on page load.
 - **Changes:** explains that current runs perform analysis only. There is no
   simulated implementation, repair history, patch download, or verified badge.
+- **GitHub preview:** explicit sign-in, account-scoped sessions and repository indexing.
+  Sync/continue loads the current user/App intersection; search and visibility filters
+  operate on the server. Indexed repositories display browse/index support and cannot
+  be submitted as arbitrary analysis targets. Signing out and disconnecting are separate.
 
 The `selected` outcome means the proposed feature passed analysis policy. Retry
 diagnostic assertions may be expected failures and remain distinct from ordinary
@@ -75,8 +83,11 @@ Selection emits progress at actual check/trace/profile/assessment boundaries.
 
 SQLite state is stored under `data/web/`, and reports remain under
 `data/artifacts/`. One process-owned worker executes one workflow at a time,
-with four active/queued slots and idempotent submission keys. An OS lock excludes
-another API worker. Graceful shutdown drains its active workflow. On restart,
+with four active/queued slots per owner, sixteen globally, and per-owner idempotent
+submission keys. OS locks exclude another API worker and concurrent CLI execution.
+The worker waits before claiming while a CLI owns execution. Explicit workflow context
+keeps settings and report roots consistent between CLI/API adapters. Graceful shutdown
+drains its active workflow. On restart,
 running jobs whose prior worker stopped are marked interrupted; paid analysis is
 never replayed automatically. Queued work can be claimed normally. Run IDs in the
 API identify queue records; controller report IDs remain in exported provenance.
@@ -109,19 +120,22 @@ backend/.venv/Scripts/python.exe -m pytest backend/tests
 API tests cover validation, duplicate submissions, queue limits, event cursors,
 persistence, worker ownership/restart handling, changed reports/artifacts,
 redacted exports, read-backed excerpts, and shared-service result publication.
-These tests do not call Meta or Docker.
+These tests do not call Meta or Docker. The new foundation tests also cover auth replay,
+browser binding, CSRF, token refresh/rotation, two-owner isolation on result surfaces,
+legacy migration, multi-page repository sync, stale cache and disconnect races. The
+browser uses compact status polling and retains at most 200 recent events.
 
 ## Remaining backend milestones
 
 This delivers the local frontend and its browser bridge, not completion of every
-package in the original integration plan. Stage 4 audit findings U0 remain tracked
-in `audit/stage4-review/report.md`; they must be resolved before autonomous patching.
+package in the original integration plan. Stage 4 audit findings U0 are repaired;
+the original review remains historical and the [new closure receipt](../audit/full-feature-foundations/report.md)
+records the reproductions and verification.
 The Phase 5 planner/Implementer/Verifier, expanded feature catalog, public targets,
 and arbitrary local targets remain unavailable.
 
 The worker is a thread owned by the local API process, rather than a distributed
-worker service. CLI entry points do not yet share the API execution lock: avoid
-launching concurrent CLI workflows while browser analysis runs. Hard process
+worker service. CLI entry points now share the API execution lock. Hard process
 termination does not perform Docker cleanup; inspect and stop any owned leftover
 runner container before starting a replacement execution. Do not treat SQLite
 queue persistence as resumable model execution or a production deployment system.

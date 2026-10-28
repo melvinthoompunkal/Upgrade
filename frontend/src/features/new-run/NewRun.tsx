@@ -1,4 +1,4 @@
-import { useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   ArrowRight,
@@ -22,11 +22,20 @@ const SCRAPY_URL = 'https://github.com/scrapy/scrapy'
 const SCRAPY_SHA = '5c7886a3f27dbf8b66f557cc9945dbc4a6aceaac'
 
 export function NewRun() {
-  const { capabilities, targets, history, error, refresh, loading } = useWorkspace()
+  const { capabilities, targets, history, error, refresh, loading, session } = useWorkspace()
   const navigate = useNavigate()
-  const [source, setSource] = useState('')
-  const [sha, setSha] = useState('')
-  const [goal, setGoal] = useState('')
+  const draftKey = `upgrade-run-draft:${session?.user?.id ?? 'local'}`
+  const [draft] = useState<Record<string, string>>(() => {
+    try {
+      const value = JSON.parse(sessionStorage.getItem(draftKey) ?? '{}')
+      return value && typeof value === 'object' ? value : {}
+    } catch {
+      return {}
+    }
+  })
+  const [source, setSource] = useState(typeof draft.source === 'string' ? draft.source : '')
+  const [sha, setSha] = useState(typeof draft.sha === 'string' ? draft.sha : '')
+  const [goal, setGoal] = useState(typeof draft.goal === 'string' ? draft.goal : '')
   const [targetId, setTargetId] = useState('crawler-demo')
   const [kind, setKind] = useState<'fit_select' | 'source_trace'>('fit_select')
   const [optionsOpen, setOptionsOpen] = useState(false)
@@ -41,6 +50,14 @@ export function NewRun() {
     capabilities?.model_configured &&
     capabilities.worker_available &&
     (kind === 'source_trace' || capabilities.image_receipt_present)
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(draftKey, JSON.stringify({ source, sha, goal }))
+    } catch {
+      /* Browser storage may be disabled. */
+    }
+  }, [draftKey, source, sha, goal])
 
   function useExample() {
     setSource(SCRAPY_URL)
@@ -88,6 +105,11 @@ export function NewRun() {
     setSubmitError('')
     try {
       const run = await createRun(request, submission.current.key)
+      try {
+        sessionStorage.removeItem(draftKey)
+      } catch {
+        /* Draft storage is optional. */
+      }
       refresh()
       navigate(`/runs/${run.id}/overview`)
     } catch (reason) {

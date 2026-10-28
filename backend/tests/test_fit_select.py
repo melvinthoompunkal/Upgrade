@@ -261,3 +261,89 @@ def test_cli_exit_semantics(monkeypatch, status, code):
     monkeypatch.setattr(fit_select, "record_fit_selection", record)
     monkeypatch.setattr("sys.argv", ["graft-fit-select"])
     assert fit_select.main() == code
+
+
+def test_optional_markdown_failure_preserves_structured_failure(tmp_path, monkeypatch):
+    monkeypatch.setattr(fit_select, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(
+        fit_select, "Settings", lambda: Settings(_env_file=None, model_api_key=None)
+    )
+    publish = ArtifactStore.publish
+
+    def fail_markdown(store, name, content):
+        if name == "report.md":
+            raise PermissionError("private path and error body")
+        return publish(store, name, content)
+
+    monkeypatch.setattr(ArtifactStore, "publish", fail_markdown)
+    report, path = asyncio.run(fit_select.record_fit_selection(argparse.Namespace(goal="retry")))
+    assert json.loads(path.read_text()) == report
+    assert report["error_code"] == "missing_configuration"
+    assert "report.md" in report["unavailable_artifacts"]
+    assert "private path" not in path.read_text()
+
+
+def test_failure_counts_agree_in_json_and_markdown(tmp_path, monkeypatch):
+    monkeypatch.setattr(fit_select, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(
+        fit_select, "Settings", lambda: Settings(_env_file=None, model_api_key=None)
+    )
+    report, path = asyncio.run(fit_select.record_fit_selection(argparse.Namespace(goal="retry")))
+    assert report["analyzed_feature_count"] == 0
+    text = path.with_suffix(".md").read_text()
+    assert "Analyzed source features: **0**" in text
+    assert "Eligible features: **0**" in text
+
+
+def test_unwritable_output_cli_has_sanitized_terminal_diagnostic(tmp_path, monkeypatch, capsys):
+    (tmp_path / "data").write_text("blocks artifact directory creation")
+    monkeypatch.setattr(fit_select, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr("sys.argv", ["graft-fit-select"])
+    assert fit_select.main() == 1
+    output = capsys.readouterr()
+    assert not output.out
+    error = json.loads(output.err)
+    assert error["error_code"] in {"publication_failed", "selection_failed"}
+    assert str(tmp_path) not in output.err
+
+
+@pytest.mark.parametrize("change", ["missing", "extra", "type"])
+def test_damaged_capture_is_retained_as_invalid_evidence(workflow, monkeypatch, change):
+    from app.selection_baseline import SelectionBaseline
+
+    args, _ = workflow
+    from_run = SelectionBaseline.from_run
+
+    def corrupt(directory, target, image):
+        path = directory / "test-captures/baseline/capture.json"
+        data = json.loads(path.read_text())
+        if change == "missing":
+            del data["diagnostic"]
+        elif change == "extra":
+            data["unexpected"] = "untrusted data"
+        else:
+            data["elapsed_ms"] = {"wrong": "shape"}
+        path.write_text(json.dumps(data))
+        return from_run(directory, target, image)
+
+    monkeypatch.setattr(SelectionBaseline, "from_run", corrupt)
+    report, path = asyncio.run(fit_select.record_fit_selection(args))
+    assert report["error_code"] == "invalid_evidence"
+    assert json.loads(path.read_text())["status"] == "failed"
+    assert "test-captures/baseline/capture.json" not in report["artifact_hashes"]
+    # The same retained failure is inspectable through the actual API projection.
+    from fastapi.testclient import TestClient
+
+    from app.main import create_app
+
+    with TestClient(
+        create_app(settings(), data_root=path.parent.parent.parent, start_worker=False)
+    ) as client:
+        run = next(
+            item
+            for item in client.get("/api/runs").json()["items"]
+            if item["id"] == report["run_id"]
+        )
+        detail = client.get(f"/api/runs/{run['id']}").json()
+        assert detail["error"]["code"] == "invalid_evidence"
+        assert detail["analyzed_feature_count"] == 0

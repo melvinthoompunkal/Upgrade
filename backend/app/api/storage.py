@@ -1,7 +1,6 @@
 """A bounded SQLite queue and ordered events for one local worker."""
 
 import hashlib
-import json
 import sqlite3
 from contextlib import contextmanager
 from datetime import UTC, datetime
@@ -11,6 +10,8 @@ from uuid import uuid4
 from fastapi import HTTPException
 
 from app.api.contracts import Event, RunRequest, RunSummary
+from app.api.migrations import LOCAL_OWNER, migrate
+from app.selection_artifacts import prepare_directory
 
 
 def now() -> str:
@@ -20,22 +21,11 @@ def now() -> str:
 class RunStore:
     def __init__(self, path: Path):
         self.path = path
-        path.parent.mkdir(parents=True, exist_ok=True)
+        prepare_directory(path.parent)
+        if path.is_symlink() or path.is_junction():
+            raise ValueError("The run database must be a regular local file.")
         with self.connect() as db:
-            db.executescript("""
-                PRAGMA journal_mode=WAL;
-                CREATE TABLE IF NOT EXISTS runs (
-                    id TEXT PRIMARY KEY, key TEXT UNIQUE, fingerprint TEXT,
-                    request TEXT, summary TEXT NOT NULL, report TEXT, digest TEXT
-                );
-                CREATE TABLE IF NOT EXISTS events (
-                    sequence INTEGER PRIMARY KEY AUTOINCREMENT, run_id TEXT NOT NULL,
-                    timestamp TEXT NOT NULL, stage TEXT NOT NULL, message TEXT NOT NULL
-                );
-                CREATE UNIQUE INDEX IF NOT EXISTS unique_report ON runs(report)
-                    WHERE report IS NOT NULL;
-                PRAGMA user_version=1;
-            """)
+            migrate(db)
 
     @contextmanager
     def connect(self):
@@ -54,23 +44,26 @@ class RunStore:
             (run_id, now(), stage, message),
         )
 
-    def enqueue(self, request: RunRequest, key: str) -> RunSummary:
+    def enqueue(self, request: RunRequest, key: str, *, owner_id: str = LOCAL_OWNER) -> RunSummary:
         body = request.model_dump_json()
         fingerprint = hashlib.sha256(body.encode()).hexdigest()
         with self.connect() as db:
             db.execute("BEGIN IMMEDIATE")
-            previous = db.execute("SELECT * FROM runs WHERE key=?", (key,)).fetchone()
+            previous = db.execute(
+                "SELECT * FROM runs WHERE owner_id=? AND key=?", (owner_id, key)
+            ).fetchone()
             if previous:
                 if previous["fingerprint"] != fingerprint:
                     raise HTTPException(
                         409, "This submission key already belongs to different inputs."
                     )
                 return RunSummary.model_validate_json(previous["summary"])
-            active = sum(
-                json.loads(row[0])["status"] != "finished"
-                for row in db.execute("SELECT summary FROM runs")
-            )
-            if active >= 4:
+            active, owned = db.execute(
+                """SELECT count(*),coalesce(sum(owner_id=?),0) FROM runs
+                WHERE json_extract(summary,'$.status')!='finished'""",
+                (owner_id,),
+            ).fetchone()
+            if active >= 16 or owned >= 4:
                 raise HTTPException(429, "The local queue is full. Wait for a run to finish.")
             title = getattr(request, "goal", None) or {
                 "meta_smoke": "Meta connectivity check",
@@ -87,22 +80,58 @@ class RunStore:
                 updated_at=now(),
             )
             db.execute(
-                "INSERT INTO runs(id,key,fingerprint,request,summary) VALUES (?,?,?,?,?)",
-                (summary.id, key, fingerprint, body, summary.model_dump_json()),
+                "INSERT INTO runs(id,key,fingerprint,request,summary,owner_id) "
+                "VALUES (?,?,?,?,?,?)",
+                (summary.id, key, fingerprint, body, summary.model_dump_json(), owner_id),
             )
             self.event(db, summary.id, "inputs", "Queued for the local worker.")
             return summary
 
-    def row(self, run_id: str):
+    def row(self, run_id: str, *, owner_id: str | None = None):
         with self.connect() as db:
             row = db.execute("SELECT * FROM runs WHERE id=?", (run_id,)).fetchone()
-        if row is None:
+        if row is None or (owner_id is not None and row["owner_id"] != owner_id):
             raise HTTPException(404, "Run not found.")
         return row
 
-    def summaries(self) -> list[RunSummary]:
+    def page(
+        self,
+        *,
+        owner_id: str,
+        cursor: int = 0,
+        query: str = "",
+        kind: str | None = None,
+        limit: int = 30,
+    ) -> tuple[list[RunSummary], int | None]:
+        conditions, values = ["owner_id=?"], [owner_id]
+        if query:
+            conditions.append(
+                "instr(lower(json_extract(summary,'$.title')||' '||id||' '||"
+                "coalesce(json_extract(summary,'$.outcome'),'')),lower(?))>0"
+            )
+            values.append(query)
+        if kind:
+            conditions.append("json_extract(summary,'$.kind')=?")
+            values.append(kind)
         with self.connect() as db:
-            rows = db.execute("SELECT summary FROM runs").fetchall()
+            rows = db.execute(
+                "SELECT summary FROM runs WHERE "
+                + " AND ".join(conditions)
+                + " ORDER BY json_extract(summary,'$.created_at') DESC,id DESC LIMIT ? OFFSET ?",
+                (*values, limit + 1, cursor),
+            ).fetchall()
+        return (
+            [RunSummary.model_validate_json(row[0]) for row in rows[:limit]],
+            cursor + limit if len(rows) > limit else None,
+        )
+
+    def summaries(self, *, status: str | None = None) -> list[RunSummary]:
+        with self.connect() as db:
+            rows = db.execute(
+                "SELECT summary FROM runs"
+                + (" WHERE json_extract(summary,'$.status')=?" if status else ""),
+                (status,) if status else (),
+            ).fetchall()
         return sorted(
             (RunSummary.model_validate_json(row[0]) for row in rows),
             key=lambda item: item.created_at,
@@ -125,11 +154,23 @@ class RunStore:
             db.execute("UPDATE runs SET summary=? WHERE id=?", (updated.model_dump_json(), run_id))
             self.event(db, run_id, stage, message)
 
-    def claim(self):
+    def claim(self, *, mode: str = "local"):
         with self.connect() as db:
             db.execute("BEGIN IMMEDIATE")
+            owner_filter = (
+                "owner_id=?"
+                if mode == "local"
+                else (
+                    "owner_id!=? AND EXISTS (SELECT 1 FROM users "
+                    "WHERE users.id=runs.owner_id AND users.connected=1)"
+                )
+            )
             rows = db.execute(
-                "SELECT * FROM runs WHERE request IS NOT NULL ORDER BY rowid"
+                "SELECT * FROM runs WHERE request IS NOT NULL "
+                "AND json_extract(summary,'$.status')='queued' AND "
+                + owner_filter
+                + " ORDER BY rowid LIMIT 1",
+                (LOCAL_OWNER,),
             ).fetchall()
             for row in rows:
                 summary = RunSummary.model_validate_json(row["summary"])
@@ -151,6 +192,30 @@ class RunStore:
                 return row
         return None
 
+    def cancel_queued(self, owner_id: str) -> None:
+        with self.connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            rows = db.execute(
+                "SELECT id,summary FROM runs WHERE owner_id=? "
+                "AND json_extract(summary,'$.status')='queued'",
+                (owner_id,),
+            ).fetchall()
+            for row in rows:
+                summary = RunSummary.model_validate_json(row["summary"])
+                updated = summary.model_copy(
+                    update={
+                        "status": "finished",
+                        "stage": "complete",
+                        "outcome": "cancelled",
+                        "updated_at": now(),
+                        "revision": summary.revision + 1,
+                    }
+                )
+                db.execute(
+                    "UPDATE runs SET summary=? WHERE id=?", (updated.model_dump_json(), row["id"])
+                )
+                self.event(db, row["id"], "complete", "Cancelled after GitHub disconnect.")
+
     def attach(self, run_id: str, relative: str, digest: str) -> None:
         with self.connect() as db:
             db.execute("UPDATE runs SET report=?,digest=? WHERE id=?", (relative, digest, run_id))
@@ -162,8 +227,8 @@ class RunStore:
                 (summary.id, summary.model_dump_json(), relative, digest),
             )
 
-    def events(self, run_id: str, after: int) -> list[Event]:
-        self.row(run_id)
+    def events(self, run_id: str, after: int, *, owner_id: str | None = None) -> list[Event]:
+        self.row(run_id, owner_id=owner_id)
         with self.connect() as db:
             rows = db.execute(
                 "SELECT * FROM events WHERE run_id=? AND sequence>? ORDER BY sequence LIMIT 100",

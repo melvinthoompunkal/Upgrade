@@ -9,6 +9,7 @@ from test_meta_client import completion, settings
 from test_target_profiler import finalized_profile, read_all, ref  # noqa: F401
 
 from app import fit_matcher
+from app.behavior_contracts import REGISTERED_RETRY
 from app.errors import BudgetError, EvidenceError
 from app.evidence_contracts import SourceTrace
 from app.fit_matcher import FitMatcher
@@ -121,6 +122,7 @@ def batch_data(matcher, rating=5):
                 },
                 "adaptation": {
                     "rationale": "Bound three GET attempts in fetch",
+                    "behavior_contract": REGISTERED_RETRY.model_dump(mode="json"),
                     "target_gap_ids": ["retry-503"],
                     "integration_points": [fetch],
                     "production_paths": ["src/crawler.py"],
@@ -287,3 +289,40 @@ def test_shared_budget_does_not_reset_for_matching(matching_context):
             assert budget.requests == 1
 
     asyncio.run(run())
+
+
+def test_disconnected_helper_cannot_claim_fetch_integration(matching_context):
+    data = batch_data(matching_context)
+    plan = data["assessments"][0]["adaptation"]
+    plan["production_paths"] = plan["new_production_paths"] = ["src/retry_helper.py"]
+    result, _ = matching_context.select(AssessmentBatch.model_validate(data))
+    assert result.selected_feature_id is None
+    assert not next(g.passed for g in result.candidates[0].gates if g.name == "isolated_adaptation")
+    plan["production_paths"] = ["src/retry_helper.py", "src/crawler.py"]
+    result, _ = matching_context.select(AssessmentBatch.model_validate(data))
+    assert result.selected_feature_id == "bounded-retries"
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("method", "POST"),
+        ("retry_statuses", [404]),
+        ("max_total_attempts", 99),
+        ("final_error", "suppress"),
+        ("parsing", "before_status_check"),
+        ("transport_errors", "retry"),
+        ("backoff", True),
+        ("retry_after", True),
+    ],
+)
+def test_prose_cannot_override_mismatched_behavior_contract(matching_context, field, value):
+    data = batch_data(matching_context)
+    plan = data["assessments"][0]["adaptation"]
+    plan["rationale"] = "GET/503, exactly three attempts, raise_for_status before parsing."
+    plan["behavior_contract"][field] = value
+    result, _ = matching_context.select(AssessmentBatch.model_validate(data))
+    assert result.selected_feature_id is None
+    assert not next(
+        g.passed for g in result.candidates[0].gates if g.name == "acceptance_readiness"
+    )

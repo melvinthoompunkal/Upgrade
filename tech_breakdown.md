@@ -12,6 +12,11 @@ storage and export a patch with unchanged-test red-to-green verification. The br
 catalog, real repository planner, Implementer, and Verifier/Fixer remain pending.
 A local frontend and persistent browser bridge now expose the existing workflows;
 see [the browser workspace guide](docs/frontend.md) for current scope and limitations.
+The [foundation implementation receipt](audit/full-feature-foundations/report.md)
+records closure of the six Stage 4 audit findings, shared CLI/API execution exclusion,
+owner-scoped APIs/sessions and an optional GitHub authorization/repository-index preview.
+Local mode remains active; the full account/catalog/adaptation roadmap is in
+[full-feature-development.md](docs/full-feature-development.md).
 The [frontend integration plan](docs/frontend-integration-plan.md)
 defines the proposed user experience, design, API bridge, and delivery packages U0–U6.
 
@@ -792,10 +797,10 @@ Its working directory also contains managed repositories, the exact exported `sn
 and protected diagnostic `acceptance/`. Not every internal directory is a downloadable
 artifact. Failed runs can have only a subset; consult the final verified manifest.
 
-Planned additions are `frontend/`, `backend/app/api/`, shared orchestration/worker services,
-SQLite storage and later patch/verification modules. None exists merely because its
-name appears in a design tree. The [frontend plan](docs/frontend-integration-plan.md)
-defines the proposed layout. Keep frozen acceptance artifacts outside the production
+`frontend/`, `backend/app/api/`, shared workflow context/worker services, SQLite history,
+and optional GitHub identity/repository-index modules are implemented. General catalog
+and patch/verification modules remain planned. The [frontend plan](docs/frontend-integration-plan.md)
+retains the design criteria. Keep frozen acceptance artifacts outside the production
 worktree; future patch tools must not be able to edit them.
 
 ## 9. Remaining delivery sequence
@@ -806,13 +811,13 @@ calendar dates must be estimated from the chosen implementation scope.
 
 | Work | Current state | Required next result |
 |---|---|---|
-| Stage 4 audit remediation / frontend U0 | Six findings open | Meaningful regression cases and corrected policy, capture, finalization, containment and count behavior |
-| Shared workflow services / U1 | CLI controllers exist | Typed requests/context and progress sink reused by CLI and API |
-| Durable run API and worker / U2 | Not implemented | Saved runs, idempotent queueing, sequenced events, recovery, manifest-backed downloads |
-| Main browser experience / U3–U4 | Plan written | Source/target/goal form, history, overview, all actual features, profile/citations, tests and system checks |
+| Stage 4 audit remediation / frontend U0 | Repaired with new regression reproductions | See the foundation closure receipt; original audits remain historical |
+| Shared workflow services / U1 | Typed inputs/context, progress and shared CLI/API execution lock implemented | Hard-stop recovery/cleanup remains a separate milestone |
+| Durable run API and worker / U2 | Implemented locally, now owner scoped | Hosted leases, fairness, retention and private-code lifecycle |
+| Main browser experience / U3–U4 | Delivered for the sample workflows; GitHub repository-index preview added | General supported target adapters and a persistent feature catalog |
 | Phase 5 backend | Handoff/specifications only | Real planner, finalized frozen acceptance, safe generated patch, actual scope/dependency limits, green/regression and capped repair |
 | Adaptation UI / U5 | Depends on Phase 5 | Actual diff, source-to-target mapping, acceptance/red/green/regression and repair history |
-| Usability/live verification / U6 | Planned | Responsive/keyboard/failure/reconnect checks, fresh browser-driven real run and independently checked exports |
+| Usability/live verification / U6 | Local build, browser/mobile, API and baseline receipts exist | Real GitHub App sign-in, fresh complete catalog/adaptation release checks |
 | Optional 4B | Pending | Independently traced depth/duplicate slices, honest comparisons and measured combined budget |
 
 A usable selection UI can ship before the patch backend. Full adaptation controls depend
@@ -859,9 +864,10 @@ current implementation defects are listed in the status reference above.
 | Stage 4 W1 | Exact pinned target export and test/capture/image/input binding | [W1 documentation](docs/stage4-w1.md), [report](audit/stage4-w1-report.md) |
 | Stage 4 W2 | Immutable target/profile/assessment/gate/score/result and baseline-binding contracts | [W2 documentation](docs/stage4-w2.md), [report](audit/stage4-w2-report.md) |
 | Stage 4 W3–W6 / 4A | Real Target Profiler and Matcher, complete one-candidate selection CLI, artifacts and recorded live verification | [Stage 4 documentation](docs/stage4.md), [report](audit/stage4-report.md) |
-| Frontend planning | Graft UI inspection, distinct design/wireframes, capability coverage, API/worker/storage design and delivery/verification plan | [Frontend integration plan](docs/frontend-integration-plan.md) |
+| Frontend and persistent API | React workspace, saved runs/events, evidence, system checks and exports; owner/session boundaries and GitHub repository-index preview | [Browser guide](docs/frontend.md), [foundation receipt](audit/full-feature-foundations/report.md) |
 
 The first three coding tasks are complete, and Stage 4A selection is delivered with
-the listed audit follow-ups. Optional 4B, Phase 5 adaptation, persistent run API and the
-frontend are not implemented. This breakdown now records that boundary; it does not
-authorize or claim completion of those future components.
+the foundation audit repairs. The persistent local API and frontend are implemented.
+Optional 4B, general feature discovery/relevance, private retrieval, hosted operation and
+Phase 5 adaptation remain pending. Their release requirements are tracked in the full
+feature plan; the connection preview is not a completed full-product release.

@@ -322,6 +322,11 @@ class RunArtifacts:
     def detail(self) -> RunDetail:
         values = self.summary.model_dump()
         report = self.report
+        self.warnings.extend(
+            public_text(warning[:2000])
+            for warning in report.get("warnings", [])[:20]
+            if isinstance(warning, str)
+        )
         values.update(
             goal=report.get("goal", ""),
             target_path_prefix=report.get("target_path_prefix"),
@@ -344,6 +349,10 @@ class RunArtifacts:
             data = self.load(name)
             if data is not None:
                 try:
+                    if key == "assessment":
+                        # Older receipts are readable; an absent contract proves no readiness.
+                        for item in data.get("assessments", []):
+                            item.get("adaptation", {}).setdefault("behavior_contract", None)
                     values[key] = model.model_validate(data)
                 except ValidationError:
                     self.warnings.append(f"{name} does not match its domain contract.")

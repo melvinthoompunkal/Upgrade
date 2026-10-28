@@ -3,6 +3,14 @@
 from dataclasses import dataclass
 from pathlib import Path
 
+from app.config import Settings
+
+
+@dataclass(frozen=True)
+class WorkflowContext:
+    artifact_root: Path
+    settings: Settings
+
 
 @dataclass(frozen=True)
 class TraceInputs:

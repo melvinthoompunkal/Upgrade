@@ -296,11 +296,14 @@ def main() -> int:
     )
     args = parser.parse_args()
     try:
-        directory = PROJECT_ROOT / "data/artifacts" / f"pinned-baseline-{uuid4().hex}"
-        directory.mkdir(parents=True)
-        manager = RepositoryManager(directory / "repositories")
-        target, original = manager.local_target(registered_target(PROJECT_ROOT, "crawler-demo"))
-        report, path = record_pinned_baseline(target, original, directory, args.image_receipt)
+        from app.execution import ProcessLock
+
+        with ProcessLock(PROJECT_ROOT / "data/execution.lock"):
+            directory = PROJECT_ROOT / "data/artifacts" / f"pinned-baseline-{uuid4().hex}"
+            directory.mkdir(parents=True)
+            manager = RepositoryManager(directory / "repositories")
+            target, original = manager.local_target(registered_target(PROJECT_ROOT, "crawler-demo"))
+            report, path = record_pinned_baseline(target, original, directory, args.image_receipt)
     except (GraftError, OSError, ValueError) as error:
         print(
             json.dumps(

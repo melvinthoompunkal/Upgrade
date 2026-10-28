@@ -171,7 +171,7 @@ export function RunWorkspace() {
           Run activity
           <span>
             {events.length
-              ? `${events.length} recorded events`
+              ? `${events.length} recent events (up to 200 shown)`
               : run.historical
                 ? 'Historical receipt'
                 : 'No events yet'}

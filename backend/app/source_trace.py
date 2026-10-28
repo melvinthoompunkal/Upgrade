@@ -13,6 +13,7 @@ from pydantic import ValidationError
 
 from app.config import Settings
 from app.errors import GraftError
+from app.execution import ProcessLock
 from app.models.meta_client import MetaClient
 from app.tools.evidence import EvidenceSession
 from app.tools.repositories import (
@@ -25,7 +26,7 @@ from app.tools.repositories import (
 from app.tools.runner import PROJECT_ROOT
 from app.tools.runner_artifacts import file_hashes
 from app.tracer import SourceTracer
-from app.workflow_inputs import TraceInputs
+from app.workflow_inputs import TraceInputs, WorkflowContext
 
 
 def write_json(path: Path, data: dict) -> str:
@@ -34,9 +35,11 @@ def write_json(path: Path, data: dict) -> str:
     return hashlib.sha256(content).hexdigest()
 
 
-async def record_source_trace(args: TraceInputs) -> tuple[dict, Path]:
+async def record_source_trace(
+    args: TraceInputs, *, context: WorkflowContext | None = None
+) -> tuple[dict, Path]:
     run_id = f"source-trace-{uuid4().hex}"
-    directory = PROJECT_ROOT / "data" / "artifacts" / run_id
+    directory = (context.artifact_root if context else PROJECT_ROOT / "data/artifacts") / run_id
     directory.mkdir(parents=True)
     report_path = directory / "report.json"
     report = {
@@ -55,7 +58,7 @@ async def record_source_trace(args: TraceInputs) -> tuple[dict, Path]:
                 for p in sorted((PROJECT_ROOT / "backend/app").rglob("*.py"))
             ),
         )
-        settings = Settings()
+        settings = context.settings if context else Settings()
         # Check configuration before retrieval; no secrets enter Git or target processes.
         client = MetaClient(settings)
         async with client:
@@ -210,7 +213,23 @@ def main() -> int:
         default="Adapt bounded HTTP status retries into the existing HTTPX GET fetch boundary.",
     )
     args = parser.parse_args()
-    report, path = asyncio.run(record_source_trace(TraceInputs(**vars(args))))
+    try:
+        with ProcessLock(PROJECT_ROOT / "data/execution.lock"):
+            report, path = asyncio.run(record_source_trace(TraceInputs(**vars(args))))
+    except (GraftError, OSError, ValueError) as error:
+        print(
+            json.dumps(
+                {
+                    "status": "failed",
+                    "error_code": error.code if isinstance(error, GraftError) else "trace_failed",
+                    "detail": str(error)
+                    if isinstance(error, GraftError)
+                    else "Unable to prepare or publish source evidence.",
+                }
+            ),
+            file=sys.stderr,
+        )
+        return 1
     print(
         json.dumps(
             {

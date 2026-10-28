@@ -7,6 +7,7 @@ import sys
 from openai.types.chat import ChatCompletionMessageParam
 
 from app.baseline import valid_feature_red
+from app.behavior_contracts import REGISTERED_RETRY
 from app.errors import EvidenceError, ModelOutputError
 from app.evidence_contracts import SourceTrace
 from app.evidence_tools import EvidenceTools
@@ -28,7 +29,7 @@ from app.target_profiler import RETRY_GAP, cites_symbol, inspect_target
 from app.tools.evidence import EvidenceSession
 from app.tools.repositories import SCRAPY_SHA, SCRAPY_URL
 
-MATCH_PROMPT_VERSION = "fit-match-v1"
+MATCH_PROMPT_VERSION = "fit-match-v2"
 SOURCE_POLICY_VERSION = "scrapy-bsd3-v1"
 # Reviewed complete notice at the registered immutable source commit; changes fail closed.
 SCRAPY_NOTICE_SHA256 = "fd331af3ccb8776bbe7f317821e5e0b91c2ab7c73464e77425d52204f7b5d980"
@@ -117,6 +118,9 @@ class FitMatcher:
                     "Propose only GET/503 retries with three total attempts. Other status codes "
                     "from source defaults are outside this acceptance contract. Keep the final "
                     "raise_for_status before parsing, including after exhausted attempts. "
+                    "Set behavior_contract to the exact supplied registered_behavior object "
+                    "only if the proposed behavior matches it; otherwise describe the actual "
+                    "behavior with the typed fields or use null when unknown. "
                     "Already-present duplicate visits cannot win. At most ONE clarification turn, "
                     "up to 8 source_read_range/target_read_range calls; no further exploration. "
                     "References must use exact qualified symbols or null. Return concise reasons."
@@ -128,6 +132,7 @@ class FitMatcher:
                     {
                         "goal": goal,
                         "policy": "fit-v1",
+                        "registered_behavior": REGISTERED_RETRY.model_dump(mode="json"),
                         "analyzed_feature_count": len(self.trace.features),
                         "source": self.source.repo.snapshot.model_dump(mode="json"),
                         "target": self.target.repo.snapshot.model_dump(mode="json"),
@@ -212,6 +217,7 @@ class FitMatcher:
             and cites_symbol(
                 self.target, plan.integration_points, "src/crawler.py", "Crawler.fetch"
             )
+            and "src/crawler.py" in plan.production_paths
         )
         deps = not (plan.runtime_dependency_additions or plan.requires_new_service)
         # A claimed zero-dependency plan still needs explicit existing-API evidence.
@@ -271,8 +277,8 @@ class FitMatcher:
             ),
             (
                 "acceptance_readiness",
-                registered_slice,
-                "Only registered bounded retry slice has acceptance",
+                registered_slice and plan.behavior_contract == REGISTERED_RETRY,
+                "Exact retry-v1 GET/503, three-attempt, final-error and parsing contract required",
             ),
             (
                 "sufficient_coverage",

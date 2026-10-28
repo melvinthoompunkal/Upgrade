@@ -104,11 +104,21 @@ class RepositoryManager:
         self.git = Git(self.directory / "control")
 
     def public_source(self, url: str, sha: str) -> PinnedRepository:
+        return self.public_snapshot(url, sha, role="source")
+
+    def public_snapshot(
+        self, url: str, sha: str, *, role: str, prefix: str = ""
+    ) -> PinnedRepository:
+        """Pin public project data for either role, without enabling executable support."""
+        if role not in {"source", "target"}:
+            raise RepositoryError("Snapshot role must be source or target.")
+        if prefix:
+            validate_repo_path(prefix)
         if not re.fullmatch(r"https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(?:\.git)?", url):
             raise RepositoryError("Only public HTTPS GitHub repository URLs are supported.")
         if not re.fullmatch(r"[0-9a-f]{40}(?:[0-9a-f]{24})?", sha):
             raise RepositoryError("Source revision must be a full commit SHA.")
-        storage = self.directory / "source.git"
+        storage = self.directory / f"{role}.git"
         self.git.run("init", "--bare", "--template=", str(storage))
         self.git.run(
             "fetch", "--depth=1", "--no-tags", "--no-recurse-submodules", url, sha, cwd=storage
@@ -118,7 +128,7 @@ class RepositoryManager:
             raise RepositoryError("Fetched source did not match the requested SHA.")
         self.git.run("update-ref", "refs/heads/pinned", sha, cwd=storage)
         self.git.run("symbolic-ref", "HEAD", "refs/heads/pinned", cwd=storage)
-        return self._inventory(storage, "source", url, sha)
+        return self._inventory(storage, role, url, sha, prefix)
 
     def local_target(self, registration: Registration) -> tuple[PinnedRepository, dict]:
         root = physical_root(registration.root)

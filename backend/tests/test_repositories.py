@@ -123,3 +123,27 @@ def test_public_fetch_pins_exact_requested_commit(committed_repo, tmp_path, monk
     assert repo.snapshot.commit_sha == sha
     assert repo.read("src/retry.py").startswith("import time")
     repo.verify()
+
+
+def test_public_target_snapshot_is_independent_and_preserves_project_prefix(
+    committed_repo, tmp_path, monkeypatch
+):
+    root, git = committed_repo
+    sha = git.run("rev-parse", "HEAD", cwd=root).decode().strip()
+    manager = RepositoryManager(tmp_path / "managed")
+    run = manager.git.run
+
+    def local_transport(*args, **kwargs):
+        return run(
+            *(str(root) if a == "https://github.com/example/fixture" else a for a in args), **kwargs
+        )
+
+    monkeypatch.setattr(manager.git, "run", local_transport)
+    repo = manager.public_snapshot(
+        "https://github.com/example/fixture", sha, role="target", prefix="src"
+    )
+    assert repo.snapshot.repo_id == "target" and repo.prefix == "src"
+    assert repo.snapshot.commit_sha == sha and repo.storage.name == "target.git"
+    assert repo.read("retry.py").startswith("import time")
+    assert not (repo.storage / "objects/info/alternates").exists()
+    repo.verify()

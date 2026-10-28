@@ -15,10 +15,11 @@ import {
   GitBranch,
 } from '@phosphor-icons/react'
 import { useWorkspace } from './workspace-context'
-import { Skeleton } from '../components/ui'
+import { ErrorState, Skeleton } from '../components/ui'
+import { AccountActions, SignIn } from '../features/account/Account'
 
 export function Shell() {
-  const { capabilities, history, error } = useWorkspace()
+  const { capabilities, history, error, session } = useWorkspace()
   const [menuOpen, setMenuOpen] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
@@ -46,7 +47,9 @@ export function Shell() {
       ? 'New run'
       : location.pathname === '/system'
         ? 'System checks'
-        : 'Runs'
+        : location.pathname === '/repositories'
+          ? 'Repositories'
+          : 'Runs'
   return (
     <div className="app-shell">
       <a className="skip-link" href="#main">
@@ -64,7 +67,11 @@ export function Shell() {
             <GitBranch size={17} />
           </span>
           <div>
-            <strong>Local workspace</strong>
+            <strong>
+              {session?.mode === 'github'
+                ? (session.user?.login ?? 'GitHub workspace')
+                : 'Local workspace'}
+            </strong>
             <span>Source to possibility</span>
           </div>
         </div>
@@ -73,6 +80,9 @@ export function Shell() {
             { to: '/', text: 'New run', icon: Plus },
             { to: '/runs', text: 'Runs', icon: Stack },
             { to: '/system', text: 'System checks', icon: Pulse },
+            ...(session?.mode === 'github' && session.authenticated
+              ? [{ to: '/repositories', text: 'Repositories', icon: GitBranch }]
+              : []),
           ].map((item) => (
             <NavLink
               to={item.to}
@@ -132,10 +142,13 @@ export function Shell() {
           <div className="sidebar-user">
             <span>U</span>
             <div>
-              <strong>Upgrade workspace</strong>
-              <small>Local development</small>
+              <strong>{session?.user?.login ?? 'Upgrade workspace'}</strong>
+              <small>
+                {session?.mode === 'github' ? 'Account workspace' : 'Local development'}
+              </small>
             </div>
           </div>
+          <AccountActions />
         </div>
       </aside>
       {menuOpen && (
@@ -175,7 +188,15 @@ export function Shell() {
               </div>
             }
           >
-            <Outlet />
+            {!session ? (
+              <div className="page">
+                {error ? <ErrorState message={error} /> : <Skeleton rows={7} />}
+              </div>
+            ) : !session.authenticated ? (
+              <SignIn />
+            ) : (
+              <Outlet />
+            )}
           </Suspense>
         </main>
         <footer className="page-footer">

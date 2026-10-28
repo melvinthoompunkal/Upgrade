@@ -560,7 +560,7 @@
   .run-finish-note { flex-wrap: wrap; line-height: 1.8; }
   .run-finish-note > span { flex: 1; }
   .activity-panel > summary { flex-wrap: wrap; }
-  .activity-panel > summary > span { display: none; }
+  .activity-panel > summary > span { display: block; flex-basis: 100%; order: 1; margin: 0 0 0 24px; }
   .activity-list > div { flex-wrap: wrap; gap: 7px; }
   .activity-list > div > span { width: 100%; padding-left: 23px; }
   .feature-detail-grid > aside { grid-template-columns: minmax(0, 1fr); }

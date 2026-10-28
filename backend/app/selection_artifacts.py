@@ -9,7 +9,20 @@ from app.baseline_contracts import ArtifactDigest
 from app.contracts import validate_repo_path
 from app.errors import EvidenceError, GraftError
 from app.tools.evidence import EvidenceSession
-from app.tools.runner_artifacts import read_regular_file
+from app.tools.runner_artifacts import physical_root, read_regular_file
+
+
+def prepare_directory(directory: Path) -> Path:
+    """Check existing ancestors before mkdir, then verify the newly created root.
+
+    This rejects pre-existing local redirection. Concurrent hostile path replacement
+    requires an OS handle-based boundary and is outside the local application's scope.
+    """
+    for part in (directory.absolute(), *directory.absolute().parents):
+        if part.is_symlink() or part.is_junction():
+            raise EvidenceError("Artifact directories must not contain links or junctions.")
+    directory.mkdir(parents=True, exist_ok=True)
+    return physical_root(directory)
 
 
 class ArtifactStore:
@@ -20,8 +33,11 @@ class ArtifactStore:
 
     def publish(self, artifact_id: str, content: bytes) -> ArtifactDigest:
         validate_repo_path(artifact_id)
-        path = self.directory / artifact_id
-        path.parent.mkdir(parents=True, exist_ok=True)
+        root = prepare_directory(self.directory)
+        path = root / artifact_id
+        prepare_directory(path.parent)
+        if path.is_symlink() or path.is_junction() or (path.exists() and not path.is_file()):
+            raise EvidenceError("Artifact destination must be a regular file.")
         temporary = path.with_name(f".{path.name}.{uuid4().hex}.tmp")
         try:
             temporary.write_bytes(content)

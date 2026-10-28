@@ -314,3 +314,46 @@ def test_worker_completes_a_shared_service_result_and_records_progress(tmp_path)
         "checks",
         "complete",
     ]
+
+
+def test_shared_cli_execution_lock_defers_worker_claim(tmp_path, monkeypatch):
+    from app.api import worker as worker_module
+    from app.execution import ProcessLock
+
+    root = tmp_path / "artifacts"
+    root.mkdir()
+    store = RunStore(tmp_path / "web/runs.sqlite3")
+    queued = store.enqueue(CheckRequest(kind="meta_smoke"), KEY)
+    deferred, started = Event(), Event()
+    acquire = ProcessLock.acquire
+
+    def observe(lock):
+        acquired = acquire(lock)
+        if not acquired:
+            deferred.set()
+        return acquired
+
+    monkeypatch.setattr(worker_module.ProcessLock, "acquire", observe)
+    worker = LocalWorker(store, root, SETTINGS)
+
+    async def execute(*_):
+        started.set()
+        path = root / "report.json"
+        path.write_text('{"status":"passed"}')
+        return {"status": "passed"}, path
+
+    worker.execute = execute
+    with ProcessLock(tmp_path / "execution.lock"):
+        worker.start()
+        assert deferred.wait(5)
+        assert json.loads(store.row(queued.id)["summary"])["status"] == "queued"
+    try:
+        assert started.wait(5)
+    finally:
+        worker.stop()
+    assert store.summaries()[0].outcome == "passed"
+    # Acquiring/releasing repeatedly never appends to the lock file.
+    for _ in range(10):
+        with ProcessLock(tmp_path / "execution.lock"):
+            pass
+    assert (tmp_path / "execution.lock").stat().st_size == 1

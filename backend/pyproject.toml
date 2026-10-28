@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Meta-powered source-to-target feature adaptation"
 requires-python = ">=3.12,<3.13"
 dependencies = [
+    "cryptography>=46,<49",
     "fastapi>=0.115.12,<1",
     "httpx>=0.28.1,<0.29",
     "openai>=2,<3",
