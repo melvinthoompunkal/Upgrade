@@ -7,6 +7,11 @@ the HTTPX crawler and offline Docker baseline, and pinned repositories with a li
 trace. Stage 4A adds target profiling and deterministic selection of one bounded retry
 candidate. Retry adaptation, final red-to-green verification, and the UI remain later work.
 
+The proposed [frontend and integration plan](docs/frontend-integration-plan.md) maps every
+current workflow into a browser application and defines its design, run API, persistence,
+delivery order, and future adaptation views. It is planning documentation; the frontend
+has not been implemented.
+
 ## Setup
 
 Requires Python 3.12 and [uv](https://docs.astral.sh/uv/). From the repository root:
