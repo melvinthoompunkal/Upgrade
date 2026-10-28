@@ -67,7 +67,7 @@ For the demo, bake approved target dependencies into a pinned runner image in ad
 
 ## 3. MVP feature list
 
-### Must-have — the demo fails without these
+### Must-have — the demo fails without these and should be added first
 
 - One public source GitHub URL, one public target URL or registered local Git target, and one-line goal.
 - Commit-pinned inventories, stack detection, and a known target runner; report unsupported inputs before editing.
