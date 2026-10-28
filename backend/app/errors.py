@@ -44,3 +44,7 @@ class RepositoryError(GraftError):
 
 class EvidenceError(GraftError):
     code = "invalid_evidence"
+
+
+class UnsupportedTargetError(GraftError):
+    code = "unsupported_target"

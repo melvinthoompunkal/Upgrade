@@ -4,8 +4,8 @@ Adapt one small feature from a source repository into a target project, with Mus
 
 The first three coding milestones in section 11 are implemented: the Meta backend foundation,
 the HTTPX crawler and offline Docker baseline, and pinned repositories with a live Meta source
-trace. Feature selection, retry adaptation, final red-to-green verification, and the UI remain
-later work.
+trace. Stage 4A adds target profiling and deterministic selection of one bounded retry
+candidate. Retry adaptation, final red-to-green verification, and the UI remain later work.
 
 ## Setup
 
@@ -110,12 +110,26 @@ The ordinary baseline must pass. The separate retry diagnostic records either th
 missing-retry assertions or `already_present` when all frozen retry cases pass. Changes to
 inputs, capture evidence, or original target fail the run. The existing `graft-crawler-baseline`
 command continues to test local fixture files. See [Stage 4 W1 details](docs/stage4-w1.md).
-Target profiling, selection, and patching remain subsequent work.
+The selection workflow below reuses this binding; patching remains subsequent work.
 
 Stage 4 W2 now provides immutable profile, assessment, gate, score/result, and
 selection-facing baseline-binding contracts. Model proposals exclude controller-owned
 results; final artifacts validate snapshot identity, observed-gap links, score thresholds,
 and selection consistency. See [Stage 4 W2 contracts and handoff](docs/stage4-w2.md).
+
+## Select a feature (Stage 4A)
+
+```powershell
+uv run --project backend --locked graft-fit-select --target crawler-demo --goal "Improve resilience to transient HTTP failures"
+```
+
+This runs fresh same-snapshot Docker captures, a live Meta source trace and target profile,
+and a high-reasoning fit assessment. Python validates evidence, computes scores and all
+gates, and returns `selected` or `no_safe_fit` (exit 0), or a specific `failed` result
+(exit 1). It analyzes **one** source feature; optional broader comparison is pending.
+The command prints its unique report path with hashed artifacts and readable results.
+It preserves the original target and managed worktree, and produces no patch or
+post-implementation verification. See [Stage 4 usage, policy, and boundaries](docs/stage4.md).
 
 ## Development checks
 

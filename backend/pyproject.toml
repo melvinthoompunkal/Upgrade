@@ -20,6 +20,7 @@ graft-meta-smoke = "app.smoke:main"
 graft-crawler-baseline = "app.baseline:main"
 graft-pinned-baseline = "app.pinned_baseline:main"
 graft-source-trace = "app.source_trace:main"
+graft-fit-select = "app.fit_select:main"
 
 [build-system]
 requires = ["hatchling>=1.27,<2"]

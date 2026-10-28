@@ -1,5 +1,9 @@
 import pytest
+from test_pinned_baseline import mocked_runner as mocked_runner
+from test_pinned_baseline import pinned_target as pinned_target
 
+from app import pinned_baseline
+from app.selection_baseline import SelectionBaseline
 from app.tools.evidence import EvidenceSession
 from app.tools.git import Git
 from app.tools.repositories import Registration, RepositoryManager
@@ -36,3 +40,12 @@ def session(committed_repo, tmp_path):
     manager = RepositoryManager(tmp_path / "managed")
     repo, _ = manager.local_target(Registration("source", root))
     return EvidenceSession(repo)
+
+
+@pytest.fixture
+def baseline_context(pinned_target, mocked_runner):
+    target, original, directory, receipt = pinned_target
+    report, _ = pinned_baseline.record_pinned_baseline(*pinned_target)
+    assert report["status"] == "passed"
+    baseline = SelectionBaseline.from_run(directory, target, receipt)
+    return EvidenceSession(target), baseline, original

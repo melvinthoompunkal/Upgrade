@@ -1,16 +1,13 @@
 """A read-only Meta tracer with a fixed tool registry and controller-validated citations."""
 
 import json
-from typing import cast
 
 from openai.types.chat import ChatCompletionMessageParam
-from pydantic import ValidationError
 
-from app.contracts import Contract, RepoPath
-from app.errors import EvidenceError, GraftError, ModelOutputError
-from app.evidence_contracts import ReadRange, SearchSymbols, SourceTrace
+from app.errors import EvidenceError, GraftError
+from app.evidence_contracts import SourceTrace
+from app.evidence_tools import EvidenceTools, collect_evidence
 from app.models.meta_client import MetaClient
-from app.models.schema import response_format, strict_schema
 from app.tools.evidence import EvidenceSession
 
 FOCUS_PATHS = (
@@ -33,71 +30,17 @@ FOCUS_SYMBOLS = {
 }
 
 
-class EvidencePath(Contract):
-    path: RepoPath
-    query: str | None
-
-
 class SourceTracer:
     def __init__(self, client: MetaClient, evidence: EvidenceSession, *, output_tokens: int = 8000):
         self.client = client
         self.evidence = evidence
         self.output_tokens = output_tokens
-        self.events: list[dict] = []
-        self.registry = {
-            "read_range": (
-                ReadRange,
-                "Read up to 200 inclusive lines from an inventoried source text file.",
-            ),
-            "python_evidence": (
-                EvidencePath,
-                "Read definitions, assignments, and imports using Python AST; never executes code.",
-            ),
-            "search_symbols": (
-                SearchSymbols,
-                "Find matching AST symbols in the declared retry focus files.",
-            ),
-        }
+        self.tools = EvidenceTools(evidence, FOCUS_PATHS)
+        self.events = self.tools.events
+        self.registry = self.tools.registry
 
     def dispatch(self, name: str, raw: str) -> dict:
-        if name not in self.registry or len(raw) > 4096:
-            raise EvidenceError("Unsupported source tool or oversized arguments; nothing executed.")
-        schema = self.registry[name][0]
-        try:
-            arguments = schema.model_validate_json(raw)
-        except ValidationError:
-            raise EvidenceError("Source tool arguments failed the registered schema.") from None
-        if isinstance(arguments, ReadRange):
-            return self.evidence.read_range(
-                arguments.path, arguments.start_line, arguments.end_line
-            )
-        if isinstance(arguments, EvidencePath):
-            index = self.evidence.index(arguments.path)
-            matches = [
-                s
-                for s in index.symbols
-                if arguments.query is None or arguments.query.lower() in s.name.lower()
-            ]
-            return {
-                "path": index.path,
-                "symbols": [s.model_dump() for s in matches[:80]],
-                "imports": list(index.imports),
-                "parse_error": index.parse_error,
-                "truncated": len(matches) > 80,
-            }
-        assert isinstance(arguments, SearchSymbols)
-        results = []
-        inventory = {f.path for f in self.evidence.repo.inventory.files}
-        for path in FOCUS_PATHS:
-            if path.endswith(".py") and path in inventory:
-                for symbol in self.evidence.index(path).symbols:
-                    if arguments.query.lower() in symbol.name.lower():
-                        results.append({"path": path, **symbol.model_dump()})
-        return {
-            "matches": results[:80],
-            "truncated": len(results) > 80,
-            "scope": "retry focus files only; heuristic static evidence, not runtime calls",
-        }
+        return self.tools.dispatch(name, raw)
 
     async def trace(self, goal: str) -> SourceTrace:
         repo = self.evidence.repo
@@ -173,76 +116,33 @@ class SourceTracer:
                 ),
             },
         ]
-        tools = [
-            {
-                "type": "function",
-                "function": {
-                    "name": name,
-                    "description": description,
-                    "strict": True,
-                    "parameters": strict_schema(schema),
-                },
-            }
-            for name, (schema, description) in self.registry.items()
-        ]
-        for turn in range(16):
-            completion, call = await self.client.request(
-                stage=f"trace_source.{turn + 1}",
-                messages=messages,
-                reasoning="medium",
-                output_tokens=self.output_tokens,
-                tools=tools,
-                tool_choice="auto",
-                parallel_tool_calls=False,
-                response_format=response_format(SourceTrace),
+        trace = await collect_evidence(
+            self.client,
+            self.tools,
+            messages,
+            SourceTrace,
+            stage="trace_source",
+            turns=16,
+            output_tokens=self.output_tokens,
+        )
+        call = self.client.calls[-1]
+        try:
+            trace = self.evidence.validate_trace(trace)
+        except GraftError as exc:
+            raise EvidenceError(str(exc), call=call) from None
+        required = set(FOCUS_PATHS[:3])
+        cited = {
+            r.path
+            for f in trace.features
+            for r in (*f.entry_points, *f.implementation, *f.source_tests)
+        }
+        if (
+            len(trace.features) != 1
+            or trace.features[0].evidence_status != "supported"
+            or not required <= cited
+        ):
+            raise EvidenceError(
+                "Retry trace lacks supported implementation/settings/test evidence.",
+                call=call,
             )
-            message = completion.choices[0].message
-            if not message.tool_calls:
-                try:
-                    trace = self.evidence.validate_trace(
-                        self.client.parse(completion, call, SourceTrace)
-                    )
-                except GraftError as exc:
-                    raise EvidenceError(str(exc), call=call) from None
-                required = set(FOCUS_PATHS[:3])
-                cited = {
-                    r.path
-                    for f in trace.features
-                    for r in (*f.entry_points, *f.implementation, *f.source_tests)
-                }
-                if (
-                    len(trace.features) != 1
-                    or trace.features[0].evidence_status != "supported"
-                    or not required <= cited
-                ):
-                    raise EvidenceError(
-                        "Retry trace lacks supported implementation/settings/test evidence.",
-                        call=call,
-                    )
-                return trace
-            if completion.choices[0].finish_reason != "tool_calls" or len(message.tool_calls) > 8:
-                raise ModelOutputError("Invalid source tool-call response.", call=call)
-            messages.append(
-                cast(ChatCompletionMessageParam, message.model_dump(mode="json", exclude_none=True))
-            )
-            seen = set()
-            for tool in message.tool_calls:
-                if tool.type != "function" or not 1 <= len(tool.id) <= 64 or tool.id in seen:
-                    raise EvidenceError(
-                        "Invalid or duplicate source tool-call identity.", call=call
-                    )
-                seen.add(tool.id)
-                event = {"turn": turn + 1, "tool": tool.function.name, "call_id": tool.id}
-                try:
-                    result = self.dispatch(tool.function.name, tool.function.arguments)
-                    event["status"] = "passed"
-                    event["arguments"] = json.loads(tool.function.arguments)
-                except GraftError as exc:
-                    # A denied bounded read is visible and recoverable; it never becomes evidence.
-                    result = {"error_code": exc.code, "detail": str(exc)}
-                    event["status"] = "rejected"
-                self.events.append(event)
-                messages.append(
-                    {"role": "tool", "tool_call_id": tool.id, "content": json.dumps(result)}
-                )
-        raise EvidenceError("Source tracing exceeded its 16-turn limit.")
+        return trace

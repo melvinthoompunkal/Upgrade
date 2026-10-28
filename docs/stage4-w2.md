@@ -1,8 +1,9 @@
 # Stage 4 W2: typed selection artifacts
 
 W2 defines the immutable data boundary for target profiling and feature selection.
-It builds on the [W1 pinned baseline](stage4-w1.md). Profiling, model assessment,
-gate evidence evaluation, and the selection command remain subsequent work.
+It builds on the [W1 pinned baseline](stage4-w1.md). The subsequent
+[Stage 4A workflow](stage4.md) now implements profiling, model assessment,
+gate evaluation, and the selection command using these contracts.
 
 ## Contracts
 
