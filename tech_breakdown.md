@@ -90,7 +90,7 @@ For the demo, bake approved target dependencies into a pinned runner image in ad
 - Optional user-triggered PR creation after reviewing the verified local result.
 - Side-by-side source behavior and adapted target implementation in the run view.
 
-### Cut — explicitly outside scope
+### Cut — explicitly outside scope / what shouldnt be thought of
 
 - More than one source, more than one target, or implementation of feature #2/#3 in the same run.
 - Generic cross-language ports, framework migrations, dependency upgrades, large refactors, database migrations, or new external services.
