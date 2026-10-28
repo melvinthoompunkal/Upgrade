@@ -1,7 +1,6 @@
 """One process-owned worker. Interrupted inference is never replayed automatically."""
 
 import asyncio
-import json
 import threading
 from pathlib import Path
 from uuid import uuid4
@@ -18,6 +17,8 @@ from app.execution import ProcessLock
 from app.fit_select import record_fit_selection
 from app.models.meta_client import MetaClient
 from app.pinned_baseline import record_pinned_baseline
+from app.report_publication import publish_json_report
+from app.selection_artifacts import ArtifactStore, prepare_directory
 from app.smoke import run_smoke
 from app.source_trace import record_source_trace
 from app.tools.repositories import RepositoryManager, registered_target
@@ -82,7 +83,7 @@ class LocalWorker:
             progress("checks", "Testing current working files in the restricted Docker runner.")
             return await asyncio.to_thread(record_baseline, receipt, artifact_root=self.root)
         directory = self.root / f"{request.kind.replace('_', '-')}-{uuid4().hex}"
-        directory.mkdir(parents=True)
+        prepare_directory(directory)
         if request.kind == "pinned_baseline":
             progress(
                 "checks", "Testing exact committed target bytes in the restricted Docker runner."
@@ -98,12 +99,13 @@ class LocalWorker:
         async with MetaClient(self.settings) as client:
             report = (await run_smoke(client)).model_dump(mode="json")
         path = directory / "report.json"
-        path.write_text(json.dumps(report, indent=2), encoding="utf-8")
+        publish_json_report(ArtifactStore(directory, {}), report)
         return report, path
 
     def loop(self) -> None:
         while not self.stop_requested.is_set():
-            execution = ProcessLock(self.root.parent / "execution.lock")
+            # Changing storage does not change the shared target/provider execution domain.
+            execution = ProcessLock(PROJECT_ROOT / "data/execution.lock")
             if not execution.acquire():
                 self.stop_requested.wait(0.5)
                 continue

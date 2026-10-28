@@ -44,11 +44,24 @@ class RunStore:
             (run_id, now(), stage, message),
         )
 
-    def enqueue(self, request: RunRequest, key: str, *, owner_id: str = LOCAL_OWNER) -> RunSummary:
+    def enqueue(
+        self,
+        request: RunRequest,
+        key: str,
+        *,
+        owner_id: str = LOCAL_OWNER,
+        require_connected: bool = False,
+    ) -> RunSummary:
         body = request.model_dump_json()
         fingerprint = hashlib.sha256(body.encode()).hexdigest()
         with self.connect() as db:
             db.execute("BEGIN IMMEDIATE")
+            if require_connected:
+                connected = db.execute(
+                    "SELECT connected FROM users WHERE id=?", (owner_id,)
+                ).fetchone()
+                if not connected or not connected[0]:
+                    raise HTTPException(409, "Reconnect GitHub before starting another run.")
             previous = db.execute(
                 "SELECT * FROM runs WHERE owner_id=? AND key=?", (owner_id, key)
             ).fetchone()
@@ -195,26 +208,30 @@ class RunStore:
     def cancel_queued(self, owner_id: str) -> None:
         with self.connect() as db:
             db.execute("BEGIN IMMEDIATE")
-            rows = db.execute(
-                "SELECT id,summary FROM runs WHERE owner_id=? "
-                "AND json_extract(summary,'$.status')='queued'",
-                (owner_id,),
-            ).fetchall()
-            for row in rows:
-                summary = RunSummary.model_validate_json(row["summary"])
-                updated = summary.model_copy(
-                    update={
-                        "status": "finished",
-                        "stage": "complete",
-                        "outcome": "cancelled",
-                        "updated_at": now(),
-                        "revision": summary.revision + 1,
-                    }
-                )
-                db.execute(
-                    "UPDATE runs SET summary=? WHERE id=?", (updated.model_dump_json(), row["id"])
-                )
-                self.event(db, row["id"], "complete", "Cancelled after GitHub disconnect.")
+            self.cancel_queued_in(db, owner_id)
+
+    def cancel_queued_in(self, db: sqlite3.Connection, owner_id: str) -> None:
+        """Cancel under the caller's authorization transaction without releasing its lock."""
+        rows = db.execute(
+            "SELECT id,summary FROM runs WHERE owner_id=? "
+            "AND json_extract(summary,'$.status')='queued'",
+            (owner_id,),
+        ).fetchall()
+        for row in rows:
+            summary = RunSummary.model_validate_json(row["summary"])
+            updated = summary.model_copy(
+                update={
+                    "status": "finished",
+                    "stage": "complete",
+                    "outcome": "cancelled",
+                    "updated_at": now(),
+                    "revision": summary.revision + 1,
+                }
+            )
+            db.execute(
+                "UPDATE runs SET summary=? WHERE id=?", (updated.model_dump_json(), row["id"])
+            )
+            self.event(db, row["id"], "complete", "Cancelled after GitHub disconnect.")
 
     def attach(self, run_id: str, relative: str, digest: str) -> None:
         with self.connect() as db:

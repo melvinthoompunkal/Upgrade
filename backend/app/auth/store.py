@@ -6,6 +6,8 @@ import time
 from dataclasses import dataclass
 from uuid import uuid4
 
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
+
 from app.api.migrations import LOCAL_OWNER
 from app.api.storage import RunStore
 from app.auth.crypto import CredentialCipher, ReconnectRequired
@@ -15,6 +17,19 @@ SESSION_COOKIE = "upgrade_session"
 AUTH_COOKIE = "upgrade_auth"
 SESSION_SECONDS = 7 * 24 * 3600
 IDLE_SECONDS = 24 * 3600
+
+
+class CredentialData(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True, hide_input_in_errors=True)
+    access_token: str = Field(min_length=1, repr=False)
+    refresh_token: str = Field(min_length=1, repr=False)
+    expires: float = Field(ge=0, allow_inf_nan=False)
+    refresh_expires: float = Field(ge=0, allow_inf_nan=False)
+
+
+class AuthVerifier(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True, hide_input_in_errors=True)
+    verifier: str = Field(pattern=r"^[A-Za-z0-9_-]{43}$", repr=False)
 
 
 def digest(value: str) -> str:
@@ -61,12 +76,18 @@ class AuthStore:
             ).fetchone()
             if (
                 not row
-                or row["expires"] < time.time()
+                or row["expires"] <= time.time()
                 or not secrets.compare_digest(row["browser_hash"], digest(browser))
             ):
                 return None
             db.execute("DELETE FROM auth_transactions WHERE state_hash=?", (digest(state),))
-            return self.cipher.decrypt("auth", row["verifier"])["verifier"], row["destination"]
+        # Commit consumption before decoding. A lost key or damaged record cannot
+        # roll back the single-use boundary or escape as an unsanitized callback error.
+        try:
+            verifier = AuthVerifier.model_validate(self.cipher.decrypt("auth", row["verifier"]))
+        except (ReconnectRequired, ValidationError):
+            return None
+        return verifier.verifier, row["destination"]
 
     def encrypted_tokens(self, owner: str, tokens: GitHubTokens) -> bytes:
         return self.cipher.encrypt(
@@ -133,44 +154,56 @@ class AuthStore:
             db.execute("DELETE FROM sessions WHERE token_hash=?", (digest(session),))
 
     def access_token(self, owner: str, github: GitHubClient) -> str:
-        try:
-            return self._access_token(owner, github)
-        except (GitHubError, ReconnectRequired):
-            self.disconnect(owner)
-            raise ReconnectRequired(
-                "GitHub authorization is unavailable. Reconnect GitHub."
-            ) from None
-
-    def _access_token(self, owner: str, github: GitHubClient) -> str:
         # A short SQLite write transaction serializes refresh-token consumption across
         # API threads/processes. Provider calls have a bounded timeout; hosted leases
         # and distributed credential storage remain a separate release requirement.
         with self.runs.connect() as db:
             db.execute("BEGIN IMMEDIATE")
-            row = db.execute("SELECT * FROM credentials WHERE user_id=?", (owner,)).fetchone()
-            if not row:
-                raise ReconnectRequired("Reconnect GitHub to access repositories.")
-            data = self.cipher.decrypt(owner, row["ciphertext"])
-            if data["expires"] <= time.time() + 60:
-                if data["refresh_expires"] <= time.time():
-                    raise ReconnectRequired("GitHub authorization expired. Reconnect GitHub.")
-                tokens = github.refresh(data["refresh_token"])
-                db.execute(
-                    "UPDATE credentials SET ciphertext=?,updated=? WHERE user_id=?",
-                    (self.encrypted_tokens(owner, tokens), time.time(), owner),
-                )
-                return tokens.access_token.get_secret_value()
-            # Reencrypt with the current first key, allowing gradual rotation.
+            try:
+                token = self._credential_token(db, owner, github)
+            except (GitHubError, ReconnectRequired):
+                # Settle this failed authorization before releasing the same lock.
+                # Cleanup after rollback could erase a concurrently renewed grant.
+                self._disconnect(db, owner)
+                token = None
+        if token is None:
+            raise ReconnectRequired(
+                "GitHub authorization is unavailable. Reconnect GitHub."
+            ) from None
+        return token
+
+    def _credential_token(self, db, owner: str, github: GitHubClient) -> str:
+        row = db.execute("SELECT * FROM credentials WHERE user_id=?", (owner,)).fetchone()
+        if not row:
+            raise ReconnectRequired("Reconnect GitHub to access repositories.")
+        try:
+            data = CredentialData.model_validate(self.cipher.decrypt(owner, row["ciphertext"]))
+        except ValidationError:
+            raise ReconnectRequired("Stored GitHub credentials are unusable.") from None
+        if data.expires <= time.time() + 60:
+            if data.refresh_expires <= time.time():
+                raise ReconnectRequired("GitHub authorization expired. Reconnect GitHub.")
+            tokens = github.refresh(data.refresh_token)
             db.execute(
-                "UPDATE credentials SET ciphertext=? WHERE user_id=?",
-                (self.cipher.encrypt(owner, data), owner),
+                "UPDATE credentials SET ciphertext=?,updated=? WHERE user_id=?",
+                (self.encrypted_tokens(owner, tokens), time.time(), owner),
             )
-            return data["access_token"]
+            return tokens.access_token.get_secret_value()
+        # Reencrypt with the current first key, allowing gradual rotation.
+        db.execute(
+            "UPDATE credentials SET ciphertext=? WHERE user_id=?",
+            (self.cipher.encrypt(owner, data.model_dump()), owner),
+        )
+        return data.access_token
+
+    def _disconnect(self, db, owner: str) -> None:
+        db.execute("DELETE FROM credentials WHERE user_id=?", (owner,))
+        db.execute("UPDATE users SET connected=0 WHERE id=?", (owner,))
+        db.execute("DELETE FROM repository_sync WHERE owner_id=?", (owner,))
+        db.execute("DELETE FROM repository_cache WHERE owner_id=?", (owner,))
+        self.runs.cancel_queued_in(db, owner)
 
     def disconnect(self, owner: str) -> None:
         with self.runs.connect() as db:
-            db.execute("DELETE FROM credentials WHERE user_id=?", (owner,))
-            db.execute("UPDATE users SET connected=0 WHERE id=?", (owner,))
-            db.execute("DELETE FROM repository_sync WHERE owner_id=?", (owner,))
-            db.execute("DELETE FROM repository_cache WHERE owner_id=?", (owner,))
-        self.runs.cancel_queued(owner)
+            db.execute("BEGIN IMMEDIATE")
+            self._disconnect(db, owner)

@@ -16,10 +16,22 @@ planning baseline and release criteria; they must not be read as a claim that th
 product is delivered. Current evidence is in the new
 [foundation receipt](../audit/full-feature-foundations/report.md); original audits remain unchanged.
 
+The F0 follow-up audit closes additional source-trace/pinned-baseline publication gaps,
+checks artifact roots before creating run directories, and keeps CLI/API exclusion on
+the workspace lock even when the API uses custom storage. Its fresh regressions and
+limits are recorded in the [F0 follow-up receipt](../audit/full-feature-foundations/f0-follow-up.md).
+
+The next F1 pass completes the local identity/owner boundary's failure and concurrency
+checks. It validates encrypted auth records, consumes unusable auth transactions once,
+settles failed refresh/disconnect/queued cancellation atomically, rechecks connection
+at admission, and resets displayed results and drafts to the new account's scope. See the
+[F1 identity receipt](../audit/full-feature-foundations/f1-identity.md). Schema v3 and
+existing credential formats remain compatible; real GitHub sign-in remains deferred.
+
 | Package | Implemented in this pass | Remaining exit work |
 |---|---|---|
-| F0 | S4-A01–A06 fixes and focused reproductions; typed retry-v1 behavior; strict hash-before-decode capture boundary; independent JSON finalization; physical artifact containment; truthful counts; common CLI/API lock and explicit workflow root/settings | See the new closure receipt; concurrent hostile local path replacement is outside this local boundary |
-| F1 | Transactional schema v3, numeric GitHub identity, hashed expiring sessions, browser-bound single-use auth state, encrypted rotating credentials, CSRF, owner checks on every run/evidence route, private legacy ownership and per-owner idempotency | Real account validation is deferred at the user's request to remain in local mode; hosted security/operations are not certified |
+| F0 | S4-A01–A06 fixes and focused reproductions; typed retry-v1 behavior; strict hash-before-decode captures; independent JSON finalization including source trace and pinned baseline; containment before run/artifact creation; truthful counts; common CLI/API lock including custom API storage | Local F0 exit checks are recorded in the foundation and follow-up receipts; concurrent hostile path replacement and hard-stop recovery remain outside this local boundary |
+| F1 | Transactional schema v3, numeric GitHub identity, hashed expiring sessions, validated single-use auth state and encrypted credentials, atomic refresh/disconnect/admission boundaries, CSRF including malformed headers, owner-scoped APIs/downloads/excerpts, private legacy migration and browser account-switch isolation | Local identity exit checks are in the F1 receipt. Real account validation remains deferred at the user's request; hosted security/operations are not certified |
 | F2 | Configurable GitHub App authorization preview, bounded resumable user/App repository sync and browser index with global search/visibility filters | Private credential broker/fetch, App installation tokens, signed webhooks, provider revocation, in-flight cancellation and live grant checks |
 | F3 | Role-qualified public snapshots with project-root prefix; typed python-static-v1 preflight; fresh urllib3 source and HTTPX target inventories | General evidence/discovery and project-specific executable adapters; these examples are browse/index only |
 | F4 | Not implemented | Persistent discovered feature catalog and independent corroboration |
@@ -167,10 +179,10 @@ Implementation update: S4-A01–A06 are repaired in the foundation pass, with ne
 reproductions in [the closure receipt](../audit/full-feature-foundations/report.md).
 The following table preserves the findings and their required completion evidence.
 
-The [Stage 4 review](../audit/stage4-review/report.md) lists four Medium and two Low
-findings. Inspection of the current implementations still shows the reported patterns.
-The frontend worker's generic exception handler can record a failed queue item, but
-does not repair the controller's capture validation or missing disk receipt.
+The [Stage 4 review](../audit/stage4-review/report.md) listed four Medium and two Low
+findings at the planning baseline. The foundation implementation repaired those
+selection paths. The F0 follow-up also retains controller JSON when source evidence
+or pinned-baseline binding publication fails; a queue error alone is insufficient.
 
 | ID | Priority and required change | Completion evidence |
 |---|---|---|
@@ -190,8 +202,8 @@ a new closure receipt with reproduction results and the relevant commit identity
 
 | Earlier package | Reconciled status |
 |---|---|
-| U0 audit remediation | Still open; shipping UI did not close it |
-| U1 shared workflows | Typed workflow inputs and canonical service reuse delivered; execution context/path ownership, progress consistency and shared CLI/API locking still need work |
+| U0 audit remediation | S4-A01–A06 repaired; foundation and F0 follow-up receipts record the regression evidence |
+| U1 shared workflows | Typed workflow inputs/context, canonical services, stage progress and workspace-wide CLI/API exclusion delivered; hosted lifecycle and hard-stop cleanup remain F6 work |
 | U2 durable local API | Delivered locally; not a distributed or tenant-aware execution platform |
 | U3 main experience | Delivered for the registered sample and current analysis workflows |
 | U4 existing tool coverage | Delivered locally: trace, fit, baseline modes, explicit Meta check, evidence and exports |
@@ -201,27 +213,29 @@ a new closure receipt with reproduction results and the relevant commit identity
 
 ### Documentation and operational omissions
 
-Several lower tables in [tech_breakdown.md](../tech_breakdown.md), the historical
-[frontend integration plan](frontend-integration-plan.md), and
-[stage4.md](stage4.md) still describe API/UI as future work, despite the newer delivered
-frontend. Update current-status tables and cross-links in a dedicated documentation
-pass; preserve dated historical receipts. Use [frontend.md](frontend.md), the current
-source, and this reconciliation when deciding what remains.
+Current-status tables in [tech_breakdown.md](../tech_breakdown.md) and the links in the
+[frontend integration plan](frontend-integration-plan.md) now reflect the delivered
+local API/UI and F0 repairs. Original design sections and dated receipts remain
+historical. Use [frontend.md](frontend.md), the current source and the implementation
+update above when deciding what remains.
 
 Also carry these gaps into development rather than treating them as closed by tests:
 
-- CLI workflows do not share the API worker's execution lock. A hard stop can leave
-  owned Docker processes; persisted queue state does not make paid inference resumable.
-- Current history import automatically discovers local receipts without assigning an
-  account. Existing data must not become visible to every future signed-in user.
+- CLI and API workflows share the workspace execution lock, including custom API
+  storage. A hard stop can still leave owned Docker processes; persisted queue state
+  does not make paid inference resumable.
+- Historical receipt import runs only in local mode under `local-workspace` ownership.
+  Those records are not automatically assigned to a GitHub account or shared publicly.
 - Run detail embeds cards, references, tests, calls and artifact descriptors together;
-  history filtering and queue scans are not database-paginated at scale.
+  history filtering/paging now runs on the server, but catalog payload boundaries
+  and large-scale query verification remain pending.
 - Existing coverage names examined files, which can still contain unread lines. Read
   citations and static AST overlap do not prove semantic completeness or runtime order.
 - Current acceptance/source-use/runner policy is specifically registered to the sample.
   General repository support requires supported adapters and contract preparation.
-- No production authentication, owner checks, account deletion/retention, private-data
-  model consent, request quotas or hosted worker isolation has been delivered.
+- Session/owner boundaries and active-job quotas are implemented locally. Production
+  authentication validation, deletion/retention, private-data model consent, broader
+  request quotas and hosted worker isolation remain release requirements.
 - Existing receipts do not establish a current dependency-vulnerability review, all
   supported model variants, or production load behavior. Add release-specific checks.
 

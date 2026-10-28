@@ -25,6 +25,12 @@ REQUEST = {
 }
 
 
+@pytest.fixture(autouse=True)
+def worker_project_root(tmp_path, monkeypatch):
+    # Test workers must never share the real workspace's execution lock.
+    monkeypatch.setattr("app.api.worker.PROJECT_ROOT", tmp_path / "project")
+
+
 @pytest.fixture
 def client(tmp_path):
     app = create_app(SETTINGS, data_root=tmp_path, start_worker=False)
@@ -282,8 +288,8 @@ def test_worker_lock_and_restart_never_replay_running_inference(tmp_path):
 
 
 def test_worker_completes_a_shared_service_result_and_records_progress(tmp_path):
-    root = tmp_path / "artifacts"
-    root.mkdir()
+    root = tmp_path / "custom-data/artifacts"
+    root.mkdir(parents=True)
     store = RunStore(tmp_path / "web/runs.sqlite3")
     store.enqueue(CheckRequest(kind="meta_smoke"), KEY)
     started, release = Event(), Event()
@@ -320,8 +326,8 @@ def test_shared_cli_execution_lock_defers_worker_claim(tmp_path, monkeypatch):
     from app.api import worker as worker_module
     from app.execution import ProcessLock
 
-    root = tmp_path / "artifacts"
-    root.mkdir()
+    root = tmp_path / "custom-data/artifacts"
+    root.mkdir(parents=True)
     store = RunStore(tmp_path / "web/runs.sqlite3")
     queued = store.enqueue(CheckRequest(kind="meta_smoke"), KEY)
     deferred, started = Event(), Event()
@@ -343,7 +349,8 @@ def test_shared_cli_execution_lock_defers_worker_claim(tmp_path, monkeypatch):
         return {"status": "passed"}, path
 
     worker.execute = execute
-    with ProcessLock(tmp_path / "execution.lock"):
+    lock_path = worker_module.PROJECT_ROOT / "data/execution.lock"
+    with ProcessLock(lock_path):
         worker.start()
         assert deferred.wait(5)
         assert json.loads(store.row(queued.id)["summary"])["status"] == "queued"
@@ -354,6 +361,6 @@ def test_shared_cli_execution_lock_defers_worker_claim(tmp_path, monkeypatch):
     assert store.summaries()[0].outcome == "passed"
     # Acquiring/releasing repeatedly never appends to the lock file.
     for _ in range(10):
-        with ProcessLock(tmp_path / "execution.lock"):
+        with ProcessLock(lock_path):
             pass
-    assert (tmp_path / "execution.lock").stat().st_size == 1
+    assert lock_path.stat().st_size == 1

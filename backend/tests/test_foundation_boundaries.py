@@ -1,15 +1,20 @@
 """Audit reproductions at decoding and filesystem boundaries."""
 
+import asyncio
 import hashlib
 import json
 import os
 import subprocess
+from importlib import import_module
 
 import pytest
 
 from app.capture_metadata import decode_capture
+from app.config import Settings
 from app.errors import EvidenceError, GraftError
+from app.execution import ProcessLock
 from app.selection_artifacts import ArtifactStore
+from app.workflow_inputs import TraceInputs, WorkflowContext
 
 
 @pytest.mark.parametrize(
@@ -62,3 +67,73 @@ def test_artifact_junction_rejected_before_any_outside_write(tmp_path, redirect_
             os.rmdir(link)
         else:
             link.unlink()
+
+
+@pytest.mark.parametrize("workflow", ["source_trace", "local_baseline"])
+def test_workflow_rejects_linked_artifact_ancestor_before_creation(tmp_path, monkeypatch, workflow):
+    from test_audit_regressions import make_link
+
+    from app import baseline, source_trace
+
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    link = tmp_path / "redirected"
+    make_link(link, outside)
+
+    def must_not_run(*args):
+        pytest.fail("Linked artifact roots must be rejected before provider/Docker access.")
+
+    try:
+        with pytest.raises(GraftError):
+            if workflow == "source_trace":
+                monkeypatch.setattr(source_trace, "MetaClient", must_not_run)
+                asyncio.run(
+                    source_trace.record_source_trace(
+                        TraceInputs(
+                            "https://github.com/example/source", "a" * 40, "crawler-demo", "retry"
+                        ),
+                        context=WorkflowContext(
+                            link / "nested/artifacts", Settings(_env_file=None, model_api_key=None)
+                        ),
+                    )
+                )
+            else:
+                monkeypatch.setattr(baseline, "prepared_image", must_not_run)
+                baseline.record_baseline(tmp_path / "image.json", artifact_root=link / "nested")
+        assert not list(outside.iterdir())
+    finally:
+        if os.name == "nt":
+            os.rmdir(link)
+        else:
+            link.unlink()
+
+
+@pytest.mark.parametrize(
+    "module_name,service",
+    [
+        ("baseline", "record_baseline"),
+        ("pinned_baseline", "record_pinned_baseline"),
+        ("source_trace", "record_source_trace"),
+        ("fit_select", "record_fit_selection"),
+        ("smoke", "_run_configured"),
+    ],
+)
+def test_cli_reports_busy_without_starting_work(
+    tmp_path, monkeypatch, capsys, module_name, service
+):
+    module = import_module(f"app.{module_name}")
+    # The smoke CLI imports its project root from the runner at invocation time.
+    root_owner = import_module("app.tools.runner") if module_name == "smoke" else module
+    monkeypatch.setattr(root_owner, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr("sys.argv", [module_name])
+
+    def must_not_run(*args, **kwargs):
+        pytest.fail("A busy CLI must not start its workflow.")
+
+    monkeypatch.setattr(module, service, must_not_run)
+    with ProcessLock(tmp_path / "data/execution.lock"):
+        assert module.main() == 1
+    output = capsys.readouterr()
+    assert not output.out
+    assert json.loads(output.err)["error_code"] == "execution_busy"
+    assert str(tmp_path) not in output.err

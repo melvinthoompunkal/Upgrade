@@ -92,7 +92,10 @@ def create_run(
             409, "Configure MODEL_API_KEY in backend/.env before starting a model run."
         )
     run = request.app.state.runs.enqueue(
-        body, idempotency_key, owner_id=request.state.principal.owner_id
+        body,
+        idempotency_key,
+        owner_id=request.state.principal.owner_id,
+        require_connected=request.app.state.settings.auth_mode == "github",
     )
     response.headers["Location"] = f"/api/runs/{run.id}"
     return run

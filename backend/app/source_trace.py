@@ -12,9 +12,11 @@ from uuid import uuid4
 from pydantic import ValidationError
 
 from app.config import Settings
-from app.errors import GraftError
+from app.errors import EvidenceError, GraftError
 from app.execution import ProcessLock
 from app.models.meta_client import MetaClient
+from app.report_publication import publish_json_report
+from app.selection_artifacts import ArtifactStore, prepare_directory
 from app.tools.evidence import EvidenceSession
 from app.tools.repositories import (
     SCRAPY_SHA,
@@ -28,11 +30,12 @@ from app.tools.runner_artifacts import file_hashes
 from app.tracer import SourceTracer
 from app.workflow_inputs import TraceInputs, WorkflowContext
 
-
-def write_json(path: Path, data: dict) -> str:
-    content = json.dumps(data, indent=2, ensure_ascii=True).encode("utf-8")
-    path.write_bytes(content)
-    return hashlib.sha256(content).hexdigest()
+REQUIRED_OUTPUTS = (
+    "source-trace.json",
+    "feature-card.json",
+    "trace-bundle.json",
+    "evidence-reads.json",
+)
 
 
 async def record_source_trace(
@@ -40,17 +43,19 @@ async def record_source_trace(
 ) -> tuple[dict, Path]:
     run_id = f"source-trace-{uuid4().hex}"
     directory = (context.artifact_root if context else PROJECT_ROOT / "data/artifacts") / run_id
-    directory.mkdir(parents=True)
     report_path = directory / "report.json"
     report = {
         "status": "failed",
         "check": "pinned_snapshots_and_meta_source_trace",
         "run_id": run_id,
         "created_at": datetime.now(UTC).isoformat(),
+        "analyzed_feature_count": 0,
         "scope": "Phase 3 source trace; feature adaptation and final green tests are later work.",
     }
+    store = ArtifactStore(directory, {"run_id": run_id})
     client, tracer, evidence = None, None, None
     try:
+        prepare_directory(directory)
         report["controller_hashes"] = file_hashes(
             PROJECT_ROOT,
             tuple(
@@ -74,6 +79,8 @@ async def record_source_trace(
                 target_path_prefix=target.prefix,
                 branch=f"graft/{run_id}",
             )
+            for repo in (source, target):
+                store.adopt("repositories/" + repo.snapshot.inventory_artifact_id)
             evidence = EvidenceSession(source)
             # Make physical path denial and missing inventory checks part of each live receipt.
             rejected = []
@@ -89,6 +96,7 @@ async def record_source_trace(
                 client, evidence, output_tokens=settings.meta_trace_max_completion_tokens
             )
             trace = await tracer.trace(args.goal)
+            report["analyzed_feature_count"] = len(trace.features)
             source.verify()
             target.verify()
             original_unchanged = verify_original(manager.git, original)
@@ -97,9 +105,9 @@ async def record_source_trace(
                 for f in target.inventory.files
             )
             if not original_unchanged or not worktree_unchanged:
-                raise RuntimeError("Original target or managed baseline changed during tracing.")
+                raise EvidenceError("Original target or managed baseline changed during tracing.")
             if manager.git.run("status", "--porcelain", cwd=worktree):
-                raise RuntimeError("Managed worktree must remain clean at its pinned base.")
+                raise EvidenceError("Managed worktree must remain clean at its pinned base.")
             card = trace.features[0]
             refs = [
                 *card.entry_points,
@@ -130,40 +138,30 @@ async def record_source_trace(
                 "content_sha256": data_hash,
                 "data": data,
             }
-            artifacts = {
-                "source-trace.json": write_json(directory / "source-trace.json", envelope),
-                "feature-card.json": write_json(
-                    directory / "feature-card.json", card.model_dump(mode="json")
-                ),
-                "trace-bundle.json": write_json(
-                    directory / "trace-bundle.json",
-                    {
-                        "source": source.snapshot.model_dump(mode="json"),
-                        "feature": card.model_dump(mode="json"),
-                        "excerpts": excerpts,
-                        "notices": notices,
-                        "python_evidence": [
-                            i.model_dump(mode="json") for i in evidence.indexes.values()
-                        ],
-                        "coverage": trace.coverage.model_dump(mode="json"),
-                        "qualification": (
-                            "Static citation checks establish provenance, not semantic correctness "
-                            "or executed source tests."
-                        ),
-                    },
-                ),
-            }
-            for repo in (source, target):
-                relative = "repositories/" + repo.snapshot.inventory_artifact_id
-                artifacts[relative] = hashlib.sha256(
-                    (directory / relative).read_bytes()
-                ).hexdigest()
+            store.json("source-trace.json", envelope)
+            store.json("feature-card.json", card.model_dump(mode="json"))
+            store.json(
+                "trace-bundle.json",
+                {
+                    "source": source.snapshot.model_dump(mode="json"),
+                    "feature": card.model_dump(mode="json"),
+                    "excerpts": excerpts,
+                    "notices": notices,
+                    "python_evidence": [
+                        i.model_dump(mode="json") for i in evidence.indexes.values()
+                    ],
+                    "coverage": trace.coverage.model_dump(mode="json"),
+                    "qualification": (
+                        "Static citation checks establish provenance, not semantic correctness "
+                        "or executed source tests."
+                    ),
+                },
+            )
             report.update(
                 status="passed",
                 source_unchanged=True,
                 original_target_unchanged=True,
                 worktree_unchanged=True,
-                artifact_hashes=artifacts,
                 feature_id=card.feature_id,
                 evidence_status=card.evidence_status,
                 validated_references=len(refs),
@@ -191,15 +189,23 @@ async def record_source_trace(
             }
         if tracer is not None:
             report["tool_events"] = tracer.events
-        if evidence is not None:
-            read_log = {
-                "source_sha": evidence.repo.snapshot.commit_sha,
-                "read_bytes": evidence.read_bytes,
-                "windows": evidence.windows,
-            }
-            read_hash = write_json(directory / "evidence-reads.json", read_log)
-            report.setdefault("artifact_hashes", {})["evidence-reads.json"] = read_hash
-        write_json(report_path, report)
+        try:
+            if evidence is not None:
+                store.json(
+                    "evidence-reads.json",
+                    {
+                        "source_sha": evidence.repo.snapshot.commit_sha,
+                        "read_bytes": evidence.read_bytes,
+                        "windows": evidence.windows,
+                    },
+                )
+            store.verify()
+        except (GraftError, OSError, ValueError):
+            report["status"] = "failed"
+            report.setdefault("error_code", "invalid_evidence")
+            report.setdefault("detail", "Final source evidence publication or verification failed.")
+            report.setdefault("warnings", []).append("Some source evidence could not be retained.")
+        publish_json_report(store, report, REQUIRED_OUTPUTS)
     return report, report_path
 
 

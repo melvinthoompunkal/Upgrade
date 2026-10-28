@@ -10,6 +10,8 @@ from uuid import uuid4
 
 from app.baseline import ACCEPTANCE_FILES, EXPECTED_PASS, EXPECTED_RED, valid_feature_red
 from app.errors import EvidenceError, GraftError
+from app.report_publication import publish_json_report
+from app.selection_artifacts import ArtifactStore, prepare_directory
 from app.tools.repositories import (
     PinnedRepository,
     RepositoryManager,
@@ -81,13 +83,6 @@ GREEN_CASES = {
 }
 
 
-def write_json(path: Path, data: dict) -> str:
-    temporary = path.with_suffix(".json.tmp")
-    temporary.write_text(json.dumps(data, indent=2), encoding="utf-8")
-    temporary.replace(path)
-    return file_hashes(path.parent, (path.name,))[path.name]
-
-
 def bind_capture(capture: Capture, suite: str, image_id: str, directory: Path) -> dict:
     """Bind only complete, self-consistent captures from the requested suite/image."""
     if capture.suite != suite or capture.image_id != image_id:
@@ -131,6 +126,7 @@ def record_pinned_baseline(
 ) -> tuple[dict, Path]:
     """Use a controller-owned pinned target and retain failure evidence in its run directory."""
     directory = physical_root(directory)
+    store = ArtifactStore(directory, {})
     if any(
         (directory / name).exists()
         for name in (
@@ -279,13 +275,15 @@ def record_pinned_baseline(
                 "detail", "Pinned baseline preservation or final evidence check failed."
             )
         report["captures"] = [asdict(capture) for capture in captures]
-        binding_hash = write_json(directory / "baseline-binding.json", binding)
-        report["baseline_binding"] = {
-            "artifact_id": "baseline-binding.json",
-            "sha256": binding_hash,
-        }
+        try:
+            published = store.json("baseline-binding.json", binding)
+            report["baseline_binding"] = published.model_dump(mode="json")
+        except (GraftError, OSError, ValueError):
+            report["status"] = "failed"
+            report.setdefault("error_code", "publication_failed")
+            report.setdefault("detail", "The pinned baseline binding could not be saved.")
         report_path = directory / "report.json"
-        write_json(report_path, report)
+        publish_json_report(store, report, ("baseline-binding.json",))
     return report, report_path
 
 
@@ -300,7 +298,7 @@ def main() -> int:
 
         with ProcessLock(PROJECT_ROOT / "data/execution.lock"):
             directory = PROJECT_ROOT / "data/artifacts" / f"pinned-baseline-{uuid4().hex}"
-            directory.mkdir(parents=True)
+            prepare_directory(directory)
             manager = RepositoryManager(directory / "repositories")
             target, original = manager.local_target(registered_target(PROJECT_ROOT, "crawler-demo"))
             report, path = record_pinned_baseline(target, original, directory, args.image_receipt)

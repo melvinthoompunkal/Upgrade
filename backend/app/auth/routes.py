@@ -162,5 +162,5 @@ def disconnect(request: Request):
 
 def valid_csrf(request: Request) -> bool:
     return bool(request.state.principal) and secrets.compare_digest(
-        request.headers.get("x-csrf-token", ""), request.state.principal.csrf
+        request.headers.get("x-csrf-token", "").encode(), request.state.principal.csrf.encode()
     )

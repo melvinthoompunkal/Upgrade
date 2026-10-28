@@ -9,8 +9,10 @@ from pathlib import Path
 from uuid import uuid4
 
 from app.errors import GraftError
+from app.report_publication import publish_json_report
+from app.selection_artifacts import ArtifactStore, prepare_directory
 from app.tools.runner import PROJECT_ROOT, SANDBOX, prepared_image, run_suite
-from app.tools.runner_artifacts import RunnerError, TestCapture, export_files, file_hashes
+from app.tools.runner_artifacts import TestCapture, export_files, file_hashes
 from app.tools.targets import CRAWLER_FILES as TARGET_FILES
 
 ACCEPTANCE_FILES = ("test_retries.py",)
@@ -45,10 +47,10 @@ def valid_feature_red(capture: TestCapture) -> bool:
 
 
 def record_baseline(image_receipt: Path, *, artifact_root: Path | None = None) -> tuple[dict, Path]:
-    image_id = prepared_image(image_receipt)
     target = PROJECT_ROOT / "examples" / "crawler-target"
     run_dir = (artifact_root or PROJECT_ROOT / "data/artifacts") / f"crawler-baseline-{uuid4().hex}"
-    run_dir.mkdir(parents=True)
+    prepare_directory(run_dir)
+    image_id = prepared_image(image_receipt)
     snapshot = run_dir / "snapshot"
     acceptance = run_dir / "acceptance"
     target_hashes = export_files(target, TARGET_FILES, snapshot)
@@ -95,10 +97,10 @@ def record_baseline(image_receipt: Path, *, artifact_root: Path | None = None) -
         ),
         "inputs_unchanged": unchanged,
         "captures": [asdict(capture) for capture in captures],
-        "scope": "Phase 2 baseline only. Retry implementation and source tracing are pending.",
+        "scope": "Working-file baseline only; retry diagnostics are not adaptation verification.",
     }
     report_path = run_dir / "report.json"
-    report_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
+    publish_json_report(ArtifactStore(run_dir, {}), report)
     return report, report_path
 
 
@@ -114,9 +116,15 @@ def main() -> int:
         with ProcessLock(PROJECT_ROOT / "data/execution.lock"):
             report, path = record_baseline(args.image_receipt)
     except (GraftError, OSError, ValueError) as error:
-        detail = str(error) if isinstance(error, RunnerError) else "Unable to prepare runner files."
+        detail = str(error) if isinstance(error, GraftError) else "Unable to prepare runner files."
         print(
-            json.dumps({"status": "failed", "error_code": "runner_failed", "detail": detail}),
+            json.dumps(
+                {
+                    "status": "failed",
+                    "error_code": error.code if isinstance(error, GraftError) else "runner_failed",
+                    "detail": detail,
+                }
+            ),
             file=sys.stderr,
         )
         return 1

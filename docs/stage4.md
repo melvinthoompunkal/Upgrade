@@ -8,6 +8,8 @@ failure, artifact ancestors are checked before writing, and failure counts are r
 This strengthens selection; it does not implement adaptation. Assessment report metadata
 now records `schema_version_selection: "2"`. Older browser receipts remain readable with
 an explicit unknown/null behavior contract; they cannot prove new acceptance readiness.
+The [F0 follow-up receipt](../audit/full-feature-foundations/f0-follow-up.md) records
+additional publication and CLI/API execution checks, including custom API storage.
 
 The selection command analyzes **one** independently traced Scrapy retry slice against
 the registered Python/HTTPX crawler. It produces an evidence-backed `selected` or

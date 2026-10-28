@@ -10,6 +10,69 @@ const account = {
   install_url: 'https://github.com/apps/upgrade-fixture/installations/new',
 }
 
+test('account changes clear private results before the new history arrives', async ({ page }) => {
+  await mockApi(page)
+  let switched = false
+  let releaseHistory = () => {}
+  const pendingHistory = new Promise<void>((resolve) => {
+    releaseHistory = resolve
+  })
+  await page.route('**/api/session', (route) =>
+    route.fulfill({
+      json: switched
+        ? { ...account, user: { id: 'separate-owner', login: 'separate-owner', name: null } }
+        : account,
+    }),
+  )
+  await page.route('**/api/runs', async (route) => {
+    if (switched) await pendingHistory
+    await route.fulfill({ json: { items: switched ? [] : [fixtureRun], next_cursor: null } })
+  })
+  await page.route('**/api/runs/fixture-run', (route) =>
+    switched
+      ? route.fulfill({ status: 404, json: { detail: 'Run not found.' } })
+      : route.fulfill({ json: fixtureRun }),
+  )
+  await page.goto('/runs/fixture-run/overview')
+  await expect(page.getByRole('heading', { name: fixtureRun.title })).toBeVisible()
+  switched = true
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')))
+  try {
+    await expect(page.getByText('separate-owner', { exact: true }).first()).toBeVisible()
+    await expect(page.getByRole('heading', { name: fixtureRun.title })).toHaveCount(0)
+    await expect(page.getByRole('link', { name: fixtureRun.title })).toHaveCount(0)
+  } finally {
+    releaseHistory()
+  }
+  await expect(page.getByText('Run not found.')).toBeVisible()
+})
+
+test('account changes do not copy the previous account draft', async ({ page }) => {
+  await mockApi(page)
+  let switched = false
+  await page.route('**/api/session', (route) =>
+    route.fulfill({
+      json: switched
+        ? { ...account, user: { id: 'separate-owner', login: 'separate-owner', name: null } }
+        : account,
+    }),
+  )
+  await page.goto('/')
+  await page
+    .getByLabel('What would you like to improve?')
+    .fill('Private goal belonging to the first account')
+  switched = true
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')))
+  await expect(page.getByText('separate-owner', { exact: true }).first()).toBeVisible()
+  await expect(page.getByLabel('What would you like to improve?')).toHaveValue('')
+  const drafts = await page.evaluate(() => ({
+    previous: sessionStorage.getItem('upgrade-run-draft:river-owner'),
+    current: sessionStorage.getItem('upgrade-run-draft:separate-owner'),
+  }))
+  expect(drafts.previous).toContain('Private goal belonging to the first account')
+  expect(drafts.current).not.toContain('Private goal belonging to the first account')
+})
+
 test('signed-out accounts see onboarding without loading private runs', async ({
   page,
 }, testInfo) => {

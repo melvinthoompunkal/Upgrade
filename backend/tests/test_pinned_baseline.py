@@ -104,6 +104,30 @@ def binding_at(directory):
     return json.loads((directory / "baseline-binding.json").read_text())
 
 
+def test_binding_write_failure_retains_sanitized_report(pinned_target, mocked_runner, monkeypatch):
+    write = Path.write_text
+    write_bytes = Path.write_bytes
+
+    def fail_binding(path, *args, **kwargs):
+        if "baseline-binding" in path.name:
+            raise PermissionError("private host path and failure detail")
+        return write(path, *args, **kwargs)
+
+    def fail_binding_bytes(path, *args, **kwargs):
+        if "baseline-binding" in path.name:
+            raise PermissionError("private host path and failure detail")
+        return write_bytes(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "write_text", fail_binding)
+    monkeypatch.setattr(Path, "write_bytes", fail_binding_bytes)
+    report, path = pinned_baseline.record_pinned_baseline(*pinned_target)
+    assert report["status"] == "failed"
+    assert "baseline_binding" not in report
+    assert len(report["captures"]) == 3
+    assert json.loads(path.read_bytes()) == json.loads(json.dumps(report))
+    assert "private host path" not in path.read_text()
+
+
 def test_successful_w1_receipt_is_consumable_by_selection_contract(pinned_target, mocked_runner):
     report, _ = pinned_baseline.record_pinned_baseline(*pinned_target)
     assert report["status"] == "passed"

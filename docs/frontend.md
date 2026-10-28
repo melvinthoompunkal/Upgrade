@@ -64,6 +64,8 @@ do not bind it to a public interface. No hosted Site was created.
   Sync/continue loads the current user/App intersection; search and visibility filters
   operate on the server. Indexed repositories display browse/index support and cannot
   be submitted as arbitrary analysis targets. Signing out and disconnecting are separate.
+  On an account change, prior run details, history and repository views are cleared
+  before the new account's responses arrive. Form drafts remain scoped to their owner.
 
 The `selected` outcome means the proposed feature passed analysis policy. Retry
 diagnostic assertions may be expected failures and remain distinct from ordinary
@@ -85,6 +87,8 @@ SQLite state is stored under `data/web/`, and reports remain under
 `data/artifacts/`. One process-owned worker executes one workflow at a time,
 with four active/queued slots per owner, sixteen globally, and per-owner idempotent
 submission keys. OS locks exclude another API worker and concurrent CLI execution.
+The execution lock is always the workspace's `data/execution.lock`, including when
+the API stores reports in a custom data directory.
 The worker waits before claiming while a CLI owns execution. Explicit workflow context
 keeps settings and report roots consistent between CLI/API adapters. Graceful shutdown
 drains its active workflow. On restart,
@@ -97,6 +101,9 @@ hashes. Public JSON/text exports omit host paths and command arguments. The
 displayed digest describes the resulting export bytes; embedded controller
 digests still describe the original evidence. Source trace bundles include the
 published notices and are analysis artifacts, not executable packages.
+Source-trace and pinned-baseline publication failures retain sanitized JSON and intact
+evidence when the report destination is still writable. An unwritable report destination
+produces a sanitized terminal/API failure. See the [F0 follow-up receipt](../audit/full-feature-foundations/f0-follow-up.md).
 
 ## Verification
 
@@ -124,6 +131,9 @@ These tests do not call Meta or Docker. The new foundation tests also cover auth
 browser binding, CSRF, token refresh/rotation, two-owner isolation on result surfaces,
 legacy migration, multi-page repository sync, stale cache and disconnect races. The
 browser uses compact status polling and retains at most 200 recent events.
+The [F1 identity receipt](../audit/full-feature-foundations/f1-identity.md) adds
+populated two-owner artifact/excerpt access, failure and migration boundaries, and
+desktop/mobile checks for stale results and drafts during account switching.
 
 ## Remaining backend milestones
 

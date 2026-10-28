@@ -12,6 +12,8 @@ closes U0 and adds shared CLI/API exclusion, owner-aware API/session boundaries 
 GitHub repository-index preview. Hard-kill Docker cleanup, the general catalog and
 Phase 5 patch/verification remain pending. The [full feature plan](full-feature-development.md)
 supersedes the original account/private-repository exclusions below.
+The [F0 follow-up receipt](../audit/full-feature-foundations/f0-follow-up.md) records
+additional failure-publication, containment and custom-storage execution checks.
 
 Build one local application where a developer supplies a source repository, chooses a
 target, describes a goal, and follows the evidence through analysis, selection, and,
@@ -526,7 +528,7 @@ Project sources:
 - [Current selection orchestration](../backend/app/fit_select.py)
 - [Stage 4 behavior and limits](stage4.md)
 - [Stage 4 implementation plan and later-stage handoff](../audit/stage4-plan.md)
-- [Six outstanding Stage 4 findings](../audit/stage4-review/report.md)
+- [Historical Stage 4 findings](../audit/stage4-review/report.md)
 - [Original run/API and adaptation design](../tech_breakdown.md)
 - [Project frontend design skill](../skills/codex_frontend.md)
 - [Project design process skill](../skills/claude_frontend.md)

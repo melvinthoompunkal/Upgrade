@@ -195,7 +195,7 @@ export function Shell() {
             ) : !session.authenticated ? (
               <SignIn />
             ) : (
-              <Outlet />
+              <Outlet key={session.mode === 'local' ? 'local-workspace' : session.user?.id} />
             )}
           </Suspense>
         </main>

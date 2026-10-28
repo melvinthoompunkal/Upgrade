@@ -17,6 +17,9 @@ records closure of the six Stage 4 audit findings, shared CLI/API execution excl
 owner-scoped APIs/sessions and an optional GitHub authorization/repository-index preview.
 Local mode remains active; the full account/catalog/adaptation roadmap is in
 [full-feature-development.md](docs/full-feature-development.md).
+The [F1 identity receipt](audit/full-feature-foundations/f1-identity.md) adds strict
+auth-record validation, transactional failure cleanup/admission checks and browser
+account-switch isolation. Real GitHub account validation remains deferred.
 The [frontend integration plan](docs/frontend-integration-plan.md)
 defines the proposed user experience, design, API bridge, and delivery packages U0–U6.
 
@@ -28,7 +31,7 @@ repository. Only this registered target/prepared Python runner is supported toda
 
 The code and actual run artifacts are authoritative for implemented behavior. Later
 sections retain future design specifications and identify their delivery status.
-Existing CLI support does not imply an available workflow HTTP endpoint.
+Available workflow routes are documented in the browser guide and generated OpenAPI schema.
 
 | Capability | Status and available behavior | Implementation / evidence |
 |---|---|---|
@@ -41,8 +44,9 @@ Existing CLI support does not imply an available workflow HTTP endpoint.
 | Exact pinned target baseline | Implemented: execute approved Git blob bytes; bind SHA, monorepo prefix, hashes, image, frozen diagnostic and captured case identities | [Pinned baseline](backend/app/pinned_baseline.py), [W1 documentation](docs/stage4-w1.md) |
 | Target profiling | Implemented: parsed stack compatibility, architecture, capabilities, gaps, style, integration points, baseline provenance and coverage; inferred gaps remain distinct from observed behavior | [Target Profiler](backend/app/target_profiler.py), [profile contracts](backend/app/selection_contracts.py) |
 | Fit selection | Implemented for one actual candidate: Meta ratings plus Python totals, ten gates, stable order, short/null `top3`, complete rejections, one bounded clarification round | [Fit Matcher](backend/app/fit_matcher.py), [selection workflow](backend/app/fit_select.py) |
-| Reports and artifacts | Implemented on local disk: JSON/Markdown reports, trace/profile/assessment/fit artifacts, captures, read logs, notices, model attempts/usage, integrity manifests; failure-path defects remain below | [Artifact store](backend/app/selection_artifacts.py), [Stage 4 usage](docs/stage4.md) |
+| Reports and artifacts | Implemented on local disk: JSON/Markdown reports, trace/profile/assessment/fit artifacts, captures, read logs, notices, model attempts/usage and integrity manifests; required JSON survives optional/sidecar publication failures where its destination remains writable | [Artifact store](backend/app/selection_artifacts.py), [F0 follow-up](audit/full-feature-foundations/f0-follow-up.md) |
 | Browser/API surface | Implemented locally: React workspace, typed capability/target/run/evidence/artifact routes, same-origin static serving, and explicit browser-started workflows | [Web app](backend/app/main.py), [frontend guide](docs/frontend.md) |
+| Identity and ownership | Implemented locally: numeric GitHub identity, expiring hashed sessions, single-use browser-bound auth, encrypted rotating credentials, CSRF, atomic disconnect/admission checks and account-scoped results/drafts | [GitHub setup](docs/github-setup.md), [F1 verification](audit/full-feature-foundations/f1-identity.md) |
 | Run persistence and queue | Implemented locally: SQLite queue/history, one process-owned worker, idempotent submission, ordered events, refresh recovery, and integrity-checked artifact access; remaining reliability boundaries are documented | [Frontend guide](docs/frontend.md) |
 | Multiple source candidates | Pending optional 4B; schema capacity up to eight does not mean discovery/comparison is implemented | [Stage 4 scope](docs/stage4.md) |
 | Patch and final verification | Pending: real planner, finalized behavior contract, acceptance preparation, safe patch application, actual diff/dependency gates, green/regression checks and capped repair | Section 4 below; [Stage 4 handoff](audit/stage4-plan.md#15-handoff-to-the-later-patch-and-verification-milestone) |
@@ -50,9 +54,10 @@ Existing CLI support does not imply an available workflow HTTP endpoint.
 ### Available terminal actions and their future UI entries
 
 Run these entry points with `uv run --project backend --locked <command>`.
-Their current interface is a CLI, not `/api/runs`.
+The browser submits these shared workflows through `/api/runs`; CLI entry points
+remain available and share the workspace execution lock.
 
-| Command | Current input and result | Planned UI location |
+| Command | Current input and result | Browser location |
 |---|---|---|
 | `graft-meta-smoke` | Local Meta configuration; synthetic structured-plan and harmless tool round-trip check, with call metadata | System checks; explicit user-triggered check |
 | `graft-crawler-baseline` | Current local fixture files; isolation and ordinary baseline plus expected missing-retry diagnostic | System checks; label working-file inputs |
@@ -87,14 +92,15 @@ registration, runner/image settings, credentials and policy remain server-side c
   conceptual shapes later in this document, to build transport adapters.
 - `/health` and the local `/api` browser bridge are implemented; FastAPI also generates
   documentation/schema routes. `model_configured` means a key is present, not that a
-  fresh connectivity test passed. Its current `phase: "source_tracing"` is a static,
-  outdated label and must not drive UI capability detection or progress.
+  fresh connectivity test passed. Its current `phase: "connected_analysis_foundations"`
+  is a delivery label; `/api/capabilities` and actual run events drive capability
+  detection and progress.
 - The implemented UI views are Overview, Features, Evidence, Tests, Changes and Exports.
   Initially Changes explains that the analysis made no code changes. Future build
   controls depend on backend capabilities. Preserve the existing workflows through
   shared services when adding the run API; do not duplicate them in frontend logic.
 
-### Recorded verification and outstanding audit
+### Recorded verification and audit closure
 
 The October 27 Stage 4 completion receipt records one eligible/analyzed retry candidate,
 `http-retry-bounded`, selected at **93/100**. Six isolation and thirteen ordinary baseline
@@ -104,23 +110,25 @@ tokens and 23,176 returned output tokens. Its 29 published artifacts and 50 cita
 were independently checked at that time. These are historical run facts, not UI defaults
 or a new execution performed for this document update.
 
-The latest [Stage 4 implementation audit](audit/stage4-review/report.md) records **259
-passing backend tests** with four Medium and two Low findings still open:
+The historical [Stage 4 implementation audit](audit/stage4-review/report.md) recorded
+**259 passing backend tests** with four Medium and two Low findings. The subsequent
+[foundation receipt](audit/full-feature-foundations/report.md) closes those findings;
+the [F0 follow-up](audit/full-feature-foundations/f0-follow-up.md) adds publication,
+containment and custom-storage execution regressions.
 
-| Finding | Required follow-up |
+| Finding | Implemented closure |
 |---|---|
-| S4-A01 | Require the proposed edit scope to include its claimed integration file |
-| S4-A02 | Bind proposed behavior to the typed, versioned acceptance behavior contract |
-| S4-A03 | Verify capture hashes and validate metadata shape before constructing capture objects |
-| S4-A04 | Retain a sanitized JSON failure result when optional final report I/O fails |
-| S4-A05 | Check physical artifact containment before writing through redirected paths |
-| S4-A06 | Render actual analyzed counts in human failure reports |
+| S4-A01 | Proposed production scope must include the cited integration file |
+| S4-A02 | Exact typed `retry-v1` behavior binds acceptance readiness |
+| S4-A03 | Raw capture hashes precede strict metadata decoding |
+| S4-A04 | JSON publication is independent of optional Markdown and sidecar failures |
+| S4-A05 | Physical run/artifact roots and ancestors are checked before writes |
+| S4-A06 | JSON, Markdown and API projections use recorded analyzed counts |
 
-Resolve these before treating selection as a dependable input to autonomous patching.
-The normal recorded selection success does not close these defects. The frontend plan
-tracks them as U0. This documentation update does not change application code or claim
-fresh model/Docker/test execution. See [completion receipts](audit/stage4-report.md)
-and [tracked usage](docs/stage4.md).
+The repairs have focused regression evidence; the original findings remain unchanged
+as historical records. They do not implement production patches or establish hosted
+isolation. See the linked receipts for actual test/model/Docker execution and
+[tracked usage](docs/stage4.md) for selection boundaries.
 
 ## 1. Graft audit
 
@@ -157,18 +165,18 @@ The delivered backend was implemented independently; Graft's UI remains in `.res
 
 | Area | Current delivery | Remaining work / boundary |
 |---|---|---|
-| Backend | Python 3.12, FastAPI, Pydantic 2, Uvicorn; `backend/uv.lock` | Health route exists; run/target/capability/artifact routes do not |
-| Frontend | No active `frontend/` application or frontend dependency manifest | Planned React/Vite/Tailwind application with TypeScript transport types; new design and compatible locked dependencies |
+| Backend | Python 3.12, FastAPI, Pydantic 2, Uvicorn; health, run/target/capability/evidence/artifact routes; `backend/uv.lock` | General catalog/adaptation routes and hosted operation remain pending |
+| Frontend | React/Vite/TypeScript workspace, generated transport types, responsive evidence inspection and exports; `frontend/package-lock.json` | General feature catalog, adaptation review and PR publishing remain pending |
 | Models | Meta Chat Completions; configured default `muse-spark-1.3`, Standard mode | Tracer/profiler use medium reasoning; Matcher uses high; repository planner/patch agents pending |
 | API client | `AsyncOpenAI` transport; SDK automatic retries disabled; explicit application retries/attempt accounting | No provider/model fallback; current default at most two HTTP retries per request |
-| Orchestration | Typed sequential selection controller, one run-owned client/budget | Shared web/CLI service boundary and complete adaptation state machine pending |
+| Orchestration | Shared typed web/CLI inputs and workflow context, sequential selection controller, one run-owned client/budget | Complete adaptation state machine remains pending |
 | Repository handling | Git CLI, independent pinned clones, clean managed sparse worktree, inventory and preservation checks | Only registered local crawler target; no public target ingestion or production edits |
 | Code indexing | Python `ast`, parsed TOML, bounded text/symbol tools | Static evidence with disclosed limits; no exhaustive dependency closure/runtime call graph |
 | Execution | Prepared, pinned Linux Docker image; fixed offline suites and resource restrictions | Only reviewed Python/HTTPX fixture/dependencies; no host execution fallback |
 | Tests | Existing target suite and frozen hand-authored retry diagnostic; backend contract/policy/workflow tests | Final adaptation contract, production patch, green acceptance/regression and repair loop pending |
-| Storage | Local JSON/artifacts and managed Git repositories per run | SQLite run/event/artifact records, migrations, history and recovery pending |
-| Jobs | Direct terminal execution | Proposed single local worker, durable SQLite queue/ownership and shared execution lock; see frontend plan |
-| Progress | CLI result/report and recorded model/tool metadata | Durable ordered events, polling and browser refresh recovery pending |
+| Storage | Local JSON/artifacts, managed Git repositories, transactional SQLite migrations, owner-scoped runs/events and server history paging/search | Catalog storage, retention/deletion and hosted recovery remain pending |
+| Jobs | Single local API worker, durable SQLite queue, per-owner admission/idempotency and shared CLI/API execution lock | Hosted leases/fairness, hard-stop cleanup and broader lifecycle controls remain pending |
+| Progress | Durable ordered events, compact status polling, bounded browser event window and refresh recovery | Catalog/adaptation stages depend on their future controllers |
 | Delivery | Trace/profile/fit bundles, reports, notices, logs and provenance hashes | `changes.patch` and a verified adaptation branch are future outputs; PR creation remains optional |
 
 The implemented adapter reads `MODEL_API_KEY` locally and targets `https://api.meta.ai/v1`.

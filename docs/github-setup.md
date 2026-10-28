@@ -75,9 +75,15 @@ Do not expose this development preview as a hosted multi-user service.
   after sign-in. Mutations require the exact Origin and a per-session CSRF token.
 - Ten-minute auth transactions are single use and bound to a separate browser cookie.
   Identity uses the numeric GitHub user ID, so renamed logins keep their ownership.
+  Unusable encrypted state is consumed and rejected with a sanitized sign-in error;
+  it cannot be replayed after a missing key or malformed verifier.
 - GitHub access/refresh tokens are encrypted with authenticated, user-bound Fernet
   envelopes. Refresh is serialized and token pairs are replaced atomically. A failed
   refresh requires reconnecting. GitHub tokens never enter API DTOs or the browser.
+  Stored credential payloads are validated before use. Failure cleanup and queued-work
+  cancellation share the refresh transaction, so an older failed refresh cannot remove
+  a newly completed sign-in. Disconnect and queue cancellation also commit together;
+  new job admission rechecks connection inside its own database transaction.
 - **Sign out** invalidates the current browser session. **Disconnect GitHub** removes
   local credentials and repository cache and cancels queued work. It does not uninstall
   a shared organization App. Provider-side grant revocation and in-flight cancellation
@@ -91,6 +97,10 @@ Do not expose this development preview as a hosted multi-user service.
   analysis target selector. Installation-token fetching, signed webhooks, immediate
   provider revocation processing, private-code consent, retention and hosted isolation
   remain release requirements in [the full feature plan](full-feature-development.md).
+- Authentication/CSRF errors carry the same no-store and no-referrer headers as other
+  API responses. Malformed CSRF headers are rejected without a server error. Switching
+  accounts clears the previous history/detail views before loading new results and
+  keeps each account's form draft in its own browser-storage namespace.
 
 ## Migrate, rotate and recover
 
@@ -114,3 +124,7 @@ describes the underlying authenticated-encryption mechanism.
 Controlled provider tests cover this flow. A real account sign-in and granted private
 repository check are still required; no real GitHub App credentials were available
 for the implementation receipt.
+The [F1 identity receipt](../audit/full-feature-foundations/f1-identity.md) records
+fresh cookie/expiry/replay, populated cross-owner resource, refresh/disconnect race,
+migration rollback/retry and desktop/mobile account-switch checks. This follow-up
+does not add a schema migration or change local-mode configuration.

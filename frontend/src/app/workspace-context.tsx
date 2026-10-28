@@ -1,4 +1,12 @@
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react'
 import { api, type Capabilities, type RunPage, type Session, type Target } from '../api/client'
 
 type Workspace = {
@@ -19,9 +27,11 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
   const [revision, setRevision] = useState(0)
+  const owner = useRef<string | null>(null)
   const refresh = useCallback(() => setRevision((value) => value + 1), [])
   useEffect(() => {
     const expired = () => {
+      owner.current = null
       setSession(null)
       setHistory(null)
       setTargets([])
@@ -41,6 +51,17 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     api<Session>('/session', { signal: controller.signal })
       .then(async (current) => {
         if (controller.signal.aborted) return
+        const identity =
+          current.mode === 'local' ? 'local-workspace' : (current.user?.id ?? 'signed-out')
+        if (owner.current !== identity) {
+          // Clear private projections before loading another account's responses.
+          owner.current = identity
+          setHistory(null)
+          setTargets([])
+          setCapabilities(null)
+          setError('')
+          setLoading(true)
+        }
         setSession(current)
         if (!current.authenticated) {
           setHistory(null)

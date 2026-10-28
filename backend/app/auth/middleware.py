@@ -11,6 +11,13 @@ from app.auth.store import LOCAL_PRINCIPAL, SESSION_COOKIE
 PUBLIC = {"/api/session", "/api/auth/github/start", "/api/auth/github/callback"}
 
 
+def private_response(response):
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    return response
+
+
 class SessionMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         if not request.url.path.startswith("/api/"):
@@ -23,20 +30,20 @@ class SessionMiddleware(BaseHTTPMiddleware):
             )
             if request.url.path.startswith("/api/") and request.url.path not in PUBLIC:
                 if request.state.principal is None:
-                    return JSONResponse(
-                        {"detail": "Sign in with GitHub to continue."}, status_code=401
+                    return private_response(
+                        JSONResponse(
+                            {"detail": "Sign in with GitHub to continue."}, status_code=401
+                        )
                     )
                 if request.method not in {"GET", "HEAD", "OPTIONS"} and (
                     request.headers.get("origin") != settings.app_base_url
                     or request.headers.get("sec-fetch-site") == "cross-site"
                     or not valid_csrf(request)
                 ):
-                    return JSONResponse(
-                        {"detail": "Reload Upgrade before trying this action."}, status_code=403
+                    return private_response(
+                        JSONResponse(
+                            {"detail": "Reload Upgrade before trying this action."}, status_code=403
+                        )
                     )
         response = await call_next(request)
-        if request.url.path.startswith("/api/"):
-            response.headers["Cache-Control"] = "no-store"
-            response.headers["Referrer-Policy"] = "no-referrer"
-            response.headers["X-Content-Type-Options"] = "nosniff"
-        return response
+        return private_response(response)
