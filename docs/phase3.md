@@ -107,7 +107,8 @@ does not count as a supported trace. The CLI prints the receipt path for review.
 
 ## Audit resolutions and verification
 
-Both original audit reports remain historical records in ignored `audit/`. The existing setup
+The [consolidated audit record](full-feature-development.md#phase-1-and-phase-2)
+preserves the original findings and their closure evidence. The existing setup
 overwrite fix is preserved. Phase 3 resolves the remaining Phase 1 findings: smoke/client
 ownership, failed-generation metadata and retry accounting, strict-schema compatibility, and
 mutable plans. It also resolves all three Phase 2 findings: owned stream error propagation and

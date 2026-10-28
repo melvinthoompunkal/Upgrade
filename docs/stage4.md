@@ -1,6 +1,6 @@
 # Stage 4A: target profiling and feature selection
 
-The [foundation implementation receipt](../audit/full-feature-foundations/report.md)
+The [consolidated audit record](full-feature-development.md#stage-4-and-f0-closure)
 closes the six subsequent Stage 4 audit findings. New assessments carry a typed
 `retry-v1` behavior contract; the fetch file must occur in proposed production scope.
 Capture hashes are checked before decoding, JSON publication survives optional Markdown
@@ -8,7 +8,7 @@ failure, artifact ancestors are checked before writing, and failure counts are r
 This strengthens selection; it does not implement adaptation. Assessment report metadata
 now records `schema_version_selection: "2"`. Older browser receipts remain readable with
 an explicit unknown/null behavior contract; they cannot prove new acceptance readiness.
-The [F0 follow-up receipt](../audit/full-feature-foundations/f0-follow-up.md) records
+The [F0 follow-up record](full-feature-development.md#stage-4-and-f0-closure) covers
 additional publication and CLI/API execution checks, including custom API storage.
 
 The selection command analyzes **one** independently traced Scrapy retry slice against

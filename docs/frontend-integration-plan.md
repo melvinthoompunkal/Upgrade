@@ -7,13 +7,17 @@ Implementation update, October 28: the local React workspace, typed run API, SQL
 queue/history, evidence inspector, tests/logs, exports, and diagnostic entry points
 are implemented. See [the browser workspace guide](frontend.md) for startup and exact
 boundaries. The packages and acceptance matrix below remain the original target
-criteria. The subsequent [foundation implementation receipt](../audit/full-feature-foundations/report.md)
+criteria. The [consolidated audit record](full-feature-development.md#stage-4-and-f0-closure)
 closes U0 and adds shared CLI/API exclusion, owner-aware API/session boundaries and a
 GitHub repository-index preview. Hard-kill Docker cleanup, the general catalog and
 Phase 5 patch/verification remain pending. The [full feature plan](full-feature-development.md)
 supersedes the original account/private-repository exclusions below.
-The [F0 follow-up receipt](../audit/full-feature-foundations/f0-follow-up.md) records
+The [F0 follow-up record](full-feature-development.md#stage-4-and-f0-closure) covers
 additional failure-publication, containment and custom-storage execution checks.
+
+This document retains the original UX and integration design criteria. Use
+[the project status and package checklist](full-feature-development.md#13-development-sequence-and-deliverables)
+for the current backlog and completed work.
 
 Build one local application where a developer supplies a source repository, chooses a
 target, describes a goal, and follows the evidence through analysis, selection, and,
@@ -302,10 +306,12 @@ Unknown/unavailable data is explicit; it is not a zero count or a passing check.
 
 ## 7. Backend architecture and API bridge
 
-The current web application exposes `/health` only. Do not attach Graft's old ingestion
-routes to new buttons or invoke CLI commands through browser-supplied shell strings.
-Move orchestration behind shared typed functions so terminal and browser use the same
-controllers, checks, error handling, artifacts, and model budgets.
+At the original planning baseline the web application exposed `/health` only. The local
+run/artifact API and shared typed workflow context are now implemented; see
+[the browser guide](frontend.md). Preserve the architecture below as workflows expand.
+Do not attach Graft's old ingestion routes to new buttons or invoke CLI commands through
+browser-supplied shell strings. Terminal and browser share controllers, checks, artifacts
+and model budgets.
 
 ```mermaid
 flowchart LR
@@ -527,8 +533,8 @@ Project sources:
 - [Current web entry point](../backend/app/main.py)
 - [Current selection orchestration](../backend/app/fit_select.py)
 - [Stage 4 behavior and limits](stage4.md)
-- [Stage 4 implementation plan and later-stage handoff](../audit/stage4-plan.md)
-- [Historical Stage 4 findings](../audit/stage4-review/report.md)
+- [Stage 4 implementation plan and later-stage handoff](full-feature-development.md#12-completing-implementation-and-verification)
+- [Historical Stage 4 findings](full-feature-development.md#stage-4-and-f0-closure)
 - [Original run/API and adaptation design](../tech_breakdown.md)
 - [Project frontend design skill](../skills/codex_frontend.md)
 - [Project design process skill](../skills/claude_frontend.md)

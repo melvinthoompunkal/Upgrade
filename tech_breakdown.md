@@ -1,55 +1,17 @@
-# Upgrade: implementation status and MVP technical breakdown
+# Upgrade: MVP technical design
 
-Original research: October 27, 2026. Status updated October 28, 2026, America/New_York.
+Original research: October 27, 2026. Documentation reconciled October 28, 2026,
+America/New_York.
 
-**Current delivery:** a working terminal workflow uses Meta to trace one Scrapy retry
-feature, profile the bundled Python/HTTPX crawler, and select or reject the proposed
-adaptation using controller-owned evidence checks, gates, and scoring. Phases 1–3 and
-Stage 4A W1–W6 are implemented. Selection does not apply a production patch.
+Use [project status, audits and the development plan](docs/full-feature-development.md)
+for completed milestones, resolved findings, historical verification and the remaining
+package checklist. This document retains architecture, contracts, scoring and the
+original MVP design; its account/private-access exclusions are superseded by that roadmap.
 
-**Remaining product goal:** adapt the best eligible source feature inside managed target
-storage and export a patch with unchanged-test red-to-green verification. The broader
-catalog, real repository planner, Implementer, and Verifier/Fixer remain pending.
-A local frontend and persistent browser bridge now expose the existing workflows;
-see [the browser workspace guide](docs/frontend.md) for current scope and limitations.
-The [foundation implementation receipt](audit/full-feature-foundations/report.md)
-records closure of the six Stage 4 audit findings, shared CLI/API execution exclusion,
-owner-scoped APIs/sessions and an optional GitHub authorization/repository-index preview.
-Local mode remains active; the full account/catalog/adaptation roadmap is in
-[full-feature-development.md](docs/full-feature-development.md).
-The [F1 identity receipt](audit/full-feature-foundations/f1-identity.md) adds strict
-auth-record validation, transactional failure cleanup/admission checks and browser
-account-switch isolation. Real GitHub account validation remains deferred.
-The [frontend integration plan](docs/frontend-integration-plan.md)
-defines the proposed user experience, design, API bridge, and delivery packages U0–U6.
-
-The implemented demo pair is **Scrapy → `examples/crawler-target`**, registered as
-`crawler-demo`. The crawler exists in this monorepo; it is not a separate user-supplied
-repository. Only this registered target/prepared Python runner is supported today.
-
-## Current capabilities: frontend reference
-
-The code and actual run artifacts are authoritative for implemented behavior. Later
-sections retain future design specifications and identify their delivery status.
-Available workflow routes are documented in the browser guide and generated OpenAPI schema.
-
-| Capability | Status and available behavior | Implementation / evidence |
-|---|---|---|
-| Meta integration | Implemented: Muse Spark structured output, bounded read-only tools, provider/model validation, explicit HTTP retry ledger, shared usage budgets, sanitized provider diagnostics | [Meta client](backend/app/models/meta_client.py), [schema checks](backend/app/models/schema.py), [smoke workflow](backend/app/smoke.py) |
-| Crawler fixture | Implemented: injected caller-owned HTTPX client, HTML parsing/link extraction, breadth-first same-origin traversal, duplicate-visit suppression, page cap; fetch still makes one GET attempt | [Crawler](examples/crawler-target/src/crawler.py), [target tests](examples/crawler-target/tests/test_crawler.py) |
-| Offline execution | Implemented: fixed isolation/baseline/retry suites in prepared restricted Docker containers; captured cases, stdout/stderr, JUnit, image/input hashes | [Runner](backend/app/tools/runner.py), [runner documentation](sandbox/README.md) |
-| Repository snapshots | Implemented: public source pinned to SHA, registered local target committed HEAD cloned independently, inventories, sparse managed worktree, excluded dirty-input disclosure and preservation checks | [Repositories](backend/app/tools/repositories.py), [Phase 3](docs/phase3.md) |
-| Source evidence | Implemented: bounded line reads, Python AST/symbol evidence, qualified citation validation, read logs and disclosed coverage | [Evidence tools](backend/app/tools/evidence.py), [shared model tools](backend/app/evidence_tools.py) |
-| Source tracing | Implemented for one bounded Scrapy retry slice; feature card, implementation/test/dependency/license references, hashed excerpts and complete notices | [Tracer](backend/app/tracer.py), [trace CLI](backend/app/source_trace.py) |
-| Exact pinned target baseline | Implemented: execute approved Git blob bytes; bind SHA, monorepo prefix, hashes, image, frozen diagnostic and captured case identities | [Pinned baseline](backend/app/pinned_baseline.py), [W1 documentation](docs/stage4-w1.md) |
-| Target profiling | Implemented: parsed stack compatibility, architecture, capabilities, gaps, style, integration points, baseline provenance and coverage; inferred gaps remain distinct from observed behavior | [Target Profiler](backend/app/target_profiler.py), [profile contracts](backend/app/selection_contracts.py) |
-| Fit selection | Implemented for one actual candidate: Meta ratings plus Python totals, ten gates, stable order, short/null `top3`, complete rejections, one bounded clarification round | [Fit Matcher](backend/app/fit_matcher.py), [selection workflow](backend/app/fit_select.py) |
-| Reports and artifacts | Implemented on local disk: JSON/Markdown reports, trace/profile/assessment/fit artifacts, captures, read logs, notices, model attempts/usage and integrity manifests; required JSON survives optional/sidecar publication failures where its destination remains writable | [Artifact store](backend/app/selection_artifacts.py), [F0 follow-up](audit/full-feature-foundations/f0-follow-up.md) |
-| Browser/API surface | Implemented locally: React workspace, typed capability/target/run/evidence/artifact routes, same-origin static serving, and explicit browser-started workflows | [Web app](backend/app/main.py), [frontend guide](docs/frontend.md) |
-| Identity and ownership | Implemented locally: numeric GitHub identity, expiring hashed sessions, single-use browser-bound auth, encrypted rotating credentials, CSRF, atomic disconnect/admission checks and account-scoped results/drafts | [GitHub setup](docs/github-setup.md), [F1 verification](audit/full-feature-foundations/f1-identity.md) |
-| Run persistence and queue | Implemented locally: SQLite queue/history, one process-owned worker, idempotent submission, ordered events, refresh recovery, and integrity-checked artifact access; remaining reliability boundaries are documented | [Frontend guide](docs/frontend.md) |
-| Multiple source candidates | Pending optional 4B; schema capacity up to eight does not mean discovery/comparison is implemented | [Stage 4 scope](docs/stage4.md) |
-| Patch and final verification | Pending: real planner, finalized behavior contract, acceptance preparation, safe patch application, actual diff/dependency gates, green/regression checks and capped repair | Section 4 below; [Stage 4 handoff](audit/stage4-plan.md#15-handoff-to-the-later-patch-and-verification-milestone) |
+The implemented demo pair is Scrapy → `examples/crawler-target` (`crawler-demo`).
+Selection is delivered; production patching and final verification remain planned.
+Setup and actual browser workflows are in [README](README.md) and
+[the browser guide](docs/frontend.md).
 
 ### Available terminal actions and their future UI entries
 
@@ -97,38 +59,8 @@ registration, runner/image settings, credentials and policy remain server-side c
   detection and progress.
 - The implemented UI views are Overview, Features, Evidence, Tests, Changes and Exports.
   Initially Changes explains that the analysis made no code changes. Future build
-  controls depend on backend capabilities. Preserve the existing workflows through
-  shared services when adding the run API; do not duplicate them in frontend logic.
-
-### Recorded verification and audit closure
-
-The October 27 Stage 4 completion receipt records one eligible/analyzed retry candidate,
-`http-retry-bounded`, selected at **93/100**. Six isolation and thirteen ordinary baseline
-cases passed; the seven-case retry diagnostic had four expected assertion failures and
-three passing controls. The live run used 15 Meta HTTP attempts, 109,638 returned input
-tokens and 23,176 returned output tokens. Its 29 published artifacts and 50 citations
-were independently checked at that time. These are historical run facts, not UI defaults
-or a new execution performed for this document update.
-
-The historical [Stage 4 implementation audit](audit/stage4-review/report.md) recorded
-**259 passing backend tests** with four Medium and two Low findings. The subsequent
-[foundation receipt](audit/full-feature-foundations/report.md) closes those findings;
-the [F0 follow-up](audit/full-feature-foundations/f0-follow-up.md) adds publication,
-containment and custom-storage execution regressions.
-
-| Finding | Implemented closure |
-|---|---|
-| S4-A01 | Proposed production scope must include the cited integration file |
-| S4-A02 | Exact typed `retry-v1` behavior binds acceptance readiness |
-| S4-A03 | Raw capture hashes precede strict metadata decoding |
-| S4-A04 | JSON publication is independent of optional Markdown and sidecar failures |
-| S4-A05 | Physical run/artifact roots and ancestors are checked before writes |
-| S4-A06 | JSON, Markdown and API projections use recorded analyzed counts |
-
-The repairs have focused regression evidence; the original findings remain unchanged
-as historical records. They do not implement production patches or establish hosted
-isolation. See the linked receipts for actual test/model/Docker execution and
-[tracked usage](docs/stage4.md) for selection boundaries.
+  controls depend on backend capabilities. Preserve the implemented shared-service
+  boundary as the API expands; do not duplicate workflows in frontend logic.
 
 ## 1. Graft audit
 
@@ -184,7 +116,7 @@ Authenticated schema/tool smoke checks and the recorded full selection have succ
 with `muse-spark-1.3`. Settings also allow explicit Spark 1.2/1.1 selection; alternate
 configuration is not evidence of a fresh successful check. No provider fallback occurs.
 See [configuration](backend/app/config.py), [transport](backend/app/models/meta_client.py)
-and [recorded verification](audit/stage4-report.md). Original documentation references:
+and [recorded verification](docs/full-feature-development.md#live-sample-runs). Original documentation references:
 [Meta tool calling](https://dev.meta.ai/docs/tool-calling),
 [structured output](https://dev.meta.ai/docs/structured-output).
 
@@ -203,12 +135,11 @@ patching, merging and pushing are not part of current selection.
 
 For the demo, bake approved target dependencies into a pinned runner image in advance. Do not run a repository's Dockerfile or install arbitrary dependencies on the host. Targets needing unknown packages, services, or network tests return `unsupported_target`; a general-purpose dependency installer is cut.
 
-**Planned persistence:** keep artifact bytes on disk and add SQLite runs, sequenced
-events and artifact descriptors; model call/attempt records already exist in reports.
-Persist transitions before announcing them. Reconcile abandoned worker ownership on
-restart and mark interrupted work without automatically replaying paid calls or patches.
-The [frontend integration plan](docs/frontend-integration-plan.md) is the detailed design
-for queueing, API contracts and recovery. No such database or worker exists today.
+**Implemented local persistence:** SQLite stores owner-scoped runs, queue state and
+sequenced events; artifact bytes and model call/attempt records remain on disk. A single
+API-owned worker uses the common CLI/API execution lock and marks abandoned work
+interrupted without replaying paid calls. Hosted leases, hard-stop cleanup and lifecycle
+hardening remain [F6 work](docs/full-feature-development.md#13-development-sequence-and-deliverables).
 
 ## 3. MVP feature list
 
@@ -793,7 +724,7 @@ Upgrade/
     runner-image.json                 # created by runner build
     artifacts/<run-id>/                # created by each workflow
   .research/                          # ignored reference clones
-  audit/                              # ignored reports and receipts
+  audit/                              # machine receipts; ignored local history archive
   skills/                             # ignored local project skills
 ```
 
@@ -811,37 +742,23 @@ and patch/verification modules remain planned. The [frontend plan](docs/frontend
 retains the design criteria. Keep frozen acceptance artifacts outside the production
 worktree; future patch tools must not be able to edit them.
 
-## 9. Remaining delivery sequence
+## 9. Delivery sequence
 
-The original day-by-day estimate preceded the delivered milestones. Use this dependency
-sequence instead of scheduling completed foundation work again. Remaining hours and
-calendar dates must be estimated from the chosen implementation scope.
-
-| Work | Current state | Required next result |
-|---|---|---|
-| Stage 4 audit remediation / frontend U0 | Repaired with new regression reproductions | See the foundation closure receipt; original audits remain historical |
-| Shared workflow services / U1 | Typed inputs/context, progress and shared CLI/API execution lock implemented | Hard-stop recovery/cleanup remains a separate milestone |
-| Durable run API and worker / U2 | Implemented locally, now owner scoped | Hosted leases, fairness, retention and private-code lifecycle |
-| Main browser experience / U3–U4 | Delivered for the sample workflows; GitHub repository-index preview added | General supported target adapters and a persistent feature catalog |
-| Phase 5 backend | Handoff/specifications only | Real planner, finalized frozen acceptance, safe generated patch, actual scope/dependency limits, green/regression and capped repair |
-| Adaptation UI / U5 | Depends on Phase 5 | Actual diff, source-to-target mapping, acceptance/red/green/regression and repair history |
-| Usability/live verification / U6 | Local build, browser/mobile, API and baseline receipts exist | Real GitHub App sign-in, fresh complete catalog/adaptation release checks |
-| Optional 4B | Pending | Independently traced depth/duplicate slices, honest comparisons and measured combined budget |
-
-A usable selection UI can ship before the patch backend. Full adaptation controls depend
-on Phase 5, not on frontend mockups. Broader comparison, a second target, SSE, cancellation,
-PR integration and visual map polish must not delay the first trustworthy run experience.
-See [frontend packages and estimates](docs/frontend-integration-plan.md#9-prerequisites-and-delivery-order).
+The current dependency order, completed packages and remaining exit criteria live in
+[the single development checklist](docs/full-feature-development.md#13-development-sequence-and-deliverables).
+Estimate remaining work from the chosen adapter and hosting scope rather than the
+original day-by-day schedule.
 
 Event rules and pre-existing-code disclosure still need separate verification before
-submission. Preserve research/implementation provenance; do not describe Graft's earlier
-code or recorded runs as newly built/live work.
+submission. Preserve research/implementation provenance; recorded runs and earlier
+Graft code must retain their original dates and attribution.
 
 ## 10. Risks and failure points
 
 This table combines delivered safeguards with requirements for remaining work. Patching,
-repair and persistent recovery safeguards are future requirements. The six specific
-current implementation defects are listed in the status reference above.
+repair and hosted recovery safeguards are future requirements. The original six
+Stage 4 defects have [recorded repairs](docs/full-feature-development.md#stage-4-and-f0-closure);
+remaining operational limits are tracked with the development plan.
 
 | Risk | Mitigation or cut |
 |---|---|
@@ -862,20 +779,10 @@ current implementation defects are listed in the status reference above.
 | UI work crowds out the core demonstration | Keep CLI first and a single browser run view. Cut graphs, PR integration, extra targets, and streaming upgrades before touching the terminal outcome. |
 | Live demo timing is unpredictable | Pin SHAs, warm the runner and clones, rehearse from a fresh worktree, and keep a labeled recording of a real run. Report observed durations; do not promise the entire pipeline finishes within the speaking slot. |
 
-## 11. Completed milestones and next boundary
+## 11. Milestone and audit reference
 
-| Milestone | Delivered | Evidence |
-|---|---|---|
-| Phase 1: Meta foundation | Backend settings/health, strict contracts, real structured response and read-only tool round trip | [README](README.md); [Phase 3 resolution of earlier audit findings](audit/phase3-report.md) |
-| Phase 2: crawler/offline runner | HTTPX crawler, prepared Docker runner, passing ordinary baseline and valid missing-retry diagnostic | [Runner documentation](sandbox/README.md), [completion report](audit/phase2-report.md) |
-| Phase 3: pinned evidence/source trace | Independent source/target snapshots, inventories, managed worktree, safe evidence tools and real Meta retry trace | [Usage](docs/phase3.md), [completion report](audit/phase3-report.md) |
-| Stage 4 W1 | Exact pinned target export and test/capture/image/input binding | [W1 documentation](docs/stage4-w1.md), [report](audit/stage4-w1-report.md) |
-| Stage 4 W2 | Immutable target/profile/assessment/gate/score/result and baseline-binding contracts | [W2 documentation](docs/stage4-w2.md), [report](audit/stage4-w2-report.md) |
-| Stage 4 W3–W6 / 4A | Real Target Profiler and Matcher, complete one-candidate selection CLI, artifacts and recorded live verification | [Stage 4 documentation](docs/stage4.md), [report](audit/stage4-report.md) |
-| Frontend and persistent API | React workspace, saved runs/events, evidence, system checks and exports; owner/session boundaries and GitHub repository-index preview | [Browser guide](docs/frontend.md), [foundation receipt](audit/full-feature-foundations/report.md) |
-
-The first three coding tasks are complete, and Stage 4A selection is delivered with
-the foundation audit repairs. The persistent local API and frontend are implemented.
-Optional 4B, general feature discovery/relevance, private retrieval, hosted operation and
-Phase 5 adaptation remain pending. Their release requirements are tracked in the full
-feature plan; the connection preview is not a completed full-product release.
+[Current implementation](docs/full-feature-development.md#1-current-implementation),
+[audit closure](docs/full-feature-development.md#2-consolidated-audit-findings) and
+[dated verification](docs/full-feature-development.md#3-verification-and-provenance)
+are maintained together in the full feature development document. Add future status
+changes there rather than maintaining a second milestone or audit table here.

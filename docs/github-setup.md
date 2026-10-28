@@ -124,7 +124,7 @@ describes the underlying authenticated-encryption mechanism.
 Controlled provider tests cover this flow. A real account sign-in and granted private
 repository check are still required; no real GitHub App credentials were available
 for the implementation receipt.
-The [F1 identity receipt](../audit/full-feature-foundations/f1-identity.md) records
-fresh cookie/expiry/replay, populated cross-owner resource, refresh/disconnect race,
+The [F1 identity audit record](full-feature-development.md#f1-identity-follow-up) records
+the October 28 cookie/expiry/replay, populated cross-owner resource, refresh/disconnect race,
 migration rollback/retry and desktop/mobile account-switch checks. This follow-up
 does not add a schema migration or change local-mode configuration.

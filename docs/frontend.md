@@ -103,7 +103,7 @@ digests still describe the original evidence. Source trace bundles include the
 published notices and are analysis artifacts, not executable packages.
 Source-trace and pinned-baseline publication failures retain sanitized JSON and intact
 evidence when the report destination is still writable. An unwritable report destination
-produces a sanitized terminal/API failure. See the [F0 follow-up receipt](../audit/full-feature-foundations/f0-follow-up.md).
+produces a sanitized terminal/API failure. See the [F0 audit closure](full-feature-development.md#stage-4-and-f0-closure).
 
 ## Verification
 
@@ -131,7 +131,7 @@ These tests do not call Meta or Docker. The new foundation tests also cover auth
 browser binding, CSRF, token refresh/rotation, two-owner isolation on result surfaces,
 legacy migration, multi-page repository sync, stale cache and disconnect races. The
 browser uses compact status polling and retains at most 200 recent events.
-The [F1 identity receipt](../audit/full-feature-foundations/f1-identity.md) adds
+The [F1 identity audit record](full-feature-development.md#f1-identity-follow-up) covers
 populated two-owner artifact/excerpt access, failure and migration boundaries, and
 desktop/mobile checks for stale results and drafts during account switching.
 
@@ -139,8 +139,8 @@ desktop/mobile checks for stale results and drafts during account switching.
 
 This delivers the local frontend and its browser bridge, not completion of every
 package in the original integration plan. Stage 4 audit findings U0 are repaired;
-the original review remains historical and the [new closure receipt](../audit/full-feature-foundations/report.md)
-records the reproductions and verification.
+the [consolidated audit record](full-feature-development.md#stage-4-and-f0-closure)
+records the original findings, reproductions and verification.
 The Phase 5 planner/Implementer/Verifier, expanded feature catalog, public targets,
 and arbitrary local targets remain unavailable.
 

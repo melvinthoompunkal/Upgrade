@@ -1,247 +1,316 @@
-# Full feature development
+# Upgrade: project status, audits and development plan
 
-Planning baseline: October 28, 2026, America/New_York.
+Updated October 28, 2026, America/New_York. Implementation reviewed at commit
+`b06d6d3` (`completed f0 and f1`).
 
-This is the development plan for turning Upgrade's working crawler analysis prototype
-into a product that connects GitHub accounts, analyzes supported user repositories,
-offers a usable feature catalog, and eventually produces verified changes. It records
-current implementation separately from proposed work. Creating this plan does not
-implement authentication, close audit findings, register a GitHub App, or certify a
-new live model run.
+This is the single maintained record of completed work, audit findings, verification
+and remaining development. It replaces fourteen audit Markdown documents and the
+frontend verification receipt. Setup and command guides remain separate; their
+status references point here. The technical breakdown and frontend integration plan
+retain design detail, while this document owns the current backlog.
 
-## Implementation update: October 28, 2026
+**Current delivery:** the local CLI and browser can trace one Scrapy retry feature,
+profile the bundled Python/HTTPX crawler and select or reject a proposed adaptation.
+Phases 1–3, Stage 4A, F0 remediation and F1 local identity boundaries are implemented.
+All fourteen findings from the three original audits have recorded repairs. GitHub
+authorization and repository indexing are a development preview. General discovery,
+private retrieval, production patching and final red-to-green verification remain pending.
 
-The first foundation pass is implemented. The remaining sections retain the original
-planning baseline and release criteria; they must not be read as a claim that the full
-product is delivered. Current evidence is in the new
-[foundation receipt](../audit/full-feature-foundations/report.md); original audits remain unchanged.
+The planned product connects GitHub accounts, pins authorized source/target projects,
+offers a code-backed feature catalog with all/relevant browsing, and produces one
+reviewable verified change. **Connected analysis** delivers supported repository and
+catalog analysis; **verified adaptation** adds frozen tests, patching, capped repairs
+and change review. Neither full release gate is complete. Sections 4–14 retain the
+design and remaining requirements, with implemented parts identified explicitly.
+The broader roadmap supersedes the original MVP's account/private-access exclusions.
 
-The F0 follow-up audit closes additional source-trace/pinned-baseline publication gaps,
-checks artifact roots before creating run directories, and keeps CLI/API exclusion on
-the workspace lock even when the API uses custom storage. Its fresh regressions and
-limits are recorded in the [F0 follow-up receipt](../audit/full-feature-foundations/f0-follow-up.md).
+- [Current implementation and boundaries](#1-current-implementation)
+- [Consolidated audit findings and follow-ups](#2-consolidated-audit-findings)
+- [Verification history and retained evidence](#3-verification-and-provenance)
+- [GitHub and repository development](#5-github-login-credentials-and-repository-access)
+- [Adaptation requirements](#12-completing-implementation-and-verification)
+- [Package status and next work](#13-development-sequence-and-deliverables)
+- [Release acceptance](#14-acceptance-and-release-verification)
 
-The next F1 pass completes the local identity/owner boundary's failure and concurrency
-checks. It validates encrypted auth records, consumes unusable auth transactions once,
-settles failed refresh/disconnect/queued cancellation atomically, rechecks connection
-at admission, and resets displayed results and drafts to the new account's scope. See the
-[F1 identity receipt](../audit/full-feature-foundations/f1-identity.md). Schema v3 and
-existing credential formats remain compatible; real GitHub sign-in remains deferred.
+## 1. Current implementation
 
-| Package | Implemented in this pass | Remaining exit work |
+| Area | Delivered behavior | Boundary / next work |
 |---|---|---|
-| F0 | S4-A01–A06 fixes and focused reproductions; typed retry-v1 behavior; strict hash-before-decode captures; independent JSON finalization including source trace and pinned baseline; containment before run/artifact creation; truthful counts; common CLI/API lock including custom API storage | Local F0 exit checks are recorded in the foundation and follow-up receipts; concurrent hostile path replacement and hard-stop recovery remain outside this local boundary |
-| F1 | Transactional schema v3, numeric GitHub identity, hashed expiring sessions, validated single-use auth state and encrypted credentials, atomic refresh/disconnect/admission boundaries, CSRF including malformed headers, owner-scoped APIs/downloads/excerpts, private legacy migration and browser account-switch isolation | Local identity exit checks are in the F1 receipt. Real account validation remains deferred at the user's request; hosted security/operations are not certified |
-| F2 | Configurable GitHub App authorization preview, bounded resumable user/App repository sync and browser index with global search/visibility filters | Private credential broker/fetch, App installation tokens, signed webhooks, provider revocation, in-flight cancellation and live grant checks |
-| F3 | Role-qualified public snapshots with project-root prefix; typed python-static-v1 preflight; fresh urllib3 source and HTTPX target inventories | General evidence/discovery and project-specific executable adapters; these examples are browse/index only |
-| F4 | Not implemented | Persistent discovered feature catalog and independent corroboration |
-| F5 | History now queries on the server; URL-backed paging/search, compact status polling, bounded 200-event browser window | Feature catalog all/relevant queries, relevance assessments and scale verification |
-| F6 | Shared local execution exclusion, four active jobs per owner and sixteen globally, disconnected queued-work cancellation and cache invalidation | Leases, fairness, private lifecycle/consent, retention, hard-stop cleanup and hosted isolation |
-| F7–F8 | Not implemented | Frozen acceptance, real patches, repairs, verified diff review/download and optional explicit PR action |
-| F9 | Backend/browser/build verification and public-project preflight recorded for this pass | Full connected-analysis and verified-adaptation release receipts |
+| Phase 1: Meta foundation | Strict schemas, structured output, read-only tool protocol, sanitized errors, per-attempt telemetry and shared budgets | Smoke planning uses synthetic inputs; real repository planning is pending |
+| Phase 2: crawler and runner | Caller-owned HTTPX client, same-origin breadth-first crawl, canonical URL identity, visit-once and page limits; restricted offline Docker suites | Fetch still makes one GET attempt; the four retry assertions remain red |
+| Phase 3: snapshots and evidence | Independent pinned Git storage, clean managed worktree, inventories, bounded reads, Python AST/symbol evidence, citations, coverage and full notices | Tracing supports one bounded Scrapy retry slice, not a general catalog |
+| Stage 4 W1 | Exact Git blob export and SHA/prefix/input/image/capture binding; separate ordinary baseline and retry diagnostic | Local working-file baseline and pinned baseline remain distinct workflows |
+| Stage 4 W2 | Immutable proposal/profile/assessment/gate/result and baseline-binding contracts | Shape validation does not prove semantic correctness |
+| Stage 4 W3–W6 / 4A | Real Target Profiler and Fit Matcher; Python-owned gates/scores/order; `selected`, `no_safe_fit` and sanitized failures | One analyzed candidate; optional 4B comparison is pending; selection applies no patch |
+| Frontend and local API | React workspace, SQLite queue/history/events, shared workflow services, evidence inspector, tests/logs, exports and explicit diagnostics | One local API worker; hosted execution and adaptation UI are pending |
+| F0 foundations | S4-A01–A06 repaired; strict capture decoding, reliable JSON finalization, physical path checks and common CLI/API execution lock | Hard-stop cleanup and concurrent hostile path replacement remain outside this boundary |
+| F1 identity | Numeric GitHub identity, hashed expiring sessions, single-use PKCE state, encrypted credentials, CSRF, transactional refresh/disconnect/admission, owner-scoped results and drafts | Local mocked-provider verification is complete; real GitHub account validation remains deferred |
+| F2 connection preview | Configurable GitHub App sign-in flow, bounded resumable user/App repository intersection sync, search and visibility filters | No private Git broker/fetch, installation tokens, signed webhooks, provider revocation or current-access lifecycle |
+| F3 public preflight | Role-qualified public snapshots, project-root prefixes and `python-static-v1` manifest inspection; urllib3/HTTPX examples inventoried | Browse/index only; no independent executable adapter or general analysis support |
+| F5 browsing foundations | Global server-side run-history search/paging, URL state, compact status polling and 200-event browser window | Persistent feature catalog, all/relevant queries and scale checks are pending |
+| F6 local admission | Workspace execution exclusion, four unfinished jobs per owner and sixteen globally, queued cancellation and cache invalidation on disconnect | Leases, fairness, in-flight cancellation, retention, private-code consent and hosted isolation remain pending |
+| F4, F7–F8 | Not implemented | Persistent feature discovery; real planner, frozen acceptance, constrained patches, repair, verified diff/download and optional explicit PR publishing |
+| F9 verification | Recorded local backend/browser/build checks, live sample selection and public preflight | Full connected-analysis and verified-adaptation release receipts are still required |
 
-The chosen independent examples are [urllib3](https://github.com/urllib3/urllib3) as source
-and [HTTPX](https://github.com/encode/httpx) as target. The fresh preflight pins their actual
-commits and reads their manifests without running repository code or making model calls.
-Run `backend/.venv/Scripts/python.exe scripts/check_public_examples.py` to create a new
-bounded inventory receipt. This is not general target execution support.
+Implementation anchors:
 
-Actual connection settings and local migration/rotation instructions are in
-[github-setup.md](github-setup.md). The implementation uses `TOKEN_ENCRYPTION_KEYS`
-(newest-first keyring), superseding the singular proposed key name below. Other proposed
-settings are not consumed unless explicitly documented there. Your existing `.env`
-is unchanged; local mode remains active.
+- [Meta client](../backend/app/models/meta_client.py), [schema preflight](../backend/app/models/schema.py)
+  and [shared budget](../backend/app/models/budget.py).
+- [Repositories](../backend/app/tools/repositories.py), [evidence validation](../backend/app/tools/evidence.py),
+  [source tracer](../backend/app/tracer.py), [source controller](../backend/app/source_trace.py)
+  and [shared model tools](../backend/app/evidence_tools.py).
+- [Pinned baseline](../backend/app/pinned_baseline.py), [baseline consumer](../backend/app/selection_baseline.py),
+  [Profiler](../backend/app/target_profiler.py), [Matcher](../backend/app/fit_matcher.py)
+  and [selection controller](../backend/app/fit_select.py).
+- [Publication boundary](../backend/app/report_publication.py), [artifact containment](../backend/app/selection_artifacts.py),
+  [execution lock](../backend/app/execution.py), [run store](../backend/app/api/storage.py)
+  and [schema migrations](../backend/app/api/migrations.py).
+- [Auth store](../backend/app/auth/store.py), [middleware](../backend/app/auth/middleware.py),
+  [repository index](../backend/app/auth/repositories.py), [static support inspection](../backend/app/project_support.py)
+  and [browser account context](../frontend/src/app/workspace-context.tsx).
 
-## 1. Product outcome and scope
+The browser form and [API contracts](../backend/app/api/contracts.py) still submit
+`crawler-demo`. Entering another public source URL does not generalize the retry-specific
+tracer, profiler, runner or source-use policy. The eight-card schema capacity is a batch
+bound, not delivered multi-feature discovery. Run history is not a feature catalog.
 
-The intended experience is:
+### Selection policy to preserve
 
-1. Sign in with GitHub and explicitly grant access to selected repositories.
-2. Choose a target repository and branch; Upgrade resolves an immutable commit.
-3. Choose a public source repository, or an authorized private source repository.
-4. Browse **All features** or **Relevant to your project**, with search, categories,
-   clear coverage, and manageable pages of results.
-5. Inspect one feature's behavior, implementation evidence, dependencies, notices,
-   target fit, and limitations without leaving the current browsing context.
-6. Request deeper analysis or select one eligible feature for adaptation.
-7. Review a generated patch and real acceptance/regression results; optionally create
-   a pull request through a separate explicit action.
+Source is pinned to Scrapy `5c7886a3f27dbf8b66f557cc9945dbc4a6aceaac` for the
+registered slice. Target execution and analysis use the same committed SHA, monorepo
+prefix and exact exported bytes; dirty local changes are excluded and disclosed.
+Ordinary baseline green and feature-specific diagnostic red have separate meanings.
 
-There are two release gates. **Connected analysis** delivers steps 1–5 and deeper
-analysis against supported projects. **Verified adaptation** adds safe implementation,
-frozen tests, capped repair, and patch review. A connected-analysis release must label
-its boundary and must not claim that a selected feature has been implemented.
+The typed [retry-v1 contract](../backend/app/behavior_contracts.py) covers GET/503,
+three total attempts, final `raise_for_status`, parsing after success, propagated
+transport errors, no backoff and no Retry-After. It describes proposed behavior;
+the crawler has not been patched. Broader retry semantics need separately finalized tests.
 
-This expands the earlier MVP scope. Account systems, private-repository access, broad
-catalog browsing, and PR integration were previously excluded in
-[tech_breakdown.md](../tech_breakdown.md), section 3, and parts of the
-[frontend integration plan](frontend-integration-plan.md), section 11. Those exclusions
-explain the current implementation; they are superseded by this plan for the proposed
-product. One source, one target, and one implemented feature per adaptation run remain
-deliberate boundaries. Cross-language transfers, framework migrations, automatic
-merging, production deployment of generated code, and arbitrary dependency installation
-remain outside the first full release.
+Python computes `7*gap + 5*isolation + 3*dependency + 3*stack + 2*testability` from
+integer ratings 0–5. Eligibility requires total ≥75 and gap/isolation/stack/testability
+each ≥3, plus all ten gates: source provenance, target provenance, supported execution,
+passing baseline, demonstrable gap, isolated adaptation, existing dependencies,
+source-use policy, acceptance readiness and sufficient coverage. Stable order is
+`(-total, -isolation, -testability, -dependency_cost, feature_id)`; `top3` contains
+only actual eligible entries and may be empty. Model ratings are judgments, not probabilities.
 
-## 2. Evidence reviewed and implementation at the planning baseline
+Current selection is sequential, with at most one evidence clarification and a shared
+allowance of 32 HTTP attempts, 400,000 returned input tokens, 40,000 returned output
+tokens and 1,200 seconds checked at request boundaries. A stage must not reset it.
+`selected` and `no_safe_fit` exit 0; specific workflow failures exit 1.
+Actual patch scope and post-implementation verification remain false until F7 exists.
 
-Status here is based on source inspection and existing receipts. Historical test and
-live-run results are identified as such; no new model/Docker verification was performed
-while preparing this plan.
+Optional 4B needs independent depth and duplicate-filter traces, per-feature notices,
+coverage and measured combined usage. The target already suppresses repeated visits;
+its page cap is distinct from depth control. Retry acceptance cannot establish a depth
+gap. A genuine comparison may yield one eligible entry from three analyzed features.
 
-| Capability | Current status | Development still required |
+## 2. Consolidated audit findings
+
+The original reviews were limited code audits, with no Critical/High finding established
+in their reviewed scope. Later implementation receipts close the findings below; they
+are not a new independent security audit or hosted-product certification. IDs are
+qualified by phase because the early reports reused M1/M2/L1.
+
+### Phase 1 and Phase 2
+
+| Finding | Original severity and defect | Recorded repair / verification |
 |---|---|---|
-| Meta integration | Implemented: settings, strict output schemas, bounded tools, per-attempt accounting, shared budget, sanitized failures | Extend existing budgets to discovery, planning, implementation, and repairs without resetting them between stages |
-| Source retrieval | Public HTTPS GitHub URL and explicit commit SHA; independent managed Git storage | Authorized private retrieval, branch/ref resolution, size/time limits before expensive processing, access rechecks |
-| Source tracing | Real code-backed trace of one Scrapy retry slice | General discovery and tracing; the current prompt, focus paths, symbols, and validation are retry-specific |
-| Target selection | Only the bundled `crawler-demo` registration | Repository picker, supported project roots, stack detection, generic target snapshots and adapters |
-| Evidence | Bounded reads, Python AST/symbol checks, exact read-backed citations, coverage and notices | Preserve these guarantees for catalogs and other repositories; add language support only with real analyzers |
-| Baseline execution | Reviewed offline Docker runner and fixed crawler suites | Supported user-project runner profiles, prepared dependencies, project-specific baseline and acceptance binding |
-| Target profiling | Working crawler-oriented architecture, capabilities, gaps, style and integration analysis | Remove crawler assumptions; separate static-only analysis from executable/verified support |
-| Fit assessment | One real candidate; model ratings and controller-owned scores, ten gates, ordering and rejections | Multiple candidates, target/goal-specific assessments, generalized acceptance and source-use policy |
-| Feature browsing | Local search and decision filter over `run.features` | Source catalog, relevant/all modes, server search/filter/sort, pagination, lazy details and stable deep links |
-| Frontend/API | Implemented local React workspace and typed FastAPI bridge | Authentication-aware onboarding, repository/catalog routes, explicit access and support states |
-| History/events | SQLite, persisted runs, ordered events, idempotent enqueue and one API worker | Ownership, query-level pagination, global history search, bounded event UI and job lifecycle hardening |
-| Artifact access | Manifest-backed downloads, hash-checked excerpts, host-path redaction | Owner authorization, private cache controls, retention/deletion and authorization after access revocation |
-| GitHub login/tokens | Absent | GitHub App authorization, sessions, token storage/rotation, installations and revocation |
-| Repository planner | Smoke planner uses synthetic inputs | Real pinned-inventory planner and versioned execution/behavior contract |
-| Acceptance preparation | Existing hand-authored crawler diagnostic | Source/goal-derived final behavior contract and frozen, independently prepared acceptance tests |
-| Patching/repair | Absent; current Changes view explains analysis only | Constrained patch tools, actual diff/dependency checks, unchanged-test red-to-green, regression and capped repairs |
-| PR publishing | Absent | Reviewed branch/PR action, repository write permissions, idempotency and stale-base handling |
-| Hosted operation | Local application only | Production auth, ownership, worker isolation, quotas, observability, backups and deployment verification |
+| P1-M1 | Medium: repeat setup overwrites `.env` | Conditional creation in README; existing configuration preserved |
+| P1-M2 | Medium: smoke orchestration coupled to provider transport | Probe workflow/contracts moved to smoke modules; shared adapter owns provider primitives |
+| P1-M3 | Medium: lost failed-generation metadata and invisible retries | Failed calls retain metadata; SDK retries disabled in favor of explicit budgeted attempt ledger; 500/500/200 accounts for three attempts |
+| P1-L1 | Low: incompatible strict schemas accepted | Local compatibility preflight rejects defaults/unrestricted objects before network calls |
+| P1-L2 | Low: frozen models contain mutable lists | Tuple-backed immutable collections preserve JSON array serialization |
+| P2-M1 | Medium: stream I/O failure can leave a successful capture without logs | Logs opened before startup; owned drains propagate faults; completion and both log hashes required; six real-container stream fault probes recorded |
+| P2-M2 | Medium: equivalent origin spellings stop traversal | Canonical HTTPX scheme/host/effective-port identities for origin, queue and visited set; five added crawler cases |
+| P2-L1 | Low: linked export roots bypass checks | Supplied physical root and ancestors validated before resolution; root/ancestor/child-link regressions |
 
-Important implementation anchors:
+P1-M1 was repaired in Phase 2; Phase 3 records the remaining closures.
+Permanent regression anchors: [audit regressions](../backend/tests/test_audit_regressions.py),
+[runner tests](../backend/tests/test_runner.py) and [crawler tests](../examples/crawler-target/tests/test_crawler.py).
 
-- [NewRun.tsx](../frontend/src/features/new-run/NewRun.tsx) keeps a target selector
-  but explicitly submits `target: 'crawler-demo'`.
-- [API contracts](../backend/app/api/contracts.py) restrict targets with
-  `Literal["crawler-demo"]`; [target registration](../backend/app/tools/repositories.py)
-  rejects other target IDs.
-- [SourceTracer](../backend/app/tracer.py) requests exactly one Scrapy retry feature.
-  Entering a different public URL does not make this a general source-analysis tool.
-- [FitMatcher](../backend/app/fit_matcher.py),
-  [TargetProfiler](../backend/app/target_profiler.py), and
-  [SelectionBaseline](../backend/app/selection_baseline.py) contain reviewed crawler,
-  source, notice, diagnostic, or integration assumptions. Replacing one form field
-  cannot generalize this pipeline.
-- [SourceTrace](../backend/app/evidence_contracts.py) and selection contracts allow
-  at most eight cards/candidates. That is batch capacity, not implemented discovery
-  or a suitable database-wide catalog limit.
-- [RunStore](../backend/app/api/storage.py) has no user ownership. History listing
-  reads/sorts all summaries before [routes](../backend/app/api/routes.py) slice them;
-  [History.tsx](../frontend/src/features/runs/History.tsx) searches only loaded runs.
-- [Features.tsx](../frontend/src/features/evidence/Features.tsx) filters and renders
-  the supplied array. [useRun.ts](../frontend/src/features/runs/useRun.ts) polls the
-  full detail projection and accumulates events. These are adequate for the small
-  current result, but need different payload boundaries for large catalogs.
-- [main.py](../backend/app/main.py) has loopback host restrictions and specific SPA
-  routes; [routes.py](../backend/app/api/routes.py) has local-origin submission checks.
-  These are local protections, not a multi-user authorization system. The health
-  response also retains an outdated static `phase: "source_tracing"` label.
+### Stage 4 and F0 closure
 
-### Existing verification, with its limits
+| Finding | Original severity and defect | Implemented closure and regression evidence |
+|---|---|---|
+| S4-A01 | Medium: integration citation can disagree with production scope | `src/crawler.py` must occur in proposed production paths; disconnected helper rejected; connected scope accepted |
+| S4-A02 | Medium: source recognition substitutes for proposed behavior validation | Exact typed `retry-v1` contract required; eight behavior mismatches rejected despite matching rationale prose |
+| S4-A03 | Medium: malformed capture metadata escapes as `TypeError` | Raw digest checked before JSON decoding; strict nested shape validation; missing/extra/type corruption retained as sanitized `invalid_evidence` through CLI/API |
+| S4-A04 | Medium: report I/O suppresses structured failure receipt | Required JSON independent of optional Markdown write/render; sidecars registered immediately; outer CLI emits sanitized JSON diagnostic when destination is unwritable |
+| S4-A05 | Low: containment rejection occurs after redirected write | Physical roots/ancestors/destinations checked before creation/replacement; junction probes leave outside destination empty |
+| S4-A06 | Low: Markdown claims one analyzed feature before analysis | JSON/Markdown/API use recorded analyzed/eligible counts, including zero before inference |
 
-The [Stage 4 completion receipt](../audit/stage4-report.md) records a real selected
-retry candidate at 93/100, with 29 artifacts and 50 citations checked at that time.
-It establishes working bounded selection, not patch generation or catalog discovery.
+The F0 follow-up extended those repairs beyond selection:
 
-The newer [frontend verification receipt](frontend-verification.md), dated October 28,
-records 259 pre-existing backend tests plus 19 web API tests, 26 Playwright checks,
-a production build, and a fresh Docker baseline through the browser API. It explicitly
-records **no fresh paid Meta inference for frontend delivery** and does not close the
-Stage 4 audit. Opening a historical selection in the browser is useful integration
-evidence, but does not establish a fresh browser-driven end-to-end model success.
-
-## 3. Audit reconciliation and missed work
-
-### Earlier findings that were resolved
-
-Do not copy the old audits' open-status language into a new backlog without reading
-later receipts. [Phase 3's resolution table](../audit/phase3-report.md) records:
-
-| Finding | Current recorded resolution |
+| Follow-up boundary | Delivered result |
 |---|---|
-| Phase 1 M1: setup overwrites `.env` | Conditional creation preserves existing configuration |
-| Phase 1 M2: smoke workflow inside provider transport | Probe contracts/orchestration moved to smoke modules |
-| Phase 1 M3: lost failure telemetry/invisible retries | Failed-call metadata and explicit attempt ledger with shared budgets |
-| Phase 1 L1: incompatible strict schemas accepted | Local strict-schema compatibility checks before requests |
-| Phase 1 L2: mutable collections in frozen contracts | Immutable tuples with deliberate JSON array serialization |
-| Phase 2 M1: log I/O failures can appear successful | Owned stream drains, required logs/hashes, fault-probe coverage |
-| Phase 2 M2: equivalent origins stop traversal | Canonical HTTPX origin identities and traversal cases |
-| Phase 2 L1: linked export roots bypass checks | Physical root/ancestor validation before resolution |
+| Optional Markdown | `KeyError`, `TypeError`, `RuntimeError` and write denial yield sanitized warnings while required JSON and original outcome survive |
+| Source-trace publication | Atomic immediate artifact registration; later sidecar/read-log failure retains intact evidence, model usage and actual counts in failed JSON |
+| Pinned-baseline publication | Denied binding write retains failed JSON with captured suites and explicit unavailable binding |
+| Artifact roots | Source trace and working-file baseline reject redirected ancestors before run creation, provider access or runner access |
+| Custom API storage | Worker and CLI both use workspace `data/execution.lock`; worker waits before claiming queued work |
+| Busy CLI | All five CLI entry points return the same sanitized `execution_busy` code |
 
-Keep these regression protections when refactoring. Their original findings remain
-historical records in [audit/report.md](../audit/report.md) and
-[the Phase 2 audit](../audit/phase2-audit/report.md).
+Regression anchors: [foundation boundaries](../backend/tests/test_foundation_boundaries.py),
+[report publication](../backend/tests/test_report_publication.py),
+[fit policy](../backend/tests/test_fit_matcher.py), [selection workflow](../backend/tests/test_fit_select.py)
+and [web API](../backend/tests/test_web_api.py).
 
-### Six Stage 4 findings open at the planning baseline
+### F1 identity follow-up
 
-Implementation update: S4-A01–A06 are repaired in the foundation pass, with new regression
-reproductions in [the closure receipt](../audit/full-feature-foundations/report.md).
-The following table preserves the findings and their required completion evidence.
-
-The [Stage 4 review](../audit/stage4-review/report.md) listed four Medium and two Low
-findings at the planning baseline. The foundation implementation repaired those
-selection paths. The F0 follow-up also retains controller JSON when source evidence
-or pinned-baseline binding publication fails; a queue error alone is insufficient.
-
-| ID | Priority and required change | Completion evidence |
-|---|---|---|
-| S4-A01 | Medium: require the claimed integration file in actual proposed production scope, or an explicitly supported extension mechanism | A disconnected helper plan is rejected; a connected plan passes the structural check |
-| S4-A02 | Medium: bind assessment to a typed, versioned behavior contract; validate method, statuses, attempt bound, final-error and parsing rules | Infinite/unrelated retry behavior cannot pass acceptance readiness; no prose regex gate |
-| S4-A03 | Medium: verify bound raw capture bytes before JSON/dataclass decoding; strictly validate metadata and translate shape errors | Missing/extra fields and changed bytes yield `invalid_evidence` through CLI and API, with sanitized retained results |
-| S4-A04 | Medium: define one dependable finalization/error boundary, with JSON failure publication independent of optional Markdown | Markdown-only write failure retains JSON; an unwritable output root yields a sanitized terminal diagnostic |
-| S4-A05 | Low: validate physical root and existing ancestors before artifact creation/replacement | Junction/link redirection is rejected before an outside write; document concurrent local-tampering limits |
-| S4-A06 | Low: derive human-report counts from recorded data | Pre-inference failure shows zero consistently in JSON, Markdown and UI |
-
-Close all six with focused regression cases before enabling generated patch execution.
-Close the evidence/finalization/containment defects before a connected private-data
-release relies on the same stores. Keep original audit receipts unchanged and write
-a new closure receipt with reproduction results and the relevant commit identity.
-
-### Frontend packages: delivered versus incomplete
-
-| Earlier package | Reconciled status |
+| Boundary | Delivered result |
 |---|---|
-| U0 audit remediation | S4-A01–A06 repaired; foundation and F0 follow-up receipts record the regression evidence |
-| U1 shared workflows | Typed workflow inputs/context, canonical services, stage progress and workspace-wide CLI/API exclusion delivered; hosted lifecycle and hard-stop cleanup remain F6 work |
-| U2 durable local API | Delivered locally; not a distributed or tenant-aware execution platform |
-| U3 main experience | Delivered for the registered sample and current analysis workflows |
-| U4 existing tool coverage | Delivered locally: trace, fit, baseline modes, explicit Meta check, evidence and exports |
-| U5 adaptation | Pending Phase 5 backend and actual patch/verification artifacts |
-| U6 usability/reliability | Build, mobile/keyboard/browser checks and real API Docker baseline recorded; fresh browser-driven paid selection, production auth and large-data checks remain |
-| Optional 4B | Not delivered; real additional slices/comparison still required |
+| Failed refresh versus reconnect | Failure cleanup stays under refresh transaction; a subsequent successful authorization survives |
+| Disconnect versus queued cancellation | Connection state, credentials/cache and queued cancellation commit or roll back together |
+| Disconnect versus admission | GitHub-mode enqueue rechecks connection in the admission transaction |
+| Encrypted records | Strict token/expiry/field validation; invalid records require reconnect and settle queued work without exposing input |
+| Single-use state | Browser-bound state consumed before decoding; unavailable key or malformed verifier yields sanitized 400 and cannot replay |
+| Auth rejection | Private no-store/no-referrer/nosniff headers; malformed non-ASCII CSRF safely rejected |
+| Account switching | Results/context clear before new history; owner-keyed workspace remount reads only the new owner's draft |
+| Resource access | Populated detail/status/events/references/previews/downloads/excerpts succeed for owner; foreign account receives unknown-resource 404 and cannot search the run |
+| Migration | Duplicate-path v1 fixture rolls back unchanged and can be repaired/retried; future schemas rejected; schema v3 and credential formats remain compatible |
 
-### Documentation and operational omissions
+Sixteen backend reproductions and both desktop browser reproductions failed before
+their respective repairs. Existing replay, expiry, cookie, PKCE, rename, session rotation,
+refresh/key-rotation and owner-idempotency cases remain covered. See
+[identity boundaries](../backend/tests/test_identity_boundaries.py),
+[auth tests](../backend/tests/test_auth.py) and [account browser tests](../frontend/tests/account.spec.ts).
 
-Current-status tables in [tech_breakdown.md](../tech_breakdown.md) and the links in the
-[frontend integration plan](frontend-integration-plan.md) now reflect the delivered
-local API/UI and F0 repairs. Original design sections and dated receipts remain
-historical. Use [frontend.md](frontend.md), the current source and the implementation
-update above when deciding what remains.
+### Remaining risks and incomplete work
 
-Also carry these gaps into development rather than treating them as closed by tests:
+No original finding above remains recorded as open. These disclosed limits still need
+development and release evidence:
 
-- CLI and API workflows share the workspace execution lock, including custom API
-  storage. A hard stop can still leave owned Docker processes; persisted queue state
-  does not make paid inference resumable.
-- Historical receipt import runs only in local mode under `local-workspace` ownership.
-  Those records are not automatically assigned to a GitHub account or shared publicly.
-- Run detail embeds cards, references, tests, calls and artifact descriptors together;
-  history filtering/paging now runs on the server, but catalog payload boundaries
-  and large-scale query verification remain pending.
-- Existing coverage names examined files, which can still contain unread lines. Read
-  citations and static AST overlap do not prove semantic completeness or runtime order.
-- Current acceptance/source-use/runner policy is specifically registered to the sample.
-  General repository support requires supported adapters and contract preparation.
-- Session/owner boundaries and active-job quotas are implemented locally. Production
-  authentication validation, deletion/retention, private-data model consent, broader
-  request quotas and hosted worker isolation remain release requirements.
-- Existing receipts do not establish a current dependency-vulnerability review, all
-  supported model variants, or production load behavior. Add release-specific checks.
+- Path checks do not stop a concurrent hostile local actor replacing checked paths;
+  that threat model needs handle-based operations. Hard-killed workers can leave Docker
+  resources; the process lock does not provide orphan cleanup or hosted leases.
+- Source tests are cited, not executed. Read-backed references and AST overlap establish
+  provenance, not semantic completeness; an examined file may have unread lines.
+- Scope/dependency gates currently assess a proposal. Actual diff, dependency and
+  unchanged-test red-to-green checks remain F7 work.
+- Real GitHub sign-in/private grants remain unverified; provider revocation, current
+  private-access checks, private-code model consent and retention/deletion remain pending.
+- General discovery, independent executable project adapters, immutable catalog queries,
+  assessed/unassessed counts and 10,000-row scale checks remain pending.
+- Historical tests do not establish a dependency-vulnerability review, every allowed model
+  variant, production load behavior or hostile multi-user execution safety.
+
+## 3. Verification and provenance
+
+Results below are dated historical receipts. For this consolidation, source inspection
+and a fresh hash comparison matched all 128 files in the latest F1 source manifest;
+the saved backend/browser JUnit digests and totals also matched. No application suite,
+browser, Docker, network fetch or paid inference was rerun for this documentation change.
+
+| Milestone / date | Recorded result | Retained evidence |
+|---|---|---|
+| Phase 1 audit, Oct 27 | 46 backend tests; live Spark smoke passed with three calls, 1,938 tokens | Local [checks](../audit/checks.json), [live smoke](../audit/live-smoke.json) |
+| Phase 2 implementation/review, Oct 27 | 59 backend tests; 6 isolation and 8 ordinary cases; 4 expected retry assertions / 3 controls; five runner failure probes | Local [review checks](../audit/phase2-audit/checks.json), [baseline](../audit/phase2-audit/baseline.json), [fault reproduction](../audit/phase2-audit/capture-fault.json), [edge probes](../audit/phase2-audit/edge-probes.json), [runner probes](../audit/phase2-audit/runner-probes.json) |
+| Phase 3, Oct 27 | 92 backend tests; 6 isolation / 13 ordinary cases; expected retry red; six stream faults; live smoke and source trace | Local [checks](../audit/phase3-checks.json); trace `source-trace-8991ae909e544bf484c2f83e60c348b0` |
+| W1, Oct 27 | 116 backend tests; real pinned/local Docker baselines; 31 hashes rechecked | Local [checks](../audit/stage4-w1-checks.json) |
+| W2, Oct 27 | 214 backend tests; strict schemas and immutable binding contracts; no live calls | Local [checks](../audit/stage4-w2-checks.json), [JUnit](../audit/stage4-w2-tests.xml), [schemas](../audit/stage4-w2-schemas.json) |
+| Stage 4A implementation/review, Oct 27 | 259 backend tests; one selected feature at 93/100; 29 artifacts and 50 citations checked; six audit reproductions | Local [implementation checks](../audit/stage4-checks.json), [JUnit](../audit/stage4-tests.xml), [review checks](../audit/stage4-review/checks.json), [reproductions](../audit/stage4-review/reproductions.json), [artifact recheck](../audit/stage4-review/receipt-recheck.json) |
+| Frontend delivery, Oct 28 | 259 existing + 19 API tests; 26 desktop/mobile browser checks; TypeScript/build and HTTP serving passed; fresh API Docker baseline | API run `e80af20ddfcc4e6393b0c3f0b38dc700`; no fresh paid model inference for this delivery |
+| First foundation pass, Oct 28 | 342 backend tests; later focused profiler 20 and selection 16; browser 34 plus 2 recorded-result checks; build/lint; fresh Docker baseline and public preflight | Tracked [checks](../audit/full-feature-foundations/checks.json), [backend JUnit](../audit/full-feature-foundations/backend-tests.xml), [browser JUnit](../audit/full-feature-foundations/browser-tests.xml), [recorded-result browser JUnit](../audit/full-feature-foundations/browser-live-tests.xml), [profiler](../audit/full-feature-foundations/profile-v2-tests.xml), [selection protocol](../audit/full-feature-foundations/workflow-v2-tests.xml) |
+| F0 follow-up, Oct 28 | 358 backend tests, zero failures/errors/skips; lint/format passed | Tracked [checks](../audit/full-feature-foundations/f0-follow-up-checks.json), [JUnit](../audit/full-feature-foundations/f0-follow-up-tests.xml) |
+| F1 follow-up, Oct 28 | 384 backend tests and 36 desktop/mobile browser tests, zero failures/errors/skips; TypeScript/build/lint/format passed | Tracked [checks](../audit/full-feature-foundations/f1-identity-checks.json), [backend JUnit](../audit/full-feature-foundations/f1-identity-tests.xml), [browser JUnit](../audit/full-feature-foundations/f1-browser-tests.xml) |
+
+Counts belong to their implementation states; they are neither additive across suites
+nor competing current totals. F0/F1 checks used controlled GitHub/Meta/Docker boundaries;
+neither follow-up made live GitHub/model calls or executed Docker. Their backend suites
+report one existing Starlette/httpx deprecation warning. Windows fixture ACL/helper-spawn
+restrictions required normal local execution permissions during recorded verification.
+
+### Live sample runs
+
+- Phase 3 trace: 11 requests, 84,369 input / 13,423 output tokens, eleven references,
+  four examined files and 635 unexamined text files; full BSD-3-Clause notice retained.
+- Original Stage 4 selection `fit-select-c6e22ed623984ccb9b2838c54df7e911`:
+  one analyzed/eligible candidate at **93/100**, fifteen attempts, 109,638 input /
+  23,176 output tokens. Target `7cff4a209b665daa7d7bb30eb81619c4b2685b08`,
+  prefix `examples/crawler-target`. Preservation and 29 artifacts passed at run time.
+  A later verifier's historical-HEAD assertion became false after HEAD advanced;
+  the separate review recheck verified pinned artifacts and target bytes without
+  claiming a new live run at the later HEAD.
+- Foundation run `fit-select-13c9d57aa43d47fab61a1448531e00e6`: source trace
+  succeeded, but target profiling cited a related test rather than the exact registered
+  one. It failed as `invalid_evidence`, retaining eighteen calls and 24 artifacts.
+  The `target-profile-v2` prompt clarified the exact mapping; validators were preserved.
+- Separate run `fit-select-6a66d401a31d413bbd9193fcee246c52`: **selected**, one
+  analyzed/eligible feature at **91/100**, all ten gates, seventeen calls, 135,440 input /
+  24,148 output tokens and 29 rehashed artifacts; source, target and worktree preserved.
+  Two browser checks reopened that real result and checked excerpts/download digests.
+
+These are separate accountable runs, not hidden retries. They establish bounded selection
+and inspection of saved results, not a production patch or a new connected-analysis release.
+Recorded live public-evidence transfer was explicitly authorized at the time; that does
+not authorize future private-code transmission.
+
+### Independent public examples
+
+| Role | Repository | Recorded commit | Inventory / capability |
+|---|---|---|---|
+| Source | urllib3 | `5feb993421a48a508bc70c78e745337cc6415265` | 144 text files, 1,478,408 bytes, 82 Python files; browse/index only |
+| Target | HTTPX | `b5addb64f0161ff6bfe94c124ef76f6a1fba5254` | 90 text files, 974,681 bytes, 60 Python files; browse/index only |
+
+Tracked [public-projects.json](../audit/full-feature-foundations/public-projects.json)
+records refs, notices, inventory/manifest hashes and `python-static-v1` assessment.
+[check_public_examples.py](../scripts/check_public_examples.py) can create a new bounded
+preflight; it fetches public snapshots without model inference or repository execution.
+This does not demonstrate general discovery, executable support or safe adaptation.
+
+### Original review identities and document consolidation
+
+Phase 1 reviewed `5564d346853cf419c1aa0e976834ca803aee7e5a`; Phase 2 reviewed
+`f50bcfec17546148b7a6b4e222ef32e804952316`. Stage 4 design/research inspected
+`39ca2381cce0853e93c5b789607ad880a4da0391`; the later Stage 4 audit bound unchanged
+reviewed bytes across the transition to `07ed18dd5b323f1fc2d7cb46137ad18eb916fb8a`.
+The foundation receipt used base `9d0ea7297d0844070d7706ca1cb7a2e92c09fb08`;
+F0/F1 used base `bedf27e1daf824228144e0ede272dc1687ca0758`. Their manifests bind
+the then-uncommitted tested bytes, now committed in the reviewed `b06d6d3` history.
+Original source manifests, dates and reproduction JSON/XML were not rewritten.
+
+Merged sources: the audit README; Phase 1 audit; Phase 2 completion and review;
+Phase 3 completion; Stage 4 plan, research, W1, W2, completion and review;
+foundation, F0 and F1 receipts; and frontend verification. Findings, meaningful
+scope decisions, verification outcomes and remaining work are reconciled here.
+
+Exact original Markdown, including the prior version of this plan, is backed up in
+local `audit/historical-documents-2026-10-28.zip`, with a filename/SHA-256 manifest.
+That archive, early audit machine receipts and runtime `data/artifacts/` remain ignored
+local history and may be absent in a fresh clone. Foundation JSON/XML receipts and this
+document are tracked. Generated reports inside reproduction fixtures remain untouched.
+Future changes update this document and add machine evidence when needed; do not create
+another parallel status or closure Markdown file.
+
+### Historical Stage 4 research retained
+
+The research was performed October 27; its external links are context from that review,
+not freshly verified provider documentation. Durable implementation decisions were:
+strict schema preflight and tuple-backed immutability; bounded registered read tools;
+independent clones plus managed worktrees; fixed offline Docker execution; TOML parsing
+as data; separate distribution/import identities; and code-backed notices/coverage.
+
+The research register's primary references are preserved: [Meta schemas](https://dev.meta.ai/docs/structured-output),
+[tools](https://dev.meta.ai/docs/tool-calling), [Chat Completions](https://dev.meta.ai/docs/protocols/chat-completions),
+[Pydantic immutability](https://docs.pydantic.dev/latest/concepts/models/#faux-immutability),
+[Git clone](https://git-scm.com/docs/git-clone), [worktrees](https://git-scm.com/docs/git-worktree),
+[Docker runtime](https://docs.docker.com/engine/containers/run/),
+[HTTPX transports](https://www.python-httpx.org/advanced/transports/),
+[pytest JUnit](https://docs.pytest.org/en/stable/how-to/output.html#creating-junitxml-format-files),
+[Python 3.12 TOML](https://github.com/python/cpython/blob/v3.12.0/Doc/library/tomllib.rst),
+[package/import distinction](https://packaging.python.org/en/latest/discussions/distribution-package-vs-import-package/)
+and [name normalization](https://packaging.python.org/en/latest/specifications/name-normalization/).
+Exact source behavior comes from pinned Scrapy
+[retry](https://github.com/scrapy/scrapy/blob/5c7886a3f27dbf8b66f557cc9945dbc4a6aceaac/scrapy/downloadermiddlewares/retry.py),
+[depth](https://github.com/scrapy/scrapy/blob/5c7886a3f27dbf8b66f557cc9945dbc4a6aceaac/scrapy/spidermiddlewares/depth.py)
+and [duplicate-filter](https://github.com/scrapy/scrapy/blob/5c7886a3f27dbf8b66f557cc9945dbc4a6aceaac/scrapy/dupefilters.py)
+code and cited tests. The initial 4A estimate is historical; remaining packages need
+new estimates after adapter and hosting scope are chosen.
 
 ## 4. What to reuse from `.research/Graft`
 
-Inspected research checkout: `a386620842c34f1f731bf6ffc91bdb1b101f31ba`.
+Historical research checkout: `a386620842c34f1f731bf6ffc91bdb1b101f31ba`.
 Research is local reference material and is ignored by Git; it is not an installed
 Upgrade dependency or evidence that Upgrade has these capabilities.
 
@@ -279,24 +348,27 @@ in their GitHub account. List the repositories both that user and the app can ac
 
 ### Credentials and configuration needed
 
-The following names are proposed new backend configuration unless marked existing.
-Only the Meta key is part of the current configuration. Values must be provided
-locally or through the deployment secret store; no credential values belong in docs.
+Current settings are `AUTH_MODE`, `APP_BASE_URL`, `GITHUB_CLIENT_ID`,
+`GITHUB_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `TOKEN_ENCRYPTION_KEYS` and the existing
+Meta settings; see [GitHub setup](github-setup.md) for exact consumed names and rotation.
+The table distinguishes implemented configuration from remaining F2 proposals.
+Credential values belong only in local configuration or the deployment secret store.
 
 | Item | Who supplies it | Purpose and storage |
 |---|---|---|
-| `GITHUB_APP_ID` | App owner after GitHub App registration | Non-secret identifier for app authentication |
+| `AUTH_MODE` | Operator; implemented | `local` default or configured GitHub preview |
+| `GITHUB_APP_ID` | App owner; proposed F2 setting | App authentication for installation-token support |
 | `GITHUB_APP_SLUG` | App owner | Non-secret identifier used to build installation/settings links |
 | `GITHUB_CLIENT_ID` | App registration | Non-secret identifier used by the authorization flow |
 | `GITHUB_CLIENT_SECRET` | App owner generates it | Backend-only authorization-code exchange/refresh credential |
-| `GITHUB_PRIVATE_KEY_PATH` or secret-store reference | App owner generates a private key | Backend signs app JWTs to obtain installation tokens; keep key outside repository/artifacts |
-| `GITHUB_WEBHOOK_SECRET` | Operator generates it | Authenticate webhook deliveries; separate from client/session secrets |
-| `TOKEN_ENCRYPTION_KEY` or managed key reference | Operator | Authenticated encryption for stored user/refresh credentials; version keys for rotation |
-| `APP_BASE_URL`, `GITHUB_CALLBACK_URL`, allowed origins/hosts | Operator | Exact environment-specific URLs; validated configuration, no arbitrary return URL |
+| Proposed private-key path or secret-store reference | App owner generates a private key | Backend signs app JWTs to obtain installation tokens; keep key outside repository/artifacts |
+| Proposed `GITHUB_WEBHOOK_SECRET` | Operator generates it | Authenticate webhook deliveries; separate from client/session secrets |
+| `TOKEN_ENCRYPTION_KEYS` | Operator; implemented | Newest-first authenticated-encryption keyring; retained older keys support rotation |
+| `APP_BASE_URL` | Operator; implemented | Validated origin; callback derived as `/api/auth/github/callback`; no separate `GITHUB_CALLBACK_URL` setting |
 | `MODEL_API_KEY` | Operator; existing setting | Meta inference only; not a GitHub credential and never forwarded to target runners |
 | Session identifier and CSRF secret | Generated by Upgrade | Opaque random per-session browser credential; store only session-token hashes server-side |
 | GitHub user/refresh tokens | Issued after each user's authorization | Encrypted backend-only credentials; never returned in API DTOs |
-| Installation access token | Minted by backend as needed | Short-lived, selected-repository credential for approved background fetches |
+| Installation access token | Proposed F2 broker mints as needed | Short-lived, selected-repository credential for approved background fetches |
 
 A separate OAuth App is unnecessary for this design. A user-supplied `GITHUB_TOKEN`
 is unnecessary for normal sign-in. If a developer-only PAT fallback is later needed,
@@ -334,6 +406,9 @@ just because the app has a write permission.
 
 ### Login and session flow
 
+The local flow is implemented and tested with controlled provider responses. Real
+GitHub account validation and provider-side disconnect/revocation remain F2 exit work.
+
 1. `GET /api/auth/github/start` creates a short-lived, single-use server-side auth
    transaction containing random state, PKCE verifier, expiry and an allowlisted
    relative return destination; redirect to GitHub using PKCE S256.
@@ -355,17 +430,20 @@ just because the app has a write permission.
    stored token pair atomically; refresh failure requires reconnecting rather than an
    infinite retry loop. Keep application-session expiry independent of provider expiry.
 8. Separate **Sign out** from **Disconnect GitHub**. Sign out invalidates that browser
-   session. Disconnect revokes/removes that user's authorization, stops new private-data
-   work, cancels their affected queued work, and offers the defined deletion options.
+   session. Local disconnect removes stored authorization/cache, blocks admission and
+   cancels queued work transactionally. Provider revocation, in-flight cancellation
+   and deletion options remain required F2/F6 work.
    It must not uninstall an organization's shared app for everybody.
 
-Proposed initial policy: auth transactions expire after ten minutes; application
-sessions have a seven-day absolute expiry and a 24-hour idle expiry. These are product
-defaults to validate during authentication implementation, not current behavior.
+Implemented local policy: auth transactions expire after ten minutes; application
+sessions have a seven-day absolute expiry and a 24-hour idle expiry.
 Reject untrusted redirect destinations; redact callback codes and sensitive headers
 from proxy/access logs. Login, list browsing and result reopening must not trigger Meta.
 
 ### Installation, repository discovery and private Git access
+
+Repository intersection sync/search is implemented as a preview. Private retrieval,
+current entitlement checks and provider lifecycle handling below remain requirements.
 
 - Use user-authorized `GET /user/installations` and
   `GET /user/installations/{installation_id}/repositories` to establish the user's
@@ -608,8 +686,8 @@ motion, long names, large font sizes and color-independent status labels.
 - Start with conventional paged semantic lists/tables. Virtualize only if a measured
   dense view needs it, with a tested accessible paged alternative. Virtualization does
   not solve an oversized network response or unbounded database scan.
-- Keep catalog search global across the queried snapshot. Fix run-history search in
-  the same way; **no matches on the loaded page** must not look like a global no-result.
+- Keep catalog search global across the queried snapshot. Run-history search already
+  follows this rule; **no matches on the loaded page** must not look like a global no-result.
 - Revalidate selection after filtering. If a selected item is outside current filters,
   disclose that state or close its detail; never silently show another feature under
   the previous deep link. Refresh or Back must preserve stable feature identity.
@@ -625,17 +703,20 @@ name the cause and one useful next action. A provider failure is not an empty ca
 
 ## 10. Backend contracts, storage and ownership
 
-### Proposed API boundaries
+### API boundaries: implemented versus planned
 
-These are proposed additions/changes, not current routes. Generate frontend transport
-types from the implemented OpenAPI schema and preserve existing CLI/domain contracts
-through explicit versioned adapters.
+Implemented routes include session/auth, `/api/auth/disconnect`, repository list/sync,
+capabilities/targets, run submission/history/detail, compact `/api/runs/{id}/status`,
+events, references and artifact list/text/download. The table also describes planned
+contracts; `/progress`, installations/refs/snapshot/catalog/relevance/cancel/webhook/
+adaptation/PR endpoints are not implemented. Generate frontend types from actual
+OpenAPI, and preserve CLI/domain contracts through versioned adapters.
 
 | Route | Purpose |
 |---|---|
 | `GET /api/session` | Safe identity, connection/access state and CSRF bootstrap |
 | `GET /api/auth/github/start`, `GET /api/auth/github/callback` | Server-owned GitHub authorization flow |
-| `POST /api/auth/logout`, `POST /api/github/disconnect` | Separate local session exit from user-authorization disconnection |
+| `POST /api/auth/logout`, `POST /api/auth/disconnect` | Separate local session exit from user-authorization disconnection |
 | `GET /api/github/installations` | User-authorized installations and grant state |
 | `GET /api/repositories?q=...&owner=...&cursor=...` | Paginated authorized repository index and sync completeness |
 | `POST /api/repositories/sync` | Idempotent bounded refresh, without model inference |
@@ -649,7 +730,7 @@ through explicit versioned adapters.
 | `POST /api/features/{id}/traces` | Bounded on-demand trace of a discovered candidate |
 | `POST /api/relevance-assessments` | Explicit target/goal-specific ranking/fit job with shortlist disclosure |
 | `POST /api/runs`, `GET /api/runs?...` | Owner-scoped jobs/history, global search, typed kinds and query-level cursors |
-| `GET /api/runs/{id}/progress` | Compact state/revision/counts without full evidence arrays |
+| Implemented `GET /api/runs/{id}/status` | Compact state/revision/counts without full evidence arrays |
 | Existing detail/events/references/artifact routes | Enforce owner/current repository access; add bounded collection routes |
 | `POST /api/runs/{id}/cancel` | Cooperative cancellation with a controller-published terminal result |
 | `POST /api/webhooks/github` | Signed provider deliveries; separate from cookie/CSRF browser routes |
@@ -701,11 +782,12 @@ scope. The example's remaining matching entries are available through its cursor
 
 ### Persistence and migrations
 
-Add explicit, versioned migrations rather than only executing `CREATE TABLE IF NOT EXISTS`
-and assigning a fixed `user_version`. Back up and test migration/rollback behavior against
-an existing local database before changing ownership or the idempotency model.
+Transactional schema v3, owner-scoped runs/idempotency, auth records and repository
+cache/sync tables are implemented. F1 covers migration rollback/retry and rejection
+of future schemas. Extend explicit migrations for catalog, grants and job lifecycle;
+back up and verify existing data before further schema changes.
 
-Logical records:
+Logical records to retain or add as the remaining packages land:
 
 - Users, GitHub identities, hashed sessions, auth transactions and encrypted credential
   versions/expiries.
@@ -719,9 +801,9 @@ Logical records:
 - Owner-scoped jobs/runs, idempotency fingerprints, leases/attempts, sequenced events,
   artifact manifests and retention/deletion status.
 
-Index owner/repository/revision plus the actual list sort/filter keys. Scope idempotency
-to owner and operation; the current globally unique submission key is insufficient for
-accounts. Use indexed queue/count queries rather than decoding every historical summary.
+Index owner/repository/revision plus the actual list sort/filter keys. Retain owner-scoped
+idempotency and add operation-specific identity for future endpoints. Use indexed queue/count
+queries rather than decoding every historical summary.
 Build materialized safe list/detail projections from validated artifacts; verify artifact
 bytes when evidence is consumed, without reparsing the entire corpus per list request.
 
@@ -730,8 +812,9 @@ needs a deliberate transactional database, private artifact storage and separate
 workers; choose and migrate that boundary before public rollout. Do not require a cache,
 vector database or extra broker merely to paginate a normal catalog.
 
-Legacy local reports remain unowned/private until an authenticated operator explicitly
-imports or assigns them. Disable global auto-import in hosted mode. Preserve historical
+Legacy reports are private under `local-workspace` ownership; historical auto-import
+runs only in local mode. Any later account assignment requires an explicit operator
+action. Keep global auto-import disabled in hosted mode. Preserve historical
 provenance and never backfill a user identity by guessing from a repository name.
 
 ## 11. Jobs, privacy, budgets and operational readiness
@@ -741,8 +824,9 @@ pinned inputs, authorization grant, event sink, cancellation token and aggregate
 Keep provider/evidence/runner implementations canonical. Add stage services and a small
 explicit finalization boundary rather than more flags in the large selection function.
 
-The local worker needs a common lock across API and CLI, consistent cleanup and ownership
-records for every container. Hosted jobs additionally need durable claims/leases,
+The local worker and every CLI already share workspace `data/execution.lock`, including
+custom API artifact storage. Complete hard-stop cleanup and durable ownership records
+for every container. Hosted jobs additionally need durable claims/leases,
 heartbeats, fencing against stale completion, per-owner fairness and operator reconciliation.
 After a crash, retain partial artifacts and mark interrupted work; never automatically
 replay paid inference or continue a half-applied patch. Explicit retry starts from recorded
@@ -827,7 +911,8 @@ Required work:
    identities, integration files, allowed production scope and execution profile.
 2. Finalize a typed versioned behavior contract from source evidence and goal. Record
    included/excluded behavior, exact failure semantics, dependencies and notice obligations.
-   Bind it to acceptance readiness, resolving S4-A02 rather than trusting rationale text.
+   Preserve the typed S4-A02 selection fix and generalize acceptance binding through
+   reviewed adapters; the current `retry-v1` contract is not a general planner.
 3. Prepare acceptance tests independently before production patching. Require meaningful
    assertion red on the pinned unmodified target and a passing ordinary baseline. Collection
    errors, missing packages, unrelated exceptions, skips/xfails and timeouts are not red.
@@ -857,23 +942,24 @@ Required work:
 
 ## 13. Development sequence and deliverables
 
-Use these packages as the implementation checklist. Each package needs a focused code
-review and completion receipt; the plan's existence is not a completion marker. Work
+Use these packages as the implementation checklist. F0/F1 are complete within their
+local scope; start with the remaining F2/F3 work rather than rebuilding them. Update
+this document with reviewed behavior and machine evidence as each package lands. Work
 that does not depend on another package can proceed independently, but release gates
 still require the listed prerequisites.
 
-| Package | Deliverable | Depends on | Exit evidence |
-|---|---|---|---|
-| F0: reconcile and repair foundations | Close S4-A01–A06, canonical failure/capture handling, truthful counts/status docs and common execution ownership | Existing implementation | Six regression reproductions closed; CLI/API sanitized failures and preservation checks |
-| F1: identity and owner boundaries | Migrations, users/sessions, auth transactions, encrypted credentials, CSRF and owner-aware existing APIs/artifacts | F0 for release | Two users cannot read each other's data; legacy reports stay private; session/replay tests |
-| F2: GitHub connection | App registration guide/config, authorization, install/reconnect states, repository sync/picker, private fetch broker and revocation | F1 | Real development-account sign-in; granted private repo fetch; ungranted/foreign IDs rejected; token rotation/revocation checks |
-| F3: supported real repositories | Generic snapshot/root contracts, capability levels and versioned adapters; sample becomes optional example | F0, F2 | Independent supported Python target/source analyzed without crawler hard-coding; unsupported projects explained before inference |
-| F4: persistent source catalog | Candidate discovery, hierarchy/deduplication, bounded corroboration, revisioned coverage/cache and continuation | F3 | Multiple independently supported features, partial/failure cases and paginated immutable catalog |
-| F5: relevance and scalable browsing | Goal/target assessments, all/relevant modes, server query/filter/sort, lazy details, URL state and compact polling | F4 | Honest assessed/unassessed/eligible counts; zero model calls on view changes; scale/accessibility checks |
-| F6: job/hosting hardening | Leased ownership where hosted, cancellation, quotas, current-access checks, retention, private-code consent, observability and cleanup | Starts with F1; required before multi-user release | Restart/cancel/revocation/tenant-load cases, operator recovery and private artifact lifecycle |
-| F7: verified adaptation | Real planner, behavior contract, frozen red acceptance, constrained patches, actual limits, regression green and capped repairs | F0, F3, F5; F6 for hosting | Real independent source-to-target red-to-green receipt; failed/exhausted cases retain evidence |
-| F8: change review and optional PR | Diff/review UI, patch download, notice export, explicit idempotent publishing | F7; GitHub write permission only for PR | Downloaded patch digest matches verified result; stale/unauthorized/repeated publishing behaves correctly |
-| F9: release validation and docs | Fresh complete workflows, security/performance checks, setup/operations and reconciled status pages | All packages needed by the chosen release | Dated receipt tied to commit/build, environment, actual inputs, limits and retained artifacts |
+| Package | Current state | Deliverable | Depends on | Exit evidence |
+|---|---|---|---|---|
+| F0: reconcile and repair foundations | Complete locally | Close S4-A01–A06, canonical failure/capture handling, truthful counts/status docs and common execution ownership | Existing implementation | Six regression reproductions closed; CLI/API sanitized failures and preservation checks |
+| F1: identity and owner boundaries | Complete locally | Migrations, users/sessions, auth transactions, encrypted credentials, CSRF and owner-aware existing APIs/artifacts | F0 for release | Two users cannot read each other's data; legacy reports stay private; session/replay tests |
+| F2: GitHub connection | Partial preview | App registration guide/config, authorization, install/reconnect states, repository sync/picker, private fetch broker and revocation | F1 | Real development-account sign-in; granted private repo fetch; ungranted/foreign IDs rejected; token rotation/revocation checks |
+| F3: supported real repositories | Partial static preflight | Generic snapshot/root contracts, capability levels and versioned adapters; sample becomes optional example | F0, F2 | Independent supported Python target/source analyzed without crawler hard-coding; unsupported projects explained before inference |
+| F4: persistent source catalog | Pending | Candidate discovery, hierarchy/deduplication, bounded corroboration, revisioned coverage/cache and continuation | F3 | Multiple independently supported features, partial/failure cases and paginated immutable catalog |
+| F5: relevance and scalable browsing | History/polling foundations only | Goal/target assessments, all/relevant modes, server query/filter/sort, lazy details, URL state and compact polling | F4 | Honest assessed/unassessed/eligible counts; zero model calls on view changes; scale/accessibility checks |
+| F6: job/hosting hardening | Local lock/admission only | Leased ownership where hosted, cancellation, quotas, current-access checks, retention, private-code consent, observability and cleanup | Starts with F1; required before multi-user release | Restart/cancel/revocation/tenant-load cases, operator recovery and private artifact lifecycle |
+| F7: verified adaptation | Pending | Real planner, behavior contract, frozen red acceptance, constrained patches, actual limits, regression green and capped repairs | F0, F3, F5; F6 for hosting | Real independent source-to-target red-to-green receipt; failed/exhausted cases retain evidence |
+| F8: change review and optional PR | Pending | Diff/review UI, patch download, notice export, explicit idempotent publishing | F7; GitHub write permission only for PR | Downloaded patch digest matches verified result; stale/unauthorized/repeated publishing behaves correctly |
+| F9: release validation and docs | Local receipts only | Fresh complete workflows, security/performance checks, setup/operations and reconciled status pages | All packages needed by the chosen release | Dated receipt tied to commit/build, environment, actual inputs, limits and retained artifacts |
 
 Connected analysis requires F0–F6 and the applicable F9 checks. Verified adaptation
 requires F7/F8 patch review in addition. PR publishing may remain disabled until its
@@ -944,34 +1030,28 @@ unchanged acceptance green, regression green, scope/dependency checks and origin
 preservation. Show actual repair history, including zero repairs if none were needed.
 Mark remaining unsupported profiles and untested provider/deployment combinations explicitly.
 
-## 15. Implementation handoff and documentation updates
+## 15. Next implementation and documentation policy
 
-The first implementation pass should deliver F0 and the F1 schema/authorization boundary,
-then wire GitHub connection and the repository picker before exposing broader target
-claims. Catalog/relevance work follows real snapshot contracts; Phase 5 follows dependable
-selection and acceptance contracts. Authentication alone does not finish arbitrary project
-support, and a paginated list alone does not implement general discovery.
+Next in the connected-analysis sequence is the remaining **F2 private-access lifecycle**:
+controlled credential broker, installation tokens, signed webhooks, provider revocation,
+current-access checks and safe in-flight handling. Real development-account verification
+remains deferred while local mode is preferred; independent F3 adapter work can proceed
+on public snapshots. Do not enable private retrieval or hosting on preview evidence alone.
 
-As packages land:
+F3 must then demonstrate an independent supported project without crawler assumptions;
+F4/F5 add persistent discovery and honest all/relevant browsing. F6 is a release dependency
+for multi-user hosting. F7/F8 complete verified adaptation and actual change review.
+Optional 4B remains a bounded comparison extension, not a substitute for these packages.
 
-- Update [frontend.md](frontend.md) with actual onboarding, modes, support levels and setup.
-- Update [tech_breakdown.md](../tech_breakdown.md) and
-  [frontend-integration-plan.md](frontend-integration-plan.md) so current status tables agree.
-- Preserve [frontend-verification.md](frontend-verification.md) and existing audit reports
-  as dated receipts; add new verification/closure receipts instead of rewriting history.
-- Add a tracked GitHub App setup/configuration guide and safe example variables only
-  when the corresponding settings/flow exist; do not imply proposed names are already read.
-- Update generated OpenAPI transport types with implemented API changes, version stored
-  artifacts deliberately, and document migration of old runs.
-- Keep this checklist current with code references and release evidence. A checked task
-  needs an implemented behavior and verification; a mock screen, model claim or old
-  README description is not a completion receipt.
+Keep current status, resolved findings, remaining exit criteria and verification history
+in this document. Add JSON/XML/hash evidence alongside the existing receipts as needed.
+Update [frontend.md](frontend.md) for actual workflow/startup changes and
+[github-setup.md](github-setup.md) for implemented settings/migration/rotation. Preserve
+machine receipt dates and tested identities; a documentation edit is not new live evidence.
 
-Primary local references: [README](../README.md), [frontend usage](frontend.md),
-[frontend verification](frontend-verification.md), [technical breakdown](../tech_breakdown.md),
-[frontend integration plan](frontend-integration-plan.md),
-[Phase 1 audit](../audit/report.md), [Phase 2 completion](../audit/phase2-report.md),
-[Phase 2 audit](../audit/phase2-audit/report.md), [Phase 3 completion](../audit/phase3-report.md),
-[W1 completion](../audit/stage4-w1-report.md), [W2 completion](../audit/stage4-w2-report.md),
-[Stage 4 completion](../audit/stage4-report.md), [Stage 4 audit](../audit/stage4-review/report.md),
-and [Stage 4 design/handoff](../audit/stage4-plan.md).
+[README](../README.md) is the entry point. [Technical breakdown](../tech_breakdown.md)
+and [frontend integration plan](frontend-integration-plan.md) retain architecture/design
+detail. Command references remain [Phase 3](phase3.md), [W1](stage4-w1.md),
+[W2](stage4-w2.md), [Stage 4](stage4.md) and [runner boundary](../sandbox/README.md).
+Future status references should link to this document's sections instead of opening
+another audit/status Markdown file.

@@ -1,6 +1,10 @@
 # Graft Meta
 
-Adapt one small feature from a source repository into a target project, with Muse Spark planning and code-backed red-to-green evidence. The approved design is in [tech_breakdown.md](tech_breakdown.md).
+Adapt one small feature from a source repository into a target project, with Muse Spark planning and code-backed red-to-green evidence. The technical design is in [tech_breakdown.md](tech_breakdown.md).
+
+Start with [project status, audits and the development plan](docs/full-feature-development.md)
+for completed work, resolved findings, verification history and the remaining backlog.
+This is the single maintained status document; the guides below cover setup and usage.
 
 The first three coding milestones in section 11 are implemented: the Meta backend foundation,
 the HTTPX crawler and offline Docker baseline, and pinned repositories with a live Meta source
@@ -21,7 +25,7 @@ implementation pass: the six Stage 4 audit regressions are repaired, CLI/API exe
 is mutually excluded, history search is server-side, and an optional GitHub connection
 preview adds account ownership, sessions, encrypted credentials and repository indexing.
 Local mode remains the default. See [GitHub setup](docs/github-setup.md) and
-[the implementation receipt](audit/full-feature-foundations/report.md) for exact limits.
+[the consolidated audit record](docs/full-feature-development.md#2-consolidated-audit-findings) for exact limits.
 General discovery, private Git retrieval and verified adaptations remain pending.
 
 ## Setup

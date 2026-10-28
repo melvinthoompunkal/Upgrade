@@ -62,7 +62,7 @@ Desktop.ini
 skills/
 audit/
 
-# Keep historical local audit data ignored, but retain the sanitized foundation receipt.
+# Keep local audit history/archive ignored; retain sanitized foundation machine receipts.
 !audit/
 audit/**
 !audit/full-feature-foundations/
