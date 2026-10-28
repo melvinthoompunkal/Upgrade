@@ -35,6 +35,9 @@ pytest-cache-files-*/
 node_modules/
 dist/
 build/
+*.tsbuildinfo
+/frontend/playwright-report/
+/frontend/test-results/
 
 # Runtime repositories, worktrees, reports, and local databases live here.
 /.research/

@@ -5,12 +5,16 @@ Adapt one small feature from a source repository into a target project, with Mus
 The first three coding milestones in section 11 are implemented: the Meta backend foundation,
 the HTTPX crawler and offline Docker baseline, and pinned repositories with a live Meta source
 trace. Stage 4A adds target profiling and deterministic selection of one bounded retry
-candidate. Retry adaptation, final red-to-green verification, and the UI remain later work.
+candidate. A local React frontend and a persistent browser API now expose the existing
+analysis workflows. Retry adaptation and final red-to-green verification remain later work.
 
-The proposed [frontend and integration plan](docs/frontend-integration-plan.md) maps every
-current workflow into a browser application and defines its design, run API, persistence,
-delivery order, and future adaptation views. It is planning documentation; the frontend
-has not been implemented.
+The [browser workspace guide](docs/frontend.md) covers startup, workflow coverage,
+verification, and remaining backend milestones. The original
+[frontend and integration plan](docs/frontend-integration-plan.md) retains the broader
+design and delivery criteria; it is not a completion receipt for every package.
+
+To open the frontend, start the backend below, then run `npm ci` and `npm run dev` in
+`frontend/`. Open <http://127.0.0.1:5173>. Requires Node 20.19+ or 22.12+.
 
 ## Setup
 

@@ -9,8 +9,10 @@ Stage 4A W1–W6 are implemented. Selection does not apply a production patch.
 
 **Remaining product goal:** adapt the best eligible source feature inside managed target
 storage and export a patch with unchanged-test red-to-green verification. The broader
-catalog, real repository planner, Implementer, Verifier/Fixer, persistent run API, and
-frontend remain pending. The [frontend integration plan](docs/frontend-integration-plan.md)
+catalog, real repository planner, Implementer, and Verifier/Fixer remain pending.
+A local frontend and persistent browser bridge now expose the existing workflows;
+see [the browser workspace guide](docs/frontend.md) for current scope and limitations.
+The [frontend integration plan](docs/frontend-integration-plan.md)
 defines the proposed user experience, design, API bridge, and delivery packages U0–U6.
 
 The implemented demo pair is **Scrapy → `examples/crawler-target`**, registered as
@@ -35,8 +37,8 @@ Existing CLI support does not imply an available workflow HTTP endpoint.
 | Target profiling | Implemented: parsed stack compatibility, architecture, capabilities, gaps, style, integration points, baseline provenance and coverage; inferred gaps remain distinct from observed behavior | [Target Profiler](backend/app/target_profiler.py), [profile contracts](backend/app/selection_contracts.py) |
 | Fit selection | Implemented for one actual candidate: Meta ratings plus Python totals, ten gates, stable order, short/null `top3`, complete rejections, one bounded clarification round | [Fit Matcher](backend/app/fit_matcher.py), [selection workflow](backend/app/fit_select.py) |
 | Reports and artifacts | Implemented on local disk: JSON/Markdown reports, trace/profile/assessment/fit artifacts, captures, read logs, notices, model attempts/usage, integrity manifests; failure-path defects remain below | [Artifact store](backend/app/selection_artifacts.py), [Stage 4 usage](docs/stage4.md) |
-| Browser/API surface | FastAPI health and generated documentation only; no workflow routes, integrated frontend, static frontend serving, or browser-started runs | [Current web app](backend/app/main.py) |
-| Run persistence and queue | Pending: SQLite lifecycle/history, durable worker, ordered progress events, refresh recovery and artifact-serving API | [Frontend/API plan](docs/frontend-integration-plan.md) |
+| Browser/API surface | Implemented locally: React workspace, typed capability/target/run/evidence/artifact routes, same-origin static serving, and explicit browser-started workflows | [Web app](backend/app/main.py), [frontend guide](docs/frontend.md) |
+| Run persistence and queue | Implemented locally: SQLite queue/history, one process-owned worker, idempotent submission, ordered events, refresh recovery, and integrity-checked artifact access; remaining reliability boundaries are documented | [Frontend guide](docs/frontend.md) |
 | Multiple source candidates | Pending optional 4B; schema capacity up to eight does not mean discovery/comparison is implemented | [Stage 4 scope](docs/stage4.md) |
 | Patch and final verification | Pending: real planner, finalized behavior contract, acceptance preparation, safe patch application, actual diff/dependency gates, green/regression checks and capped repair | Section 4 below; [Stage 4 handoff](audit/stage4-plan.md#15-handoff-to-the-later-patch-and-verification-milestone) |
 
@@ -78,11 +80,11 @@ registration, runner/image settings, credentials and policy remain server-side c
   binding and a content hash. `baseline-binding.json` retains the W1 format;
   `report.json` is the final manifest. Use the actual serializers/contracts, not the
   conceptual shapes later in this document, to build transport adapters.
-- Only `/health` is implemented as an application route; FastAPI also generates its
+- `/health` and the local `/api` browser bridge are implemented; FastAPI also generates
   documentation/schema routes. `model_configured` means a key is present, not that a
   fresh connectivity test passed. Its current `phase: "source_tracing"` is a static,
   outdated label and must not drive UI capability detection or progress.
-- The proposed UI views are Overview, Features, Evidence, Tests, Changes and Exports.
+- The implemented UI views are Overview, Features, Evidence, Tests, Changes and Exports.
   Initially Changes explains that the analysis made no code changes. Future build
   controls depend on backend capabilities. Preserve the existing workflows through
   shared services when adding the run API; do not duplicate them in frontend logic.

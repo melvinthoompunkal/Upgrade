@@ -3,6 +3,7 @@
 import argparse
 import asyncio
 import json
+from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
@@ -31,6 +32,7 @@ from app.tools.repositories import (
 from app.tools.runner import PROJECT_ROOT
 from app.tools.runner_artifacts import file_hashes
 from app.tracer import SourceTracer
+from app.workflow_inputs import SelectionInputs
 
 REQUIRED_OUTPUTS = (
     "source-trace.json",
@@ -124,7 +126,9 @@ def human_report(report: dict, profile, result) -> str:
     return "\n".join(lines)
 
 
-async def record_fit_selection(args: argparse.Namespace) -> tuple[dict, Path]:
+async def record_fit_selection(
+    args: SelectionInputs, *, progress: Callable[[str, str], None] = lambda *_: None
+) -> tuple[dict, Path]:
     run_id = f"fit-select-{uuid4().hex}"
     directory = PROJECT_ROOT / "data" / "artifacts" / run_id
     directory.mkdir(parents=True)
@@ -183,6 +187,9 @@ async def record_fit_selection(args: argparse.Namespace) -> tuple[dict, Path]:
                 stage="inputs_pinned",
             )
             inspect_target(target_evidence)  # Unsupported inputs stop before Docker or inference.
+            progress(
+                "checks", "Running isolation, committed baseline, and retry diagnostic suites."
+            )
             baseline_report, baseline_path = await asyncio.to_thread(
                 record_pinned_baseline, target, original, directory, args.image_receipt
             )
@@ -217,6 +224,7 @@ async def record_fit_selection(args: argparse.Namespace) -> tuple[dict, Path]:
             for repo in (source, target):
                 store.adopt("repositories/" + repo.snapshot.inventory_artifact_id)
             source_evidence = EvidenceSession(source)
+            progress("analysis", "Tracing source behavior using pinned code and test references.")
             tracer = SourceTracer(
                 client, source_evidence, output_tokens=settings.meta_trace_max_completion_tokens
             )
@@ -247,6 +255,9 @@ async def record_fit_selection(args: argparse.Namespace) -> tuple[dict, Path]:
                     },
                 )
             profiler = TargetProfiler(client, target_evidence, baseline)
+            progress(
+                "analysis", "Profiling the target architecture, capabilities, and observed gaps."
+            )
             proposal = await profiler.propose(args.goal)
             reads = store.derived(
                 "evidence-reads-target.json", read_log(target_evidence, profiler.events)
@@ -256,6 +267,9 @@ async def record_fit_selection(args: argparse.Namespace) -> tuple[dict, Path]:
             profile_call = client.calls[-1]
             store.derived("target-profile.json", profile.model_dump(mode="json"), call=profile_call)
             matcher = FitMatcher(client, source_evidence, target_evidence, trace, profile, baseline)
+            progress(
+                "selection", "Assessing fit; the controller will compute scores and policy gates."
+            )
             batch = await matcher.assess(args.goal)
             report["stage"] = "assessed"
             # A clarification may add target reads; freeze the final read log/profile together.
@@ -367,7 +381,7 @@ def main() -> int:
     parser.add_argument(
         "--image-receipt", type=Path, default=PROJECT_ROOT / "data" / "runner-image.json"
     )
-    report, path = asyncio.run(record_fit_selection(parser.parse_args()))
+    report, path = asyncio.run(record_fit_selection(SelectionInputs(**vars(parser.parse_args()))))
     print(
         json.dumps(
             {

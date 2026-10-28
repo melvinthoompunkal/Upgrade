@@ -2,8 +2,13 @@
 
 Date: October 27, 2026, America/New_York.
 
-Status: proposed implementation plan. This task changes documentation only.
-The frontend, run API, storage, and patch workflow described below are not implemented.
+Original status: proposed implementation plan, October 27, 2026.
+Implementation update, October 28: the local React workspace, typed run API, SQLite
+queue/history, evidence inspector, tests/logs, exports, and diagnostic entry points
+are implemented. See [the browser workspace guide](frontend.md) for startup and exact
+boundaries. The packages and acceptance matrix below remain the original target
+criteria; U0 audit closure, a unified CLI/API execution lock, hard-kill Docker cleanup,
+and Phase 5 patch/verification work are not claimed complete.
 
 Build one local application where a developer supplies a source repository, chooses a
 target, describes a goal, and follows the evidence through analysis, selection, and,

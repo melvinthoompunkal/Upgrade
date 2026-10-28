@@ -25,6 +25,7 @@ from app.tools.repositories import (
 from app.tools.runner import PROJECT_ROOT
 from app.tools.runner_artifacts import file_hashes
 from app.tracer import SourceTracer
+from app.workflow_inputs import TraceInputs
 
 
 def write_json(path: Path, data: dict) -> str:
@@ -33,7 +34,7 @@ def write_json(path: Path, data: dict) -> str:
     return hashlib.sha256(content).hexdigest()
 
 
-async def record_source_trace(args: argparse.Namespace) -> tuple[dict, Path]:
+async def record_source_trace(args: TraceInputs) -> tuple[dict, Path]:
     run_id = f"source-trace-{uuid4().hex}"
     directory = PROJECT_ROOT / "data" / "artifacts" / run_id
     directory.mkdir(parents=True)
@@ -209,7 +210,7 @@ def main() -> int:
         default="Adapt bounded HTTP status retries into the existing HTTPX GET fetch boundary.",
     )
     args = parser.parse_args()
-    report, path = asyncio.run(record_source_trace(args))
+    report, path = asyncio.run(record_source_trace(TraceInputs(**vars(args))))
     print(
         json.dumps(
             {
