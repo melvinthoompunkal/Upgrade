@@ -6,10 +6,10 @@ from app.project_support import inspect_project
 def test_readable_python_project_does_not_claim_executable_support(session):
     support = inspect_project(session.repo)
     assert support.name == "fixture" and support.python_files > 0
-    assert support.capability == "browse_index"
+    assert support.capability == "evidence_analysis"
     assert not support.execution_supported and not support.adaptation_supported
     assert support.manifest_sha256
-    assert "offline test profile" in support.reasons[0]
+    assert "Python range" in support.reasons[0]
 
 
 def test_missing_manifest_is_explained_without_execution(session):

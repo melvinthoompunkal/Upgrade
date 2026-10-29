@@ -10,6 +10,9 @@ original MVP design; its account/private-access exclusions are superseded by tha
 
 The implemented demo pair is Scrapy → `examples/crawler-target` (`crawler-demo`).
 Selection is delivered; production patching and final verification remain planned.
+F3 adds public Python structural analysis with optional reviewed native offline tests;
+the crawler selection is now an explicit example. General feature discovery and matching
+remain separate downstream packages.
 Setup and actual browser workflows are in [README](README.md) and
 [the browser guide](docs/frontend.md).
 
@@ -102,7 +105,7 @@ The delivered backend was implemented independently; Graft's UI remains in `.res
 | Models | Meta Chat Completions; configured default `muse-spark-1.3`, Standard mode | Tracer/profiler use medium reasoning; Matcher uses high; repository planner/patch agents pending |
 | API client | `AsyncOpenAI` transport; SDK automatic retries disabled; explicit application retries/attempt accounting | No provider/model fallback; current default at most two HTTP retries per request |
 | Orchestration | Shared typed web/CLI inputs and workflow context, sequential selection controller, one run-owned client/budget | Complete adaptation state machine remains pending |
-| Repository handling | Git CLI, independent pinned clones, clean managed sparse worktree, inventory and preservation checks | Only registered local crawler target; no public target ingestion or production edits |
+| Repository handling | Git CLI, independent pins, project-root inventories, public Python structure/native test adapters, sample managed worktree and preservation checks | Public profile limits apply; no production edits or general discovery |
 | Code indexing | Python `ast`, parsed TOML, bounded text/symbol tools | Static evidence with disclosed limits; no exhaustive dependency closure/runtime call graph |
 | Execution | Prepared, pinned Linux Docker image; fixed offline suites and resource restrictions | Only reviewed Python/HTTPX fixture/dependencies; no host execution fallback |
 | Tests | Existing target suite and frozen hand-authored retry diagnostic; backend contract/policy/workflow tests | Final adaptation contract, production patch, green acceptance/regression and repair loop pending |

@@ -28,12 +28,15 @@ IMAGE_INPUTS = (
     "requirements.lock",
     "pytest.ini",
     "test_isolation.py",
+    "unittest_runner.py",
     ".dockerignore",
 )
 SUITES = {
     "isolation": "/opt/runner/test_isolation.py",
     "baseline": "/snapshot/tests/test_crawler.py",
     "acceptance": "/acceptance/test_retries.py",
+    "project_baseline": "/snapshot/tests",
+    "project_unittest": "/snapshot/tests",
 }
 CONTAINER_TIMEOUT_SECONDS = 60
 
@@ -78,6 +81,29 @@ def _stop_container(name: str) -> None:
     raise RunnerError("Could not stop the owned runner container.")
 
 
+def suite_command(suite: str, image_id: str) -> tuple[str, ...]:
+    if suite == "project_unittest":
+        return "--entrypoint", "python", image_id, "/opt/runner/unittest_runner.py"
+    native = suite == "project_baseline"
+    return (
+        image_id,
+        "-c",
+        "/snapshot/pyproject.toml" if native else "/opt/runner/pytest.ini",
+        *(() if native else ("--noconftest",)),
+        "-p",
+        "no:cacheprovider",
+        "-p",
+        "pytest_timeout",
+        "--timeout=10",
+        "--timeout-method=signal",
+        "--timeout-disable-debugger-detection",
+        "--junitxml=/results/junit.xml",
+        "--basetemp=/tmp/pytest",
+        "-q",
+        SUITES[suite],
+    )
+
+
 def container_command(
     *, name: str, suite: str, image_id: str, snapshot: Path, acceptance: Path, results: Path
 ) -> tuple[str, ...]:
@@ -98,6 +124,7 @@ def container_command(
                 f"type=bind,source={resolved},target={target}" + (",readonly" if readonly else ""),
             ]
         )
+    project_suite = suite in {"project_baseline", "project_unittest"}
     return (
         "docker",
         "create",
@@ -122,21 +149,9 @@ def container_command(
         "--env",
         "PYTEST_DISABLE_PLUGIN_AUTOLOAD=1",
         "--env",
-        "PYTHONPATH=/snapshot/src",
+        "PYTHONPATH=/snapshot/src:/snapshot" if project_suite else "PYTHONPATH=/snapshot/src",
         *mounts,
-        image_id,
-        "-c",
-        "/opt/runner/pytest.ini",
-        "--noconftest",
-        "-p",
-        "pytest_timeout",
-        "--timeout=10",
-        "--timeout-method=signal",
-        "--timeout-disable-debugger-detection",
-        "--junitxml=/results/junit.xml",
-        "--basetemp=/tmp/pytest",
-        "-q",
-        SUITES[suite],
+        *suite_command(suite, image_id),
     )
 
 
@@ -262,7 +277,9 @@ def run_suite(
         elif state.get("OOMKilled") or state.get("Error"):
             diagnostic = "Container ran out of memory or failed to execute."
         else:
-            cases = parse_junit(read_regular_file(results, "junit.xml"))
+            cases = parse_junit(
+                read_regular_file(results, "junit.xml"), qualified_names=suite == "project_baseline"
+            )
             status = classify_result(exit_code, cases)
     except (RunnerError, OSError, ValueError, KeyError) as error:
         diagnostic = str(error) if isinstance(error, RunnerError) else "Invalid runner capture."

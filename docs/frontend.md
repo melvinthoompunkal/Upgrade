@@ -42,9 +42,13 @@ do not bind it to a public interface. No hosted Site was created.
 
 ## Workflows and results
 
-- **New run:** supply a public GitHub URL, full source SHA, registered target,
-  and goal. The explicit Scrapy example fills its reviewed URL and SHA together.
-  Editing the URL clears the SHA. Analysis options include source-only tracing.
+- **New run:** inspect a public Python source URL/full SHA/root; optionally add a target.
+  Each inspection shows capability and native-test blockers before submission. Editing
+  any pin input clears that selection. **Analyze projects** uses stored project IDs,
+  performs structural analysis without model calls, and optionally runs the target's
+  original native suite offline. No target or model key is needed for source-only analysis.
+  **Try the crawler example** opens `/example`, retaining the reviewed Scrapy retry
+  trace/fit workflow and its model/runner requirements.
 - **Runs:** persisted history, global server search, workflow filters, bounded pagination, stable URLs,
   and refresh recovery. Existing known CLI report directories are imported at
   backend startup in local mode and labeled recorded CLI runs. GitHub accounts see only
@@ -53,6 +57,9 @@ do not bind it to a public interface. No hosted Site was created.
 - **Workspace:** actual feature cards, controller scores/gates/rejections,
   source-to-target comparison, architecture/gaps/style, dependency and license
   references, bounded coverage, captured cases/logs, model usage, and exports.
+  Public project runs instead show bounded production/test definitions, code citations,
+  exact project-root identity and coverage; they have Overview/Evidence/Tests/Exports
+  views and do not claim feature selection or verified adaptation.
 - **Evidence inspector:** exact SHA/file/symbol/line references backed by stored,
   hash-checked excerpts. Source tests are citations, not executed source tests.
   The drawer supports Escape, deep links, and focus return.
@@ -88,6 +95,11 @@ backend is running.
 The API calls the canonical workflow services. `TraceInputs` and `SelectionInputs`
 are shared with CLI adapters; it never constructs browser-supplied shell strings.
 Selection emits progress at actual check/trace/profile/assessment boundaries.
+
+Public project pins live under `data/projects/`; schema v5 stores their owner-scoped
+descriptors in SQLite. Full commit SHAs are fixed at inspection, and the worker reopens
+those objects without fetching a branch again. GitHub private pins remain browse-only
+through the separate opt-in F2 workflow.
 
 SQLite state is stored under `data/web/`, and reports remain under
 `data/artifacts/`. One process-owned worker executes one workflow at a time,

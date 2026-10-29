@@ -8,6 +8,7 @@ dependencies = [
     "fastapi>=0.115.12,<1",
     "httpx>=0.28.1,<0.29",
     "openai>=2,<3",
+    "packaging>=25,<27",
     "pydantic>=2.11.3,<3",
     "pydantic-settings>=2.9,<3",
     "uvicorn>=0.34,<1",
@@ -22,6 +23,7 @@ graft-crawler-baseline = "app.baseline:main"
 graft-pinned-baseline = "app.pinned_baseline:main"
 graft-source-trace = "app.source_trace:main"
 graft-fit-select = "app.fit_select:main"
+graft-project-analyze = "app.project_cli:main"
 
 [build-system]
 requires = ["hatchling>=1.27,<2"]

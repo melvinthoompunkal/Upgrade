@@ -57,7 +57,7 @@ test('account changes do not copy the previous account draft', async ({ page }) 
         : account,
     }),
   )
-  await page.goto('/')
+  await page.goto('/example')
   await page
     .getByLabel('What would you like to improve?')
     .fill('Private goal belonging to the first account')
@@ -324,7 +324,7 @@ test('disconnect reports when provider revocation needs manual completion', asyn
       json: { status: 'disconnected', provider_revocation: 'manual_revocation_required' },
     })
   })
-  await page.goto('/')
+  await page.goto('/example')
   if (test.info().project.name === 'mobile')
     await page.getByRole('button', { name: 'Open navigation' }).click()
   await page.getByRole('button', { name: 'Disconnect GitHub' }).click()

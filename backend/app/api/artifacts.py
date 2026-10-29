@@ -20,6 +20,7 @@ from app.api.storage import RunStore, now
 from app.contracts import Ref, RepoSnapshot
 from app.errors import GraftError
 from app.evidence_contracts import Coverage, FeatureCard
+from app.project_contracts import ProjectAnalysis
 from app.selection_contracts import AssessmentBatch, FitResult, TargetProfile
 from app.tools.runner_artifacts import read_regular_file
 
@@ -29,6 +30,7 @@ PREFIXES = {
     "crawler-baseline": "local_baseline",
     "pinned-baseline": "pinned_baseline",
     "meta-smoke": "meta_smoke",
+    "project-analysis": "project_analysis",
 }
 TITLES = {
     "fit_select": "Feature selection",
@@ -36,6 +38,7 @@ TITLES = {
     "local_baseline": "Working-file baseline",
     "pinned_baseline": "Committed target baseline",
     "meta_smoke": "Meta connectivity check",
+    "project_analysis": "Public project analysis",
 }
 
 
@@ -87,7 +90,7 @@ def import_history(store: RunStore, root: Path) -> None:
         return
     for directory in root.iterdir():
         match = re.fullmatch(
-            r"(fit-select|source-trace|crawler-baseline|pinned-baseline|meta-smoke)-[a-f0-9]{32}",
+            r"(fit-select|source-trace|crawler-baseline|pinned-baseline|meta-smoke|project-analysis)-[a-f0-9]{32}",
             directory.name,
         )
         if not match or not directory.is_dir():
@@ -133,7 +136,13 @@ class RunArtifacts:
                             self.hashes[name] = capture["sha256"]
             for capture in self.report.get("captures", []):
                 suite = capture.get("suite")
-                if suite not in {"isolation", "baseline", "acceptance"}:
+                if suite not in {
+                    "isolation",
+                    "baseline",
+                    "acceptance",
+                    "project_baseline",
+                    "project_unittest",
+                }:
                     continue
                 for name, sha in capture.get("artifact_hashes", {}).items():
                     self.hashes[f"test-captures/{suite}/{name}"] = sha
@@ -313,6 +322,8 @@ class RunArtifacts:
             "target-profile.json",
             "fit-result.json",
             "matcher-assessment.json",
+            "source-project-analysis.json",
+            "target-project-analysis.json",
         ):
             data = self.load(name)
             if data is not None:
@@ -322,6 +333,14 @@ class RunArtifacts:
     def detail(self) -> RunDetail:
         values = self.summary.model_dump()
         report = self.report
+        values["project_analyses"] = []
+        for role in ("source", "target"):
+            data = self.load(f"{role}-project-analysis.json")
+            if data is not None:
+                try:
+                    values["project_analyses"].append(ProjectAnalysis.model_validate(data))
+                except ValidationError:
+                    self.warnings.append(f"The {role} project analysis could not be validated.")
         self.warnings.extend(
             public_text(warning[:2000])
             for warning in report.get("warnings", [])[:20]

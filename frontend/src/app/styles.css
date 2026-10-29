@@ -25,6 +25,7 @@
   button { transition: background-color .16s, color .16s, border-color .16s, transform .16s; }
   button:active:not(:disabled) { transform: translateY(1px); }
   input, select, textarea { @apply w-full rounded-md border border-line bg-surface px-3.5 text-ink; min-height: 43px; font: inherit; }
+  .project-check { width: 16px; min-height: 16px; padding: 0; accent-color: var(--color-accent); flex-shrink: 0; }
   input::placeholder, textarea::placeholder { color: #788290; opacity: 1; }
   textarea { @apply py-3 leading-relaxed; resize: vertical; min-height: 112px; }
   input[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: var(--color-accent); }

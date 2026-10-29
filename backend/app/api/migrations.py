@@ -3,7 +3,7 @@
 import sqlite3
 
 LOCAL_OWNER = "local-workspace"
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 
 
 def migrate(db: sqlite3.Connection) -> None:
@@ -74,4 +74,7 @@ def migrate(db: sqlite3.Connection) -> None:
         ON repository_snapshots(owner_id,github_id)""")
     db.execute("""CREATE TABLE IF NOT EXISTS run_authorizations (
         run_id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, access_epoch INTEGER NOT NULL)""")
+    db.execute("""CREATE TABLE IF NOT EXISTS projects (
+        id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, descriptor TEXT NOT NULL)""")
+    db.execute("CREATE INDEX IF NOT EXISTS owner_projects ON projects(owner_id,id)")
     db.execute(f"PRAGMA user_version={SCHEMA_VERSION}")

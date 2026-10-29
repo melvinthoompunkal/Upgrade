@@ -17,9 +17,11 @@ from app.api.contracts import (
     RunSummary,
     Target,
 )
+from app.api.security import require_local_origin
 from app.api.storage import now
 from app.auth.snapshots import access_error
 from app.errors import GraftError
+from app.projects import project_store
 from app.tools.git import Git
 from app.tools.runner import PROJECT_ROOT
 
@@ -37,7 +39,14 @@ def artifacts(request: Request, run_id: str) -> RunArtifacts:
 def capabilities(request: Request):
     settings = request.app.state.settings
     return Capabilities(
-        kinds=["fit_select", "source_trace", "pinned_baseline", "local_baseline", "meta_smoke"],
+        kinds=[
+            "fit_select",
+            "source_trace",
+            "pinned_baseline",
+            "local_baseline",
+            "meta_smoke",
+            "project_analysis",
+        ],
         model_configured=settings.model_configured,
         model_id=settings.meta_model_id,
         checked_at=now(),
@@ -75,15 +84,11 @@ def create_run(
 ):
     if not re.fullmatch(r"[A-Za-z0-9_-]+", idempotency_key):
         raise HTTPException(422, "Invalid submission key.")
-    origin = request.headers.get("origin")
-    allowed = {
-        f"http://{host}:{port}" for host in ("127.0.0.1", "localhost") for port in (8000, 5173)
-    }
-    allowed.add(request.app.state.settings.app_base_url)
-    if (origin and origin not in allowed) or request.headers.get("sec-fetch-site") == "cross-site":
-        raise HTTPException(403, "Start runs from the local Upgrade application.")
+    require_local_origin(request)
     if not request.app.state.worker.available:
         raise HTTPException(503, "The local worker is unavailable. Start one backend process.")
+    if body.kind == "project_analysis":
+        project_store(request).admit(request.state.principal.owner_id, body)
     if request.app.state.settings.auth_mode == "github" and not request.state.principal.connected:
         raise HTTPException(409, "Reconnect GitHub before starting another run.")
     if (

@@ -15,7 +15,7 @@ Contract finalization and model-driven implementation remain later gates.
 
 ## Execution boundary
 
-Only `crawler-demo` is registered. The controller exports exactly its `pyproject.toml`,
+The explicit `crawler-demo` workflow exports exactly its `pyproject.toml`,
 `src/crawler.py`, and `tests/test_crawler.py`. It checks path containment, rejects links and
 junctions, bounds file reads, and copies acceptance tests to a separate directory. `.git`,
 `.env`, and other project files never enter the snapshot. This is a content-hashed fixture
@@ -37,7 +37,7 @@ Each suite gets a fresh container with:
   per-file write limit. Captured stdout/stderr are bounded to 2 MiB each.
 - 10 seconds per test and 60 seconds per container invocation. Timeout/output-limit paths
   terminate the container; generated containers are removed after captures.
-- Fixed pytest paths/configuration, disabled plugin autoload/conftests, and an explicitly
+- Fixed pytest paths/configuration, disabled plugin autoload/conftests for the crawler, and an explicitly
   loaded timeout plugin. No target-provided command, Dockerfile, install hook, or environment
   file is used. No host test-execution fallback exists.
 
@@ -46,9 +46,18 @@ The image contains no provider client or API keys, and host environment values a
 Isolation checks verify effective UID/capabilities/no-new-privileges, loopback-only networking,
 read-only inputs/root, and absence of known credential variables and host paths.
 
-This supports the declared fixture and prepared dependencies. It is not a general repository
-sandbox or a certificate of safety for adversarial test code. Unknown dependencies and general
-target registration are deferred; there is no arbitrary target-path option.
+F3 also provides reviewed public Python profiles. `project_baseline` uses original
+`tests/`, `conftest.py` and reviewed `pyproject.toml` options; it preserves qualified case
+identities. `project_unittest` uses the controller-owned `unittest_runner.py` and native
+`load_tests`, including doctests. Mixed collection, unprepared dependencies/configuration
+and incomplete executable inputs are rejected by preflight. Neither adapter installs a
+project or runs setup/build hooks. The SHA/root, export hashes, adapter/image and captures
+are bound in `project-baseline-binding.json`. Rebuild the image after updating the new
+unittest runner as well. See [F3 limits](../docs/full-feature-development.md#6-supporting-real-target-and-source-projects).
+
+These are bounded local profiles, not a certificate of safety for adversarial multi-user
+execution. Additional dependencies need a separately reviewed preparation path; no
+arbitrary host target-path option exists.
 
 ## Evidence and failure semantics
 

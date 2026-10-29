@@ -16,6 +16,7 @@ export type EventPage = Schemas['EventPage']
 export type Session = Schemas['SessionView']
 export type RepositoryPage = Schemas['RepositoryPage']
 export type Snapshot = Schemas['SnapshotView']
+export type ProjectSelection = Schemas['ProjectSelection']
 export type InstallationPage = Schemas['InstallationPage']
 export type Feature = Schemas['FeatureCard']
 export type RunRequest =
@@ -77,4 +78,5 @@ export const kindLabel: Record<RunSummary['kind'], string> = {
   pinned_baseline: 'Committed baseline',
   local_baseline: 'Working-file baseline',
   meta_smoke: 'Meta check',
+  project_analysis: 'Project analysis',
 }

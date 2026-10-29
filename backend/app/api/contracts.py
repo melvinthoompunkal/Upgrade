@@ -7,9 +7,17 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.contracts import ModelCall, Ref, RepoSnapshot
 from app.evidence_contracts import Coverage, FeatureCard
+from app.project_contracts import ProjectAnalysis, ProjectAnalysisRequest
 from app.selection_contracts import AssessmentBatch, FitResult, TargetProfile
 
-RunKind = Literal["fit_select", "source_trace", "pinned_baseline", "local_baseline", "meta_smoke"]
+RunKind = Literal[
+    "fit_select",
+    "source_trace",
+    "pinned_baseline",
+    "local_baseline",
+    "meta_smoke",
+    "project_analysis",
+]
 
 
 class SourceRequest(BaseModel):
@@ -49,7 +57,10 @@ class CheckRequest(BaseModel):
     kind: Literal["pinned_baseline", "local_baseline", "meta_smoke"]
 
 
-RunRequest = Annotated[SelectionRequest | TraceRequest | CheckRequest, Field(discriminator="kind")]
+RunRequest = Annotated[
+    SelectionRequest | TraceRequest | CheckRequest | ProjectAnalysisRequest,
+    Field(discriminator="kind"),
+]
 
 
 class Problem(BaseModel):
@@ -130,6 +141,7 @@ class TestSuite(BaseModel):
 
 
 class RunDetail(RunSummary):
+    project_analyses: list[ProjectAnalysis] = Field(default_factory=list)
     schema_version: str = "1"
     goal: str = ""
     source: RepoSnapshot | None = None
@@ -160,7 +172,9 @@ class Capabilities(BaseModel):
     checked_at: str
     image_receipt_present: bool
     worker_available: bool
-    scope: str = "One bounded retry feature; analysis only."
+    scope: str = (
+        "Public Python project structure; optional native baseline. Crawler fit is an example."
+    )
 
 
 class Target(BaseModel):

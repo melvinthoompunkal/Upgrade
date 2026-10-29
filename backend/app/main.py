@@ -24,6 +24,7 @@ from app.auth.snapshots import router as snapshot_router
 from app.auth.store import AuthStore
 from app.auth.webhooks import router as webhook_router
 from app.config import Settings
+from app.projects import router as project_router
 from app.selection_artifacts import prepare_directory
 from app.tools.runner import PROJECT_ROOT
 
@@ -48,6 +49,7 @@ def create_app(
         app.state.settings = settings
         app.state.artifact_root = data_root / "artifacts"
         app.state.private_repository_root = data_root / "private-repositories"
+        app.state.project_root = data_root / "projects"
         prepare_directory(app.state.artifact_root)
         app.state.runs = RunStore(data_root / "web/runs.sqlite3")
         if settings.auth_mode == "local":
@@ -84,6 +86,7 @@ def create_app(
     application.include_router(snapshot_router)
     application.include_router(installation_router)
     application.include_router(router)
+    application.include_router(project_router)
 
     @application.get("/health", response_model=HealthResponse)
     async def health() -> HealthResponse:
@@ -108,7 +111,7 @@ def create_app(
         def spa(path: str):
             if (
                 path == ""
-                or path in {"runs", "system", "repositories"}
+                or path in {"runs", "system", "repositories", "example"}
                 or (
                     path.startswith("runs/")
                     and all(part not in {"..", "."} for part in path.split("/"))

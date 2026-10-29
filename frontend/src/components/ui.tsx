@@ -34,6 +34,7 @@ const outcomeLabels: Record<string, string> = {
   passed: 'Check passed',
   failed: 'Stopped with an error',
   interrupted: 'Interrupted',
+  baseline_failed: 'Original tests did not pass',
   running: 'In progress',
   queued: 'Queued',
 }
@@ -41,12 +42,12 @@ export function RunBadge({ run }: { run: Pick<RunSummary, 'status' | 'outcome'> 
   const state = run.status === 'finished' ? (run.outcome ?? 'finished') : run.status
   const Icon = ['selected', 'passed'].includes(state)
     ? CheckCircle
-    : ['failed', 'interrupted', 'no_safe_fit'].includes(state)
+    : ['failed', 'interrupted', 'no_safe_fit', 'baseline_failed'].includes(state)
       ? WarningCircle
       : Clock
   return (
     <span
-      className={`badge ${['selected', 'passed'].includes(state) ? 'badge-positive' : ['failed', 'interrupted'].includes(state) ? 'badge-error' : ''}`}
+      className={`badge ${['selected', 'passed'].includes(state) ? 'badge-positive' : ['failed', 'interrupted', 'baseline_failed'].includes(state) ? 'badge-error' : ''}`}
     >
       <Icon size={15} weight="regular" />
       {outcomeLabels[state] ?? state}

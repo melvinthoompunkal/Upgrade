@@ -1,0 +1,120 @@
+{
+  "run_id": "8392719bb071421bba825ed2c8b4f799",
+  "outcome": "passed",
+  "source": {
+    "repo_id": "source",
+    "origin": "https://github.com/pallets/itsdangerous",
+    "commit_sha": "672971d66a2ef9f85151e53283113f33d642dabd",
+    "inventory_artifact_id": "source-inventory.json",
+    "license_refs": [
+      {
+        "repo_id": "source",
+        "commit_sha": "672971d66a2ef9f85151e53283113f33d642dabd",
+        "path": "LICENSE.txt",
+        "start_line": 1,
+        "end_line": 28,
+        "symbol": null
+      }
+    ]
+  },
+  "target": {
+    "repo_id": "target",
+    "origin": "https://github.com/more-itertools/more-itertools",
+    "commit_sha": "8c1a6ef241b51ff055e89219f050ccf4f15f37f6",
+    "inventory_artifact_id": "target-inventory.json",
+    "license_refs": [
+      {
+        "repo_id": "target",
+        "commit_sha": "8c1a6ef241b51ff055e89219f050ccf4f15f37f6",
+        "path": "LICENSE",
+        "start_line": 1,
+        "end_line": 19,
+        "symbol": null
+      }
+    ]
+  },
+  "project_ids": [
+    "76cd7063d30b43f8886304ad53c1f39c",
+    "bcb93ec863024971b807380ff80951c6"
+  ],
+  "references": 306,
+  "usage": {
+    "requests": 0,
+    "input_tokens": 0,
+    "output_tokens": 0
+  },
+  "artifacts": [
+    {
+      "id": "9d950175ae0c691a29546e7c",
+      "label": "notices/source-notices.json",
+      "kind": "source notice",
+      "size": 1730,
+      "sha256": "9fa406c5fda1eb0a39af8ee4860d23c6b80e45c3d9cd26bed51e3c2035c42938",
+      "available": true
+    },
+    {
+      "id": "bb20e3a298e638488657ba15",
+      "label": "notices/target-notices.json",
+      "kind": "source notice",
+      "size": 1297,
+      "sha256": "37123ca2bc9380b3ec3a9a171d7c75ed84e1f9c1e11edcc6765090a586e5ff22",
+      "available": true
+    },
+    {
+      "id": "9dbd9380216097555c9deac9",
+      "label": "report.json",
+      "kind": "report",
+      "size": 2944,
+      "sha256": "da301113f81b4a989ee68c2d4e6810ee1c95767115ca3357c2bf4e3f7456e2ca",
+      "available": true
+    },
+    {
+      "id": "421e351ac50660338aae4d6f",
+      "label": "source-evidence-reads.json",
+      "kind": "evidence",
+      "size": 84859,
+      "sha256": "5796b32f03317e3f4bd834f8616c6a8924eb2c90c09cacbef55760c1644f8e15",
+      "available": true
+    },
+    {
+      "id": "5ec9636f8bf67b0a7d884573",
+      "label": "source-inventory.json",
+      "kind": "evidence",
+      "size": 6616,
+      "sha256": "053c015674ca28734e15ed0523e469d1acb7916e302a39e894de45c6e035f019",
+      "available": true
+    },
+    {
+      "id": "df28c44f09f5aec9dac38995",
+      "label": "source-project-analysis.json",
+      "kind": "evidence",
+      "size": 65905,
+      "sha256": "d3de8304fef168cdc344171e862899452b0d734365c2611adfae7fcb25e76ac5",
+      "available": true
+    },
+    {
+      "id": "ca7f37ed38d13681bb1980d8",
+      "label": "target-evidence-reads.json",
+      "kind": "evidence",
+      "size": 106767,
+      "sha256": "a85eea61b20591ec0beee32f1280733c07816cc03640b62e5c4c8e1a9770b318",
+      "available": true
+    },
+    {
+      "id": "f8ab989b374b39ab2089d22b",
+      "label": "target-inventory.json",
+      "kind": "evidence",
+      "size": 4294,
+      "sha256": "d3ed10c93ff48c54bf5d2b4bb5ab4e75d726377653fdd5be5787bd88bdfd8321",
+      "available": true
+    },
+    {
+      "id": "c8628edf46ed03a01ae7ed52",
+      "label": "target-project-analysis.json",
+      "kind": "evidence",
+      "size": 65572,
+      "sha256": "c75955010f36ffed0fe12a54948a77375b7867cbb6509b036a49ddbf0a06452b",
+      "available": true
+    }
+  ]
+}

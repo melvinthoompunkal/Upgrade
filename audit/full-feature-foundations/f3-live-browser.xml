@@ -1,0 +1,10 @@
+<testsuites id="" name="" tests="2" failures="0" skipped="0" errors="0" time="51.288017999999994">
+<testsuite name="projects-live.spec.ts" timestamp="2026-10-29T01:56:35.022Z" hostname="desktop" tests="1" failures="0" skipped="0" time="25.038" errors="0">
+<testcase name="real public source and target analysis needs no model and retains citations" classname="projects-live.spec.ts" time="25.038">
+</testcase>
+</testsuite>
+<testsuite name="projects-live.spec.ts" timestamp="2026-10-29T01:56:35.022Z" hostname="mobile" tests="1" failures="0" skipped="0" time="24.012" errors="0">
+<testcase name="real public source and target analysis needs no model and retains citations" classname="projects-live.spec.ts" time="24.012">
+</testcase>
+</testsuite>
+</testsuites>

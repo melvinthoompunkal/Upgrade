@@ -3,7 +3,7 @@ import { mockApi, fixtureRun, capabilities } from './fixtures'
 
 test('example pins source and editing the repository clears its SHA', async ({ page }) => {
   await mockApi(page)
-  await page.goto('/')
+  await page.goto('/example')
   await page.getByRole('button', { name: 'Use Scrapy example' }).click()
   await expect(page.getByLabel('Source repository')).toHaveValue('https://github.com/scrapy/scrapy')
   await page.getByRole('button', { name: /Analysis options/ }).click()
@@ -25,7 +25,7 @@ test('invalid URL preserves the form and never queues work', async ({ page }) =>
   page.on('request', (request) => {
     if (request.method() === 'POST') submissions++
   })
-  await page.goto('/')
+  await page.goto('/example')
   await page.getByLabel('Source repository').fill('https://secret@github.com/owner/repo')
   await page.getByLabel('What would you like to improve?').fill('Preserve this goal.')
   await page.getByRole('button', { name: 'Find a suitable feature', exact: true }).click()
@@ -42,7 +42,7 @@ test('run creation is idempotent and opens a stable workspace URL', async ({ pag
   page.on('request', (request) => {
     if (request.method() === 'POST') submissions.push(request.headers()['idempotency-key'])
   })
-  await page.goto('/')
+  await page.goto('/example')
   await page.getByRole('button', { name: 'Use Scrapy example' }).click()
   await page.getByRole('button', { name: 'Find a suitable feature', exact: true }).dblclick()
   await expect(page).toHaveURL(/runs\/fixture-run\/overview/)
@@ -182,7 +182,7 @@ test('missing configuration leaves historical runs accessible', async ({ page })
   await page.route('http://127.0.0.1:5173/api/capabilities', (route) =>
     route.fulfill({ json: { ...capabilities, model_configured: false } }),
   )
-  await page.goto('/')
+  await page.goto('/example')
   await expect(
     page.getByRole('button', { name: 'Find a suitable feature', exact: true }),
   ).toBeDisabled()

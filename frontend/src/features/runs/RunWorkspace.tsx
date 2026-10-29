@@ -126,20 +126,24 @@ export function RunWorkspace() {
       ))}
       <div className="run-tabs" aria-label="Run views">
         <nav>
-          {views.map((tab) => (
-            <NavLink
-              key={tab}
-              to={`/runs/${runId}/${tab}`}
-              className={view === tab ? 'tab-active' : ''}
-            >
-              {tab[0].toUpperCase() + tab.slice(1)}
-              {tab === 'features' &&
-                run.analyzed_feature_count !== null &&
-                run.analyzed_feature_count !== undefined && (
-                  <span>{run.analyzed_feature_count}</span>
-                )}
-            </NavLink>
-          ))}
+          {views
+            .filter(
+              (tab) => run.kind !== 'project_analysis' || !['features', 'changes'].includes(tab),
+            )
+            .map((tab) => (
+              <NavLink
+                key={tab}
+                to={`/runs/${runId}/${tab}`}
+                className={view === tab ? 'tab-active' : ''}
+              >
+                {tab[0].toUpperCase() + tab.slice(1)}
+                {tab === 'features' &&
+                  run.analyzed_feature_count !== null &&
+                  run.analyzed_feature_count !== undefined && (
+                    <span>{run.analyzed_feature_count}</span>
+                  )}
+              </NavLink>
+            ))}
         </nav>
         {report && (
           <a href={artifactUrl(run.id, report.id)} download className="tab-download">

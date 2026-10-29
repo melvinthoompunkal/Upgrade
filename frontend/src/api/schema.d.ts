@@ -379,6 +379,40 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/projects': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Pin Project */
+    post: operations['pin_project_api_projects_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/projects/{project_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get Project */
+    get: operations['get_project_api_projects__project_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/health': {
     parameters: {
       query?: never
@@ -483,7 +517,14 @@ export interface components {
        */
       schema_version: string
       /** Kinds */
-      kinds: ('fit_select' | 'source_trace' | 'pinned_baseline' | 'local_baseline' | 'meta_smoke')[]
+      kinds: (
+        | 'fit_select'
+        | 'source_trace'
+        | 'pinned_baseline'
+        | 'local_baseline'
+        | 'meta_smoke'
+        | 'project_analysis'
+      )[]
       /**
        * Patch Supported
        * @default false
@@ -501,7 +542,7 @@ export interface components {
       worker_available: boolean
       /**
        * Scope
-       * @default One bounded retry feature; analysis only.
+       * @default Public Python project structure; optional native baseline. Crawler fit is an example.
        */
       scope: string
     }
@@ -764,6 +805,152 @@ export interface components {
        */
       baseline_status: 'passed' | 'failed'
     }
+    /** ProjectAnalysis */
+    ProjectAnalysis: {
+      /**
+       * Schema Version
+       * @default python-structure-v1
+       * @constant
+       */
+      schema_version: 'python-structure-v1'
+      project: components['schemas']['ProjectSelection']
+      /** Entry Points */
+      entry_points: components['schemas']['SymbolEvidence'][]
+      /** Source Tests */
+      source_tests: components['schemas']['SymbolEvidence'][]
+      /** Imports */
+      imports: {
+        [key: string]: string[]
+      }
+      coverage: components['schemas']['Coverage']
+      /** Limits Reached */
+      limits_reached: string[]
+      /**
+       * Qualification
+       * @default Static definitions/imports are evidence of structure, not a complete feature catalog, runtime call graph, relevance assessment or verified adaptation.
+       */
+      qualification: string
+    }
+    /** ProjectAnalysisRequest */
+    ProjectAnalysisRequest: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'project_analysis'
+      /** Source Project */
+      source_project: string
+      /** Target Project */
+      target_project?: string | null
+      /**
+       * Goal
+       * @default
+       */
+      goal: string
+      /**
+       * Run Baseline
+       * @default false
+       */
+      run_baseline: boolean
+    }
+    /** ProjectRequest */
+    ProjectRequest: {
+      /** Url */
+      url: string
+      /** Commit Sha */
+      commit_sha: string
+      /**
+       * Role
+       * @enum {string}
+       */
+      role: 'source' | 'target'
+      /**
+       * Project Root
+       * @default
+       */
+      project_root: string
+    }
+    /** ProjectSelection */
+    ProjectSelection: {
+      /** Id */
+      id: string
+      requested: components['schemas']['ProjectRequest']
+      snapshot: components['schemas']['RepoSnapshot']
+      support: components['schemas']['ProjectSupport']
+      /** Inventory Sha256 */
+      inventory_sha256: string
+      /** Root Choices */
+      root_choices: string[]
+      /** Created At */
+      created_at: string
+    }
+    /** ProjectSupport */
+    ProjectSupport: {
+      /**
+       * Profile Version
+       * @default python-evidence-v1
+       * @constant
+       */
+      profile_version: 'python-evidence-v1'
+      /** Repo Id */
+      repo_id: string
+      /** Commit Sha */
+      commit_sha: string
+      /** Project Root */
+      project_root: string
+      /**
+       * Capability
+       * @default browse_index
+       * @enum {string}
+       */
+      capability: 'browse_index' | 'evidence_analysis' | 'verified_adaptation'
+      /** Python Files */
+      python_files: number
+      /** Manifest Sha256 */
+      manifest_sha256: string | null
+      /**
+       * Execution Supported
+       * @default false
+       */
+      execution_supported: boolean
+      /**
+       * Adaptation Supported
+       * @default false
+       * @constant
+       */
+      adaptation_supported: false
+      /** Reasons */
+      reasons?: string[]
+      /** Name */
+      name?: string | null
+      /** Python Requirement */
+      python_requirement?: string | null
+      /** Runtime Dependencies */
+      runtime_dependencies?: string[]
+      /** Dynamic */
+      dynamic?: string[]
+      /** Adapter Version */
+      adapter_version?: string | null
+      /** Analysis Reasons */
+      analysis_reasons?: string[]
+      /** Execution Reasons */
+      execution_reasons?: string[]
+      /** Acceptance Capabilities */
+      acceptance_capabilities?: string[]
+      /**
+       * Notice Policy
+       * @default analysis-only-v1
+       * @constant
+       */
+      notice_policy: 'analysis-only-v1'
+      /** Notice Paths */
+      notice_paths?: string[]
+      /**
+       * Adaptation Reason
+       * @default Feature-specific acceptance and allowed-use review are required.
+       */
+      adaptation_reason: string
+    }
     /** Ref */
     Ref: {
       /** Repo Id */
@@ -921,7 +1108,13 @@ export interface components {
        * Kind
        * @enum {string}
        */
-      kind: 'fit_select' | 'source_trace' | 'pinned_baseline' | 'local_baseline' | 'meta_smoke'
+      kind:
+        | 'fit_select'
+        | 'source_trace'
+        | 'pinned_baseline'
+        | 'local_baseline'
+        | 'meta_smoke'
+        | 'project_analysis'
       /** Title */
       title: string
       /**
@@ -952,6 +1145,8 @@ export interface components {
       /** Eligible Feature Count */
       eligible_feature_count?: number | null
       error?: components['schemas']['Problem'] | null
+      /** Project Analyses */
+      project_analyses?: components['schemas']['ProjectAnalysis'][]
       /**
        * Schema Version
        * @default 1
@@ -1010,7 +1205,13 @@ export interface components {
        * Kind
        * @enum {string}
        */
-      kind: 'fit_select' | 'source_trace' | 'pinned_baseline' | 'local_baseline' | 'meta_smoke'
+      kind:
+        | 'fit_select'
+        | 'source_trace'
+        | 'pinned_baseline'
+        | 'local_baseline'
+        | 'meta_smoke'
+        | 'project_analysis'
       /** Title */
       title: string
       /**
@@ -1150,6 +1351,16 @@ export interface components {
       limits_reached: string[]
       /** Created At */
       created_at: number
+    }
+    /** SymbolEvidence */
+    SymbolEvidence: {
+      /** Name */
+      name: string
+      /** Kind */
+      kind: string
+      ref: components['schemas']['Ref']
+      /** Repository Path */
+      repository_path: string
     }
     /** Target */
     Target: {
@@ -1762,6 +1973,7 @@ export interface operations {
           | components['schemas']['SelectionRequest']
           | components['schemas']['TraceRequest']
           | components['schemas']['CheckRequest']
+          | components['schemas']['ProjectAnalysisRequest']
       }
     }
     responses: {
@@ -1994,6 +2206,70 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['ReferenceDetail']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  pin_project_api_projects_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ProjectRequest']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ProjectSelection']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  get_project_api_projects__project_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        project_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ProjectSelection']
         }
       }
       /** @description Validation Error */

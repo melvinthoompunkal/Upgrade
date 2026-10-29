@@ -81,7 +81,7 @@ class TestCapture:
     diagnostic: str
 
 
-def parse_junit(content: bytes) -> tuple[TestCase, ...]:
+def parse_junit(content: bytes, *, qualified_names: bool = False) -> tuple[TestCase, ...]:
     if len(content) > MAX_ARTIFACT_BYTES or b"<!DOCTYPE" in content or b"<!ENTITY" in content:
         raise RunnerError("JUnit report is oversized or contains unsupported XML declarations.")
     try:
@@ -101,7 +101,10 @@ def parse_junit(content: bytes) -> tuple[TestCase, ...]:
                 message = child.get("message", "")
                 detail = child.text or ""
                 break
-        cases.append(TestCase(node.get("name", ""), outcome, message, detail))
+        name = node.get("name", "")
+        if qualified_names and node.get("classname"):
+            name = f"{node.get('classname')}.{name}"
+        cases.append(TestCase(name, outcome, message, detail))
     if not cases or len({c.name for c in cases}) != len(cases):
         raise RunnerError("JUnit must contain uniquely named test cases.")
     return tuple(cases)

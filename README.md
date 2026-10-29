@@ -30,6 +30,20 @@ F2 adds opt-in private pinned snapshots, installation states, signed lifecycle w
 and provider revocation/current-access checks. Private retrieval defaults off; real-account
 validation remains pending. General discovery and verified adaptations remain pending.
 
+F3 adds public Python project inspection and structural analysis with optional native
+offline tests. The browser starts with your own pinned source and optional target;
+the crawler is available through **Try the crawler example**. Structural analysis needs
+no model key. Supported profiles and limits are documented in
+[the F3 implementation record](docs/full-feature-development.md#6-supporting-real-target-and-source-projects).
+
+```powershell
+uv run --project backend --locked graft-project-analyze --source-url https://github.com/pallets/itsdangerous --source-sha 672971d66a2ef9f85151e53283113f33d642dabd
+```
+
+Add `--source-root` for a monorepo, or `--target-url`, `--target-sha`, `--target-root`
+and optional `--run-baseline`. Native tests need the rebuilt prepared runner; incompatible
+dependencies, collection requirements and skipped/failed tests cannot produce green evidence.
+
 ## Setup
 
 Requires Python 3.12 and [uv](https://docs.astral.sh/uv/). From the repository root:

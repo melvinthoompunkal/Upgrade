@@ -98,10 +98,24 @@ class PinnedRepository:
 
 
 class RepositoryManager:
-    def __init__(self, directory: Path):
-        directory.mkdir(parents=True, exist_ok=False)
+    def __init__(self, directory: Path, *, existing: bool = False):
+        if not existing:
+            directory.mkdir(parents=True, exist_ok=False)
         self.directory = physical_root(directory)
+        for control in (self.directory / "control", self.directory / "control/empty-hooks"):
+            if control.exists() or control.is_symlink() or control.is_junction():
+                physical_root(control)
         self.git = Git(self.directory / "control")
+
+    def reopen(self, *, role: str, url: str, sha: str, prefix: str) -> PinnedRepository:
+        """Rebuild inventory from an already pinned clone, without a ref lookup or fetch."""
+        if role not in {"source", "target"}:
+            raise RepositoryError("Unknown snapshot role.")
+        storage = physical_root(self.directory / f"{role}.git")
+        actual = self.git.run("rev-parse", "HEAD^{commit}", cwd=storage).decode().strip()
+        if actual != sha:
+            raise EvidenceError("Stored project HEAD no longer matches its selection.")
+        return self._inventory(storage, role, url, sha, prefix)
 
     def public_source(self, url: str, sha: str) -> PinnedRepository:
         return self.public_snapshot(url, sha, role="source")

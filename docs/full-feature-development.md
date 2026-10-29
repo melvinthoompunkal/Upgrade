@@ -1,6 +1,6 @@
 # Upgrade: project status, audits and development plan
 
-Updated October 28, 2026, America/New_York. Implementation reviewed at commit
+Updated October 28, 2026, America/New_York. Original foundation review at commit
 `b06d6d3` (`completed f0 and f1`).
 
 This is the single maintained record of completed work, audit findings, verification
@@ -12,6 +12,7 @@ retain design detail, while this document owns the current backlog.
 **Current delivery:** the local CLI and browser can trace one Scrapy retry feature,
 profile the bundled Python/HTTPX crawler and select or reject a proposed adaptation.
 Phases 1–3, Stage 4A, F0 remediation and F1 local identity boundaries are implemented.
+F3 now adds public Python project structure and reviewed native offline test adapters.
 All fourteen findings from the three original audits have recorded repairs. GitHub
 authorization, repository indexing and opt-in private snapshots are implemented locally;
 real-account validation remains pending. General discovery, production patching and final
@@ -47,7 +48,7 @@ The broader roadmap supersedes the original MVP's account/private-access exclusi
 | F0 foundations | S4-A01–A06 repaired; strict capture decoding, reliable JSON finalization, physical path checks and common CLI/API execution lock | Hard-stop cleanup and concurrent hostile path replacement remain outside this boundary |
 | F1 identity | Numeric GitHub identity, hashed expiring sessions, single-use PKCE state, encrypted credentials, CSRF, transactional refresh/disconnect/admission, owner-scoped results and drafts | Local mocked-provider verification is complete; real GitHub account validation remains deferred |
 | F2 local connection | GitHub App sign-in/index, installation states/setup validation, opt-in private pinned snapshots, restricted installation tokens/ephemeral Git broker, signed webhook inbox and provider revocation; fresh access checks and publication fencing | Real-account sign-in/private-grant/rotation/revocation exit checks remain pending; private fetch defaults off; active-call interruption and hosted lifecycle remain F6 |
-| F3 public preflight | Role-qualified public snapshots, project-root prefixes and `python-static-v1` manifest inspection; urllib3/HTTPX examples inventoried | Browse/index only; no independent executable adapter or general analysis support |
+| F3 public projects | Owner-scoped immutable project IDs, root selection, `python-evidence-v1` structural analysis and reviewed `python-pytest-v1` / `python-unittest-v1` native offline adapters; crawler is an explicit example | Public Python profiles only; feature discovery/matching and acceptance-driven adaptation remain F4/F5/F7; incompatible suites retain their failures |
 | F5 browsing foundations | Global server-side run-history search/paging, URL state, compact status polling and 200-event browser window | Persistent feature catalog, all/relevant queries and scale checks are pending |
 | F6 local admission | Workspace execution exclusion, four unfinished jobs per owner and sixteen globally, queued cancellation and cache invalidation on disconnect | Leases, fairness, in-flight cancellation, retention, private-code consent and hosted isolation remain pending |
 | F4, F7–F8 | Not implemented | Persistent feature discovery; real planner, frozen acceptance, constrained patches, repair, verified diff/download and optional explicit PR publishing |
@@ -70,10 +71,12 @@ Implementation anchors:
   [repository index](../backend/app/auth/repositories.py), [static support inspection](../backend/app/project_support.py)
   and [browser account context](../frontend/src/app/workspace-context.tsx).
 
-The browser form and [API contracts](../backend/app/api/contracts.py) still submit
-`crawler-demo`. Entering another public source URL does not generalize the retry-specific
-tracer, profiler, runner or source-use policy. The eight-card schema capacity is a batch
-bound, not delivered multi-feature discovery. Run history is not a feature catalog.
+The default browser form and `project_analysis` API submit server-owned public project IDs,
+with an optional target. Source-only structural analysis needs no target or model key.
+The explicit `/example` workflow retains the reviewed `crawler-demo` fit contracts and
+retry-specific tracer/profiler/gates. Public project analysis does not select a feature.
+The eight-card schema capacity is a batch bound, not delivered multi-feature discovery.
+Run history is not a feature catalog.
 
 ### Selection policy to preserve
 
@@ -231,7 +234,7 @@ development and release evidence:
 - Real GitHub sign-in/private grants and provider rotation/revocation remain unverified;
   local access checks are implemented. Private-code model consent, active-call interruption
   and retention/deletion remain pending.
-- General discovery, independent executable project adapters, immutable catalog queries,
+- General discovery, additional executable project profiles, immutable catalog queries,
   assessed/unassessed counts and 10,000-row scale checks remain pending.
 - Historical tests do not establish a dependency-vulnerability review, every allowed model
   variant, production load behavior or hostile multi-user execution safety.
@@ -242,7 +245,7 @@ Results below are dated receipts. For the original documentation consolidation, 
 and a fresh hash comparison matched all 128 files in the latest F1 source manifest;
 the saved backend/browser JUnit digests and totals also matched. No application suite,
 browser, Docker, network fetch or paid inference was rerun for that documentation-only change.
-The subsequent F2 implementation has fresh local checks listed below.
+The subsequent F2/F3 implementations have fresh local checks listed below.
 
 | Milestone / date | Recorded result | Retained evidence |
 |---|---|---|
@@ -257,6 +260,7 @@ The subsequent F2 implementation has fresh local checks listed below.
 | F0 follow-up, Oct 28 | 358 backend tests, zero failures/errors/skips; lint/format passed | Tracked [checks](../audit/full-feature-foundations/f0-follow-up-checks.json), [JUnit](../audit/full-feature-foundations/f0-follow-up-tests.xml) |
 | F1 follow-up, Oct 28 | 384 backend tests and 36 desktop/mobile browser tests, zero failures/errors/skips; TypeScript/build/lint/format passed | Tracked [checks](../audit/full-feature-foundations/f1-identity-checks.json), [backend JUnit](../audit/full-feature-foundations/f1-identity-tests.xml), [browser JUnit](../audit/full-feature-foundations/f1-browser-tests.xml) |
 | F2 local lifecycle, Oct 28 | 423 full backend checks; final 122 auth/lifecycle/API checks after the documented-endpoint and atomic-publication refinements; 42 desktop/mobile browser checks; zero failures/errors/skips; build/lint/format passed | Tracked [checks](../audit/full-feature-foundations/f2-connection-checks.json), [backend JUnit](../audit/full-feature-foundations/f2-connection-tests.xml), [final focused JUnit](../audit/full-feature-foundations/f2-lifecycle-tests.xml), [browser JUnit](../audit/full-feature-foundations/f2-browser-tests.xml) |
+| F3 public Python projects, Oct 28 | 437 backend checks, 50 mocked desktop/mobile checks and 2 real public browser-to-worker runs passed; build/TypeScript/lint/format/lock checks passed; final Docker image passed 6 isolation checks, native pytest/conftest and unittest/doctest checks, and retained error/skip failures | Tracked [checks and source hashes](../audit/full-feature-foundations/f3-checks.json), [backend JUnit](../audit/full-feature-foundations/f3-backend.xml), [browser summary](../audit/full-feature-foundations/f3-browser-summary.json), [real browser JUnit](../audit/full-feature-foundations/f3-live-browser.xml), [native adapter checks](../audit/full-feature-foundations/f3-native-checks.json) |
 
 Counts belong to their implementation states; they are neither additive across suites
 nor competing current totals. F0/F1 checks used controlled GitHub/Meta/Docker boundaries;
@@ -301,6 +305,26 @@ records refs, notices, inventory/manifest hashes and `python-static-v1` assessme
 [check_public_examples.py](../scripts/check_public_examples.py) can create a new bounded
 preflight; it fetches public snapshots without model inference or repository execution.
 This does not demonstrate general discovery, executable support or safe adaptation.
+
+F3's fresh real browser runs analyzed **ItsDangerous** source
+`672971d66a2ef9f85151e53283113f33d642dabd` and **more-itertools v10.8.0** target
+`8c1a6ef241b51ff055e89219f050ccf4f15f37f6`, with no crawler integration point and
+zero model requests. Both desktop and mobile completed through the real API queue/worker,
+opened a stored citation and retained exact source/target identities. Those structural
+runs did not request native baseline execution. Receipts:
+[desktop](../audit/full-feature-foundations/f3-live-desktop.json) and
+[mobile](../audit/full-feature-foundations/f3-live-mobile.json).
+
+Separately, original native suites were executed on public more-itertools snapshots.
+Current head `4aeb4338ae1407d8da9723e86da99efeb446f719` ran 929 cases but hit the
+existing 64-PID/thread limit; v10.8.0 ran 859 cases with one skipped compatibility test.
+Both remained `baseline_failed`; no skipped test or resource failure was converted into
+green evidence. These exploratory receipts retain their original image identities.
+Final-image success/failure controls use explicitly generated independent Git repositories,
+including a non-crawler module and a conftest-dependent test, native `load_tests` doctest,
+class setup failure and skipped-test cases. They establish adapter behavior, not a green
+public more-itertools baseline. Reproduce with `scripts/check_project_adapters.py` after
+building the runner. No source/target setup or test code was executed on the host.
 
 ### Original review identities and document consolidation
 
@@ -529,6 +553,47 @@ The requirements below describe that design and the remaining live/F6 release ch
   [GitHub rate limits](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api).
 
 ## 6. Supporting real target and source projects
+
+**F3 local implementation:** the default **Analyze public projects** form pins a full
+GitHub commit SHA separately for each role, shows inspected manifest roots and support
+reasons, and submits immutable owner-scoped project IDs. `POST /api/projects` and
+`GET /api/projects/{id}` persist the URL, requested SHA, resolved SHA, role, root,
+inventory digest, manifest digest and capability assessment in schema v5. Only full
+commit SHAs are accepted; branch/tag lookup is not performed or replayed by a worker.
+The worker reopens the independent Git storage, rechecks inventory/HEAD/object integrity
+and recomputes current adapter support. Original checkouts and dirty files are not inputs.
+
+`python-evidence-v1` reports bounded Python definitions, test definitions, imports,
+read-backed symbol citations, explicit project/repository-relative paths, full notices
+and partial coverage. It performs no model calls and makes no semantic feature/relevance
+claim. Missing/invalid manifests, syntax/index limits and unsupported roots are explained
+before admission. Analysis is capped at 200 Python files / 2 MiB, a 24 KiB manifest,
+10 seconds of indexing checked between files, 80 production and 80 test definitions,
+20-line definition windows and the existing 500,000-byte evidence allowance. Repository
+inventory limits remain 4,000 entries / 50 MiB text / 2 MiB per file; Git operations have
+120-second timeouts and retrieval has a 200 MiB post-fetch storage check. Hard streaming
+disk quotas and hosted cleanup remain F6 work.
+
+For compatible targets, explicit baseline execution uses the prepared Python 3.12 image.
+Runtime dependencies are empty or exactly `httpx==0.28.1`; declared test requirements
+must fit prepared versions. `python-pytest-v1` loads the original `conftest.py` and
+reviewed native `pyproject.toml` options, without plugin autoload. Native `load_tests`
+selects `python-unittest-v1`, which includes doctests and records all collected cases;
+mixed pytest/unittest collection is rejected. No setup/build/install command is run.
+Every suite uses the existing credential-free offline limits. Skips, expected failures,
+collection errors and resource failures remain unsuccessful. Baseline binding records
+the target ID/SHA/root, inventory/manifest, adapter/image, exact exported inputs and captures.
+`verified_adaptation` is reserved and never emitted: `analysis-only-v1` preserves notices
+and blocks reuse/adaptation until feature-specific allowed-use and acceptance review.
+
+Implementation: [contracts](../backend/app/project_contracts.py),
+[public project store](../backend/app/projects.py),
+[adapters](../backend/app/project_adapters.py),
+[shared workflow](../backend/app/project_analysis.py),
+[CLI](../backend/app/project_cli.py), and
+[native unittest capture](../sandbox/unittest_runner.py).
+The requirements below remain the design boundary for additional profiles and downstream
+discovery/adaptation; existing crawler gates are preserved in the explicit example.
 
 Replace the sample-only registration with an authorized repository snapshot contract:
 repository ID, owner scope, role (`source`/`target`), requested ref, resolved SHA,
@@ -991,8 +1056,8 @@ Required work:
 
 ## 13. Development sequence and deliverables
 
-Use these packages as the implementation checklist. F0/F1 are complete within their
-local scope; start with the remaining F2/F3 work rather than rebuilding them. Update
+Use these packages as the implementation checklist. F0/F1 and the local F2/F3 foundations
+are implemented; continue with the outstanding live gates and F4/F5 work. Update
 this document with reviewed behavior and machine evidence as each package lands. Work
 that does not depend on another package can proceed independently, but release gates
 still require the listed prerequisites.
@@ -1002,7 +1067,7 @@ still require the listed prerequisites.
 | F0: reconcile and repair foundations | Complete locally | Close S4-A01–A06, canonical failure/capture handling, truthful counts/status docs and common execution ownership | Existing implementation | Six regression reproductions closed; CLI/API sanitized failures and preservation checks |
 | F1: identity and owner boundaries | Complete locally | Migrations, users/sessions, auth transactions, encrypted credentials, CSRF and owner-aware existing APIs/artifacts | F0 for release | Two users cannot read each other's data; legacy reports stay private; session/replay tests |
 | F2: GitHub connection | Implemented locally; live exit gate pending | App guide/config, authorization, installation states, repository picker, opt-in private fetch broker, webhook/revocation and access fencing | F1 | Controlled-provider/Git/browser checks recorded; real development-account sign-in, granted private fetch and provider rotation/revocation still required |
-| F3: supported real repositories | Partial static preflight | Generic snapshot/root contracts, capability levels and versioned adapters; sample becomes optional example | F0, F2 | Independent supported Python target/source analyzed without crawler hard-coding; unsupported projects explained before inference |
+| F3: supported real repositories | Implemented locally for public Python structural analysis and reviewed native suites | Owner-scoped pinned project/root contracts, capability levels, versioned pytest/unittest adapters; sample is optional | F0, F2 | Independent public source/target structural analysis and native-suite receipts; unsupported projects explained without inference; see section 6 for profile limits |
 | F4: persistent source catalog | Pending | Candidate discovery, hierarchy/deduplication, bounded corroboration, revisioned coverage/cache and continuation | F3 | Multiple independently supported features, partial/failure cases and paginated immutable catalog |
 | F5: relevance and scalable browsing | History/polling foundations only | Goal/target assessments, all/relevant modes, server query/filter/sort, lazy details, URL state and compact polling | F4 | Honest assessed/unassessed/eligible counts; zero model calls on view changes; scale/accessibility checks |
 | F6: job/hosting hardening | Local lock/admission only | Leased ownership where hosted, cancellation, quotas, current-access checks, retention, private-code consent, observability and cleanup | Starts with F1; required before multi-user release | Restart/cancel/revocation/tenant-load cases, operator recovery and private artifact lifecycle |
@@ -1084,12 +1149,12 @@ Mark remaining unsupported profiles and untested provider/deployment combination
 The **F2 private-access lifecycle is implemented locally**. Its remaining exit work is
 real development-account sign-in, granted/ungranted private-fetch checks and provider
 rotation/revocation validation. Private retrieval remains off by default while local mode
-is preferred. The next independent coding package is F3's supported-project adapter on
-public snapshots; active-call interruption and hosted lifecycle remain F6. Do not treat
+is preferred. F3 now supplies public-project structural analysis and native offline
+adapters; active-call interruption and hosted lifecycle remain F6. Do not treat
 controlled-provider receipts as live private-access or hosting evidence.
 
-F3 must then demonstrate an independent supported project without crawler assumptions;
-F4/F5 add persistent discovery and honest all/relevant browsing. F6 is a release dependency
+The next coding packages are F4/F5: persistent discovery and honest all/relevant browsing
+on the pinned F3 project contracts. F6 is a release dependency
 for multi-user hosting. F7/F8 complete verified adaptation and actual change review.
 Optional 4B remains a bounded comparison extension, not a substitute for these packages.
 

@@ -17,6 +17,8 @@ from app.execution import ProcessLock
 from app.fit_select import record_fit_selection
 from app.models.meta_client import MetaClient
 from app.pinned_baseline import record_pinned_baseline
+from app.project_analysis import record_project_analysis
+from app.projects import ProjectStore
 from app.report_publication import publish_json_report
 from app.selection_artifacts import ArtifactStore, prepare_directory
 from app.smoke import run_smoke
@@ -66,7 +68,18 @@ class LocalWorker:
         if self.lock:
             self.lock.close()
 
-    async def execute(self, request: RunRequest, progress) -> tuple[dict, Path]:
+    async def execute(
+        self, request: RunRequest, progress, *, owner: str = "local-workspace"
+    ) -> tuple[dict, Path]:
+        if request.kind == "project_analysis":
+            return await asyncio.to_thread(
+                record_project_analysis,
+                request,
+                ProjectStore(self.store, self.root.parent / "projects"),
+                owner,
+                self.root,
+                progress,
+            )
         receipt = PROJECT_ROOT / "data/runner-image.json"
         context = WorkflowContext(self.root, self.settings)
         if request.kind == "fit_select":
@@ -152,7 +165,10 @@ class LocalWorker:
                         )
                 self.store.transition(owned_run, stage=stage, message=message)
 
-            report, path = asyncio.run(self.execute(request, progress))
+            if request.kind == "project_analysis":
+                report, path = asyncio.run(self.execute(request, progress, owner=row["owner_id"]))
+            else:
+                report, path = asyncio.run(self.execute(request, progress))
             raw = read_regular_file(self.root, path.relative_to(self.root).as_posix())
             if epoch is not None and self.connection_check(row["owner_id"]) != epoch:
                 from app.auth.crypto import ReconnectRequired
