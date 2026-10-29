@@ -49,6 +49,14 @@ do not bind it to a public interface. No hosted Site was created.
   original native suite offline. No target or model key is needed for source-only analysis.
   **Try the crawler example** opens `/example`, retaining the reviewed Scrapy retry
   trace/fit workflow and its model/runner requirements.
+- **Source catalog:** after inspecting a supported public source, **Discover features**
+  explicitly sends bounded source excerpts to Meta under the displayed allowance.
+  `/catalogs/{id}?revision=N` shows all discovered entries, truthful evidence status,
+  exclusions, remaining scan scope and per-job/cumulative usage. Search, status filters,
+  cursor pages and lazy evidence details use saved data without model calls. **Continue
+  discovery** or **Corroborate this feature** creates a new budgeted revision; earlier
+  revisions remain readable. Full notices and receipts are linked through job exports.
+  This is source discovery; target relevance, eligibility and adaptation remain later work.
 - **Runs:** persisted history, global server search, workflow filters, bounded pagination, stable URLs,
   and refresh recovery. Existing known CLI report directories are imported at
   backend startup in local mode and labeled recorded CLI runs. GitHub accounts see only
@@ -88,7 +96,8 @@ baseline failures. Unavailable evidence and unrecorded values remain explicit.
 
 `backend/app/api/` provides capabilities, targets, run creation/history, ordered
 event pages, typed result projections, reference inspection, artifact previews,
-and downloads. HTTP types are generated from FastAPI's OpenAPI schema into
+and downloads. `/api/catalogs` adds explicit discovery/continuation jobs and revisioned
+summary/detail reads on the same queue, execution lock and owner boundaries. HTTP types are generated from FastAPI's OpenAPI schema into
 `frontend/src/api/schema.d.ts`; regenerate with `npm run generate:api` while the
 backend is running.
 
@@ -97,8 +106,9 @@ are shared with CLI adapters; it never constructs browser-supplied shell strings
 Selection emits progress at actual check/trace/profile/assessment boundaries.
 
 Public project pins live under `data/projects/`; schema v5 stores their owner-scoped
-descriptors in SQLite. Full commit SHAs are fixed at inspection, and the worker reopens
-those objects without fetching a branch again. GitHub private pins remain browse-only
+descriptors in SQLite. Schema v6 adds owner-scoped catalog/revision/feature/operation
+records and persistent signed-cursor keys. Full commit SHAs are fixed at inspection,
+and the worker reopens those objects without fetching a branch again. GitHub private pins remain browse-only
 through the separate opt-in F2 workflow.
 
 SQLite state is stored under `data/web/`, and reports remain under

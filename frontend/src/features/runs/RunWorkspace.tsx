@@ -83,6 +83,16 @@ export function RunWorkspace() {
           {formatDate(run.created_at)}
         </span>
       </div>
+      {run.catalog_id && (
+        <div className="my-5">
+          <Link
+            className="button-secondary"
+            to={`/catalogs/${run.catalog_id}?revision=${run.catalog_revision}`}
+          >
+            Open saved feature catalog
+          </Link>
+        </div>
+      )}
       {reconnecting && (
         <div className="my-4">
           <Notice>
@@ -128,7 +138,9 @@ export function RunWorkspace() {
         <nav>
           {views
             .filter(
-              (tab) => run.kind !== 'project_analysis' || !['features', 'changes'].includes(tab),
+              (tab) =>
+                !['project_analysis', 'catalog_discovery'].includes(run.kind) ||
+                !['features', 'changes'].includes(tab),
             )
             .map((tab) => (
               <NavLink

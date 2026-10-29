@@ -4,6 +4,7 @@ import { ArrowRight, GitBranch, GithubLogo } from '@phosphor-icons/react'
 import { api, createRun, shortSha, type ProjectSelection } from '../../api/client'
 import { useWorkspace } from '../../app/workspace-context'
 import { Notice } from '../../components/ui'
+import { CatalogStart } from '../catalog/CatalogStart'
 
 function ProjectPin({
   role,
@@ -290,7 +291,7 @@ export function ProjectRun() {
             onChange={(event) => setGoal(event.target.value)}
           />
           <p className="field-help">
-            Saved with the report. Feature discovery and goal-based matching are later stages.
+            Saved with the report. Goal-based relevance matching is a later stage.
           </p>
         </div>
         {error && <Notice tone="error">{error}</Notice>}
@@ -306,6 +307,7 @@ export function ProjectRun() {
         {!loading && !capabilities?.worker_available && (
           <p className="field-help mt-3">Start the backend worker to analyze projects.</p>
         )}
+        <CatalogStart source={source} />
       </form>
     </div>
   )

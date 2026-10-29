@@ -28,7 +28,7 @@ Local mode remains the default. See [GitHub setup](docs/github-setup.md) and
 [the consolidated audit record](docs/full-feature-development.md#2-consolidated-audit-findings) for exact limits.
 F2 adds opt-in private pinned snapshots, installation states, signed lifecycle webhooks
 and provider revocation/current-access checks. Private retrieval defaults off; real-account
-validation remains pending. General discovery and verified adaptations remain pending.
+validation remains pending. Live general-discovery validation and verified adaptations remain pending.
 
 F3 adds public Python project inspection and structural analysis with optional native
 offline tests. The browser starts with your own pinned source and optional target;
@@ -43,6 +43,11 @@ uv run --project backend --locked graft-project-analyze --source-url https://git
 Add `--source-root` for a monorepo, or `--target-url`, `--target-sha`, `--target-root`
 and optional `--run-baseline`. Native tests need the rebuilt prepared runner; incompatible
 dependencies, collection requirements and skipped/failed tests cannot produce green evidence.
+
+F4 adds **Discover features** on a supported source pin: persistent source-only catalogs,
+bounded Meta discovery/corroboration, immutable paginated revisions, saved evidence and
+explicit continuation. Saved browsing performs no model calls. Target relevance and
+adaptation remain later packages. See [the F4 implementation record](docs/full-feature-development.md#f4-local-implementation).
 
 ## Setup
 

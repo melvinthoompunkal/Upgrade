@@ -11,6 +11,8 @@ from app.api.artifacts import digest, public_text, summary_from_report
 from app.api.contracts import Problem, RunRequest
 from app.api.storage import RunStore
 from app.baseline import record_baseline
+from app.catalog_store import CatalogStore
+from app.catalog_workflow import record_catalog
 from app.config import Settings
 from app.errors import GraftError
 from app.execution import ProcessLock
@@ -69,8 +71,19 @@ class LocalWorker:
             self.lock.close()
 
     async def execute(
-        self, request: RunRequest, progress, *, owner: str = "local-workspace"
+        self, request: RunRequest, progress, *, owner: str = "local-workspace", access_epoch=None
     ) -> tuple[dict, Path]:
+        if request.kind == "catalog_discovery":
+            return await record_catalog(
+                request,
+                CatalogStore(self.store),
+                ProjectStore(self.store, self.root.parent / "projects"),
+                owner,
+                self.root,
+                self.settings,
+                progress,
+                access_epoch=access_epoch,
+            )
         if request.kind == "project_analysis":
             return await asyncio.to_thread(
                 record_project_analysis,
@@ -165,8 +178,10 @@ class LocalWorker:
                         )
                 self.store.transition(owned_run, stage=stage, message=message)
 
-            if request.kind == "project_analysis":
-                report, path = asyncio.run(self.execute(request, progress, owner=row["owner_id"]))
+            if request.kind in {"project_analysis", "catalog_discovery"}:
+                report, path = asyncio.run(
+                    self.execute(request, progress, owner=row["owner_id"], access_epoch=epoch)
+                )
             else:
                 report, path = asyncio.run(self.execute(request, progress))
             raw = read_regular_file(self.root, path.relative_to(self.root).as_posix())

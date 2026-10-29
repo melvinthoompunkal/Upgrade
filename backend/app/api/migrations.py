@@ -3,7 +3,7 @@
 import sqlite3
 
 LOCAL_OWNER = "local-workspace"
-SCHEMA_VERSION = 5
+SCHEMA_VERSION = 6
 
 
 def migrate(db: sqlite3.Connection) -> None:
@@ -77,4 +77,26 @@ def migrate(db: sqlite3.Connection) -> None:
     db.execute("""CREATE TABLE IF NOT EXISTS projects (
         id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, descriptor TEXT NOT NULL)""")
     db.execute("CREATE INDEX IF NOT EXISTS owner_projects ON projects(owner_id,id)")
+    db.execute("""CREATE TABLE IF NOT EXISTS catalogs (
+        id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, project_id TEXT NOT NULL,
+        identity TEXT NOT NULL, cache_key TEXT NOT NULL)""")
+    db.execute("CREATE INDEX IF NOT EXISTS catalog_cache ON catalogs(owner_id,cache_key)")
+    db.execute("""CREATE TABLE IF NOT EXISTS catalog_revisions (
+        catalog_id TEXT NOT NULL, revision INTEGER NOT NULL, run_id TEXT NOT NULL UNIQUE,
+        metadata TEXT NOT NULL, trace_ids TEXT NOT NULL,
+        PRIMARY KEY(catalog_id,revision))""")
+    db.execute("""CREATE TABLE IF NOT EXISTS catalog_features (
+        catalog_id TEXT NOT NULL, revision INTEGER NOT NULL, feature_id TEXT NOT NULL,
+        name TEXT NOT NULL, category TEXT NOT NULL, evidence_status TEXT NOT NULL,
+        summary TEXT NOT NULL, detail TEXT NOT NULL, sha256 TEXT NOT NULL,
+        search_text TEXT NOT NULL,
+        PRIMARY KEY(catalog_id,revision,feature_id))""")
+    db.execute("""CREATE INDEX IF NOT EXISTS catalog_page ON catalog_features(
+        catalog_id,revision,name,feature_id)""")
+    db.execute("""CREATE TABLE IF NOT EXISTS catalog_operations (
+        owner_id TEXT NOT NULL, key TEXT NOT NULL, fingerprint TEXT NOT NULL,
+        catalog_id TEXT NOT NULL, revision INTEGER NOT NULL, cache_hit INTEGER NOT NULL,
+        PRIMARY KEY(owner_id,key))""")
+    db.execute("CREATE TABLE IF NOT EXISTS catalog_cursor_key (id INTEGER PRIMARY KEY, key BLOB)")
+    db.execute("INSERT OR IGNORE INTO catalog_cursor_key VALUES (1,randomblob(32))")
     db.execute(f"PRAGMA user_version={SCHEMA_VERSION}")

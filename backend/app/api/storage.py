@@ -53,62 +53,80 @@ class RunStore:
         require_connected: bool = False,
         access_epoch: int | None = None,
     ) -> RunSummary:
-        body = request.model_dump_json()
-        fingerprint = hashlib.sha256(body.encode()).hexdigest()
         with self.connect() as db:
             db.execute("BEGIN IMMEDIATE")
-            if require_connected:
-                connected = db.execute(
-                    "SELECT connected,access_epoch FROM users WHERE id=?", (owner_id,)
-                ).fetchone()
-                if (
-                    not connected
-                    or not connected[0]
-                    or (access_epoch is not None and connected["access_epoch"] != access_epoch)
-                ):
-                    raise HTTPException(409, "Reconnect GitHub before starting another run.")
-            previous = db.execute(
-                "SELECT * FROM runs WHERE owner_id=? AND key=?", (owner_id, key)
-            ).fetchone()
-            if previous:
-                if previous["fingerprint"] != fingerprint:
-                    raise HTTPException(
-                        409, "This submission key already belongs to different inputs."
-                    )
-                return RunSummary.model_validate_json(previous["summary"])
-            active, owned = db.execute(
-                """SELECT count(*),coalesce(sum(owner_id=?),0) FROM runs
-                WHERE json_extract(summary,'$.status')!='finished'""",
-                (owner_id,),
-            ).fetchone()
-            if active >= 16 or owned >= 4:
-                raise HTTPException(429, "The local queue is full. Wait for a run to finish.")
-            title = getattr(request, "goal", None) or {
-                "meta_smoke": "Meta connectivity check",
-                "local_baseline": "Working-file baseline",
-                "pinned_baseline": "Committed target baseline",
-            }.get(request.kind, "Source analysis")
-            summary = RunSummary(
-                id=uuid4().hex,
-                kind=request.kind,
-                title=title[:100],
-                status="queued",
-                stage="inputs",
-                created_at=now(),
-                updated_at=now(),
+            return self.enqueue_in(
+                db,
+                request,
+                key,
+                owner_id=owner_id,
+                require_connected=require_connected,
+                access_epoch=access_epoch,
             )
+
+    def enqueue_in(
+        self,
+        db,
+        request: RunRequest,
+        key: str,
+        *,
+        owner_id: str = LOCAL_OWNER,
+        require_connected: bool = False,
+        access_epoch: int | None = None,
+    ) -> RunSummary:
+        """Admit a run and its domain records in the caller's transaction."""
+        body = request.model_dump_json()
+        fingerprint = hashlib.sha256(body.encode()).hexdigest()
+        if require_connected:
+            connected = db.execute(
+                "SELECT connected,access_epoch FROM users WHERE id=?", (owner_id,)
+            ).fetchone()
+            if (
+                not connected
+                or not connected[0]
+                or (access_epoch is not None and connected["access_epoch"] != access_epoch)
+            ):
+                raise HTTPException(409, "Reconnect GitHub before starting another run.")
+        previous = db.execute(
+            "SELECT * FROM runs WHERE owner_id=? AND key=?", (owner_id, key)
+        ).fetchone()
+        if previous:
+            if previous["fingerprint"] != fingerprint:
+                raise HTTPException(409, "This submission key already belongs to different inputs.")
+            return RunSummary.model_validate_json(previous["summary"])
+        active, owned = db.execute(
+            """SELECT count(*),coalesce(sum(owner_id=?),0) FROM runs
+            WHERE json_extract(summary,'$.status')!='finished'""",
+            (owner_id,),
+        ).fetchone()
+        if active >= 16 or owned >= 4:
+            raise HTTPException(429, "The local queue is full. Wait for a run to finish.")
+        title = getattr(request, "goal", None) or {
+            "meta_smoke": "Meta connectivity check",
+            "local_baseline": "Working-file baseline",
+            "pinned_baseline": "Committed target baseline",
+            "catalog_discovery": "Source feature discovery",
+        }.get(request.kind, "Source analysis")
+        summary = RunSummary(
+            id=uuid4().hex,
+            kind=request.kind,
+            title=title[:100],
+            status="queued",
+            stage="inputs",
+            created_at=now(),
+            updated_at=now(),
+        )
+        db.execute(
+            "INSERT INTO runs(id,key,fingerprint,request,summary,owner_id) VALUES (?,?,?,?,?,?)",
+            (summary.id, key, fingerprint, body, summary.model_dump_json(), owner_id),
+        )
+        if require_connected:
             db.execute(
-                "INSERT INTO runs(id,key,fingerprint,request,summary,owner_id) "
-                "VALUES (?,?,?,?,?,?)",
-                (summary.id, key, fingerprint, body, summary.model_dump_json(), owner_id),
+                "INSERT INTO run_authorizations VALUES (?,?,?)",
+                (summary.id, owner_id, connected["access_epoch"]),
             )
-            if require_connected:
-                db.execute(
-                    "INSERT INTO run_authorizations VALUES (?,?,?)",
-                    (summary.id, owner_id, connected["access_epoch"]),
-                )
-            self.event(db, summary.id, "inputs", "Queued for the local worker.")
-            return summary
+        self.event(db, summary.id, "inputs", "Queued for the local worker.")
+        return summary
 
     def row(self, run_id: str, *, owner_id: str | None = None):
         with self.connect() as db:

@@ -413,6 +413,91 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/catalogs': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Create Catalog */
+    post: operations['create_catalog_api_catalogs_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/catalogs/{catalog_id}/continuations': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Continue Catalog */
+    post: operations['continue_catalog_api_catalogs__catalog_id__continuations_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/catalogs/{catalog_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Catalog */
+    get: operations['catalog_api_catalogs__catalog_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/catalogs/{catalog_id}/features': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Features */
+    get: operations['features_api_catalogs__catalog_id__features_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/catalogs/{catalog_id}/features/{feature_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Feature */
+    get: operations['feature_api_catalogs__catalog_id__features__feature_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/health': {
     parameters: {
       query?: never
@@ -524,6 +609,7 @@ export interface components {
         | 'local_baseline'
         | 'meta_smoke'
         | 'project_analysis'
+        | 'catalog_discovery'
       )[]
       /**
        * Patch Supported
@@ -545,6 +631,151 @@ export interface components {
        * @default Public Python project structure; optional native baseline. Crawler fit is an example.
        */
       scope: string
+    }
+    /** CatalogContinue */
+    CatalogContinue: {
+      /** Base Revision */
+      base_revision: number
+      options?: components['schemas']['DiscoveryOptions']
+      /** Trace Feature Ids */
+      trace_feature_ids?: string[]
+    }
+    /** CatalogCounts */
+    CatalogCounts: {
+      /**
+       * Discovered
+       * @default 0
+       */
+      discovered: number
+      /**
+       * Code Supported
+       * @default 0
+       */
+      code_supported: number
+      /**
+       * Partial
+       * @default 0
+       */
+      partial: number
+      /**
+       * Unsupported
+       * @default 0
+       */
+      unsupported: number
+      /**
+       * Unverified
+       * @default 0
+       */
+      unverified: number
+      /**
+       * Deeply Traced
+       * @default 0
+       */
+      deeply_traced: number
+    }
+    /** CatalogCreate */
+    CatalogCreate: {
+      /** Source Project */
+      source_project: string
+      /**
+       * Scope
+       * @default
+       */
+      scope: string
+      options?: components['schemas']['DiscoveryOptions']
+      /**
+       * Use Cache
+       * @default true
+       */
+      use_cache: boolean
+    }
+    /** CatalogJob */
+    CatalogJob: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'catalog_discovery'
+      /** Catalog Id */
+      catalog_id: string
+      /** Revision */
+      revision: number
+    }
+    /** CatalogView */
+    CatalogView: {
+      /** Id */
+      id: string
+      /** Revision */
+      revision: number
+      /** Base Revision */
+      base_revision: number | null
+      /** Run Id */
+      run_id: string
+      /** Source Project */
+      source_project: string
+      /** Source Sha */
+      source_sha: string
+      /** Project Root */
+      project_root: string
+      /** Scope */
+      scope: string
+      /** Identity */
+      identity: {
+        [key: string]: unknown
+      }
+      /**
+       * State
+       * @default queued
+       * @enum {string}
+       */
+      state: 'queued' | 'running' | 'complete_for_scope' | 'partial' | 'failed' | 'canceled'
+      /** Created At */
+      created_at: string
+      counts: components['schemas']['CatalogCounts']
+      options: components['schemas']['DiscoveryOptions']
+      /** Processed Paths */
+      processed_paths: string[]
+      /** Remaining Paths */
+      remaining_paths: string[]
+      /** Examined Paths */
+      examined_paths: string[]
+      /** Excluded Paths */
+      excluded_paths: string[]
+      /** Unexamined Areas */
+      unexamined_areas: string[]
+      /** Limit Reasons */
+      limit_reasons: string[]
+      /** Failure Code */
+      failure_code: string | null
+      /** Batches */
+      batches: {
+        [key: string]: unknown
+      }[]
+      /** Usage */
+      usage: {
+        [key: string]: number
+      }
+      /** Cumulative Usage */
+      cumulative_usage: {
+        [key: string]: number
+      }
+      /** Returned Model Ids */
+      returned_model_ids: string[]
+      /**
+       * Continuation Available
+       * @default false
+       */
+      continuation_available: boolean
+      /**
+       * Cache Hit
+       * @default false
+       */
+      cache_hit: boolean
+      /**
+       * Qualification
+       * @default All discovered features in this revision and declared scope; bounded automated discovery does not establish every capability in the repository.
+       */
+      qualification: string
     }
     /** CheckRequest */
     CheckRequest: {
@@ -580,6 +811,44 @@ export interface components {
       kind: 'stdlib' | 'runtime' | 'test'
       refs: components['schemas']['FrozenList_Ref__MinLen_min_length_1_']
     }
+    /** DiscoveryOptions */
+    DiscoveryOptions: {
+      /**
+       * Max Files
+       * @default 32
+       */
+      max_files: number
+      /**
+       * Max Candidates
+       * @default 500
+       */
+      max_candidates: number
+      /**
+       * Trace Limit
+       * @default 8
+       */
+      trace_limit: number
+      /**
+       * Max Requests
+       * @default 32
+       */
+      max_requests: number
+      /**
+       * Max Input Tokens
+       * @default 400000
+       */
+      max_input_tokens: number
+      /**
+       * Max Output Tokens
+       * @default 40000
+       */
+      max_output_tokens: number
+      /**
+       * Max Seconds
+       * @default 1200
+       */
+      max_seconds: number
+    }
     /** Event */
     Event: {
       /** Sequence */
@@ -599,6 +868,14 @@ export interface components {
       items: components['schemas']['Event'][]
       /** Next Cursor */
       next_cursor: number
+    }
+    /** EvidenceExcerpt */
+    EvidenceExcerpt: {
+      ref: components['schemas']['Ref']
+      /** Text */
+      text: string
+      /** Sha256 */
+      sha256: string
     }
     /** FeatureCard */
     FeatureCard: {
@@ -624,6 +901,96 @@ export interface components {
        * @enum {string}
        */
       evidence_status: 'supported' | 'partial' | 'unsupported'
+    }
+    /** FeatureDetail */
+    FeatureDetail: {
+      /** Feature Id */
+      feature_id: string
+      /** Name */
+      name: string
+      /** Summary */
+      summary: string
+      /** Category */
+      category: string
+      /** Group */
+      group: string
+      /** Parent Feature Id */
+      parent_feature_id: string | null
+      /** Aliases */
+      aliases: string[]
+      /**
+       * Evidence Status
+       * @default unverified
+       * @enum {string}
+       */
+      evidence_status: 'unverified' | 'supported' | 'partial' | 'unsupported'
+      /**
+       * Trace State
+       * @default untraced
+       * @enum {string}
+       */
+      trace_state: 'untraced' | 'validated' | 'failed'
+      /** Behavior Key */
+      behavior_key: string
+      /** Discovery Refs */
+      discovery_refs: components['schemas']['Ref'][]
+      card: components['schemas']['FeatureCard'] | null
+      /** Evidence */
+      evidence: components['schemas']['EvidenceExcerpt'][]
+      /** Examined Paths */
+      examined_paths: string[]
+      /** Missing Evidence */
+      missing_evidence: string[]
+      /** Failure Code */
+      failure_code: string | null
+      /**
+       * Qualification
+       * @default Source tests are cited, not executed. Imports do not prove dependency closure. Analysis-only: source reuse, relevance, eligibility and adaptation are unassessed.
+       */
+      qualification: string
+    }
+    /** FeaturePage */
+    FeaturePage: {
+      /** Catalog Id */
+      catalog_id: string
+      /** Catalog Revision */
+      catalog_revision: number
+      /** Items */
+      items: components['schemas']['FeatureSummary'][]
+      counts: components['schemas']['CatalogCounts']
+      /** Matching Filter */
+      matching_filter: number
+      /** Next Cursor */
+      next_cursor: string | null
+    }
+    /** FeatureSummary */
+    FeatureSummary: {
+      /** Feature Id */
+      feature_id: string
+      /** Name */
+      name: string
+      /** Summary */
+      summary: string
+      /** Category */
+      category: string
+      /** Group */
+      group: string
+      /** Parent Feature Id */
+      parent_feature_id: string | null
+      /** Aliases */
+      aliases: string[]
+      /**
+       * Evidence Status
+       * @default unverified
+       * @enum {string}
+       */
+      evidence_status: 'unverified' | 'supported' | 'partial' | 'unsupported'
+      /**
+       * Trace State
+       * @default untraced
+       * @enum {string}
+       */
+      trace_state: 'untraced' | 'validated' | 'failed'
     }
     /** FitCriteria */
     FitCriteria: {
@@ -1115,6 +1482,7 @@ export interface components {
         | 'local_baseline'
         | 'meta_smoke'
         | 'project_analysis'
+        | 'catalog_discovery'
       /** Title */
       title: string
       /**
@@ -1145,6 +1513,10 @@ export interface components {
       /** Eligible Feature Count */
       eligible_feature_count?: number | null
       error?: components['schemas']['Problem'] | null
+      /** Catalog Id */
+      catalog_id?: string | null
+      /** Catalog Revision */
+      catalog_revision?: number | null
       /** Project Analyses */
       project_analyses?: components['schemas']['ProjectAnalysis'][]
       /**
@@ -1212,6 +1584,7 @@ export interface components {
         | 'local_baseline'
         | 'meta_smoke'
         | 'project_analysis'
+        | 'catalog_discovery'
       /** Title */
       title: string
       /**
@@ -1974,6 +2347,7 @@ export interface operations {
           | components['schemas']['TraceRequest']
           | components['schemas']['CheckRequest']
           | components['schemas']['ProjectAnalysisRequest']
+          | components['schemas']['CatalogJob']
       }
     }
     responses: {
@@ -2270,6 +2644,183 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['ProjectSelection']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  create_catalog_api_catalogs_post: {
+    parameters: {
+      query?: never
+      header: {
+        'idempotency-key': string
+      }
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CatalogCreate']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CatalogView']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  continue_catalog_api_catalogs__catalog_id__continuations_post: {
+    parameters: {
+      query?: never
+      header: {
+        'idempotency-key': string
+      }
+      path: {
+        catalog_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CatalogContinue']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CatalogView']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  catalog_api_catalogs__catalog_id__get: {
+    parameters: {
+      query?: {
+        revision?: number | null
+      }
+      header?: never
+      path: {
+        catalog_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CatalogView']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  features_api_catalogs__catalog_id__features_get: {
+    parameters: {
+      query: {
+        revision: number
+        q?: string
+        status?: ('unverified' | 'supported' | 'partial' | 'unsupported') | null
+        category?: string | null
+        limit?: number
+        cursor?: string | null
+      }
+      header?: never
+      path: {
+        catalog_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['FeaturePage']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  feature_api_catalogs__catalog_id__features__feature_id__get: {
+    parameters: {
+      query: {
+        revision: number
+      }
+      header?: never
+      path: {
+        catalog_id: string
+        feature_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['FeatureDetail']
         }
       }
       /** @description Validation Error */

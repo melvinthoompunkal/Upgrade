@@ -26,6 +26,9 @@ const SystemChecks = lazy(() =>
 const Repositories = lazy(() =>
   import('./features/account/Repositories').then((module) => ({ default: module.Repositories })),
 )
+const Catalog = lazy(() =>
+  import('./features/catalog/Catalog').then((module) => ({ default: module.Catalog })),
+)
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -44,6 +47,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                 <Route path="runs/:runId/:view?" element={<RunWorkspace />} />
                 <Route path="system" element={<SystemChecks />} />
                 <Route path="repositories" element={<Repositories />} />
+                <Route path="catalogs/:catalogId" element={<Catalog />} />
                 <Route
                   path="*"
                   element={

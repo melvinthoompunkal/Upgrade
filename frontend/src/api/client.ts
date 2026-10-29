@@ -19,6 +19,9 @@ export type Snapshot = Schemas['SnapshotView']
 export type ProjectSelection = Schemas['ProjectSelection']
 export type InstallationPage = Schemas['InstallationPage']
 export type Feature = Schemas['FeatureCard']
+export type Catalog = Schemas['CatalogView']
+export type CatalogPage = Schemas['FeaturePage']
+export type CatalogFeature = Schemas['FeatureDetail']
 export type RunRequest =
   operations['create_run_api_runs_post']['requestBody']['content']['application/json']
 
@@ -79,4 +82,5 @@ export const kindLabel: Record<RunSummary['kind'], string> = {
   local_baseline: 'Working-file baseline',
   meta_smoke: 'Meta check',
   project_analysis: 'Project analysis',
+  catalog_discovery: 'Source discovery',
 }

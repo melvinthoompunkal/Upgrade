@@ -1,9 +1,8 @@
 """Local, same-origin run creation and manifest-backed inspection."""
 
-import re
-
 from fastapi import APIRouter, Header, HTTPException, Query, Request, Response
 
+from app.api.admission import authorize_job
 from app.api.artifacts import RunArtifacts
 from app.api.contracts import (
     Artifact,
@@ -17,10 +16,7 @@ from app.api.contracts import (
     RunSummary,
     Target,
 )
-from app.api.security import require_local_origin
 from app.api.storage import now
-from app.auth.snapshots import access_error
-from app.errors import GraftError
 from app.projects import project_store
 from app.tools.git import Git
 from app.tools.runner import PROJECT_ROOT
@@ -46,6 +42,7 @@ def capabilities(request: Request):
             "local_baseline",
             "meta_smoke",
             "project_analysis",
+            "catalog_discovery",
         ],
         model_configured=settings.model_configured,
         model_id=settings.meta_model_id,
@@ -80,32 +77,15 @@ def create_run(
     body: RunRequest,
     request: Request,
     response: Response,
-    idempotency_key: str = Header(min_length=16, max_length=100),
+    idempotency_key: str = Header(min_length=16, max_length=100, pattern=r"^[A-Za-z0-9_-]+$"),
 ):
-    if not re.fullmatch(r"[A-Za-z0-9_-]+", idempotency_key):
-        raise HTTPException(422, "Invalid submission key.")
-    require_local_origin(request)
-    if not request.app.state.worker.available:
-        raise HTTPException(503, "The local worker is unavailable. Start one backend process.")
+    if body.kind == "catalog_discovery":
+        raise HTTPException(422, "Use the catalog endpoints to create discovery jobs.")
+    epoch = authorize_job(
+        request, model_required=body.kind in {"fit_select", "source_trace", "meta_smoke"}
+    )
     if body.kind == "project_analysis":
         project_store(request).admit(request.state.principal.owner_id, body)
-    if request.app.state.settings.auth_mode == "github" and not request.state.principal.connected:
-        raise HTTPException(409, "Reconnect GitHub before starting another run.")
-    if (
-        body.kind in {"fit_select", "source_trace", "meta_smoke"}
-        and not request.app.state.settings.model_configured
-    ):
-        raise HTTPException(
-            409, "Configure MODEL_API_KEY in backend/.env before starting a model run."
-        )
-    epoch = None
-    if request.app.state.settings.auth_mode == "github":
-        try:
-            epoch = request.app.state.auth.current_access(
-                request.state.principal.owner_id, request.app.state.github
-            )
-        except GraftError as error:
-            raise access_error(error) from None
     run = request.app.state.runs.enqueue(
         body,
         idempotency_key,

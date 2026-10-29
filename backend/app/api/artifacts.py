@@ -17,6 +17,7 @@ from app.api.contracts import (
     TestSuite,
 )
 from app.api.storage import RunStore, now
+from app.catalog_contracts import CatalogJob
 from app.contracts import Ref, RepoSnapshot
 from app.errors import GraftError
 from app.evidence_contracts import Coverage, FeatureCard
@@ -39,6 +40,7 @@ TITLES = {
     "pinned_baseline": "Committed target baseline",
     "meta_smoke": "Meta connectivity check",
     "project_analysis": "Public project analysis",
+    "catalog_discovery": "Source feature discovery",
 }
 
 
@@ -333,6 +335,14 @@ class RunArtifacts:
     def detail(self) -> RunDetail:
         values = self.summary.model_dump()
         report = self.report
+        values["catalog_id"] = report.get("catalog_id")
+        values["catalog_revision"] = report.get("catalog_revision")
+        if self.summary.kind == "catalog_discovery" and self.row["request"]:
+            try:
+                job = CatalogJob.model_validate_json(self.row["request"])
+                values.update(catalog_id=job.catalog_id, catalog_revision=job.revision)
+            except ValidationError:
+                self.warnings.append("The catalog job binding could not be validated.")
         values["project_analyses"] = []
         for role in ("source", "target"):
             data = self.load(f"{role}-project-analysis.json")

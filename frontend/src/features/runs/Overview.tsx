@@ -14,9 +14,11 @@ import { artifactUrl, shortSha, type Run } from '../../api/client'
 import { SectionHeading } from '../../components/ui'
 import { Citation } from '../evidence/Inspector'
 import { ProjectOverview } from './ProjectOverview'
+import { CatalogRunOverview } from '../catalog/CatalogRunOverview'
 
 export function Overview({ run }: { run: Run }) {
   if (run.kind === 'project_analysis') return <ProjectOverview run={run} />
+  if (run.kind === 'catalog_discovery') return <CatalogRunOverview run={run} />
   const features = run.features ?? []
   const feature =
     features.find((item) => item.feature_id === run.fit?.selected_feature_id) ?? features[0]

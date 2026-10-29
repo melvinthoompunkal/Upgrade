@@ -47,9 +47,11 @@ export function Shell() {
       ? 'New run'
       : location.pathname === '/system'
         ? 'System checks'
-        : location.pathname === '/repositories'
-          ? 'Repositories'
-          : 'Runs'
+        : location.pathname.startsWith('/catalogs/')
+          ? 'Source catalog'
+          : location.pathname === '/repositories'
+            ? 'Repositories'
+            : 'Runs'
   return (
     <div className="app-shell">
       <a className="skip-link" href="#main">

@@ -5,6 +5,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from app.catalog_contracts import CatalogJob
 from app.contracts import ModelCall, Ref, RepoSnapshot
 from app.evidence_contracts import Coverage, FeatureCard
 from app.project_contracts import ProjectAnalysis, ProjectAnalysisRequest
@@ -17,6 +18,7 @@ RunKind = Literal[
     "local_baseline",
     "meta_smoke",
     "project_analysis",
+    "catalog_discovery",
 ]
 
 
@@ -58,7 +60,7 @@ class CheckRequest(BaseModel):
 
 
 RunRequest = Annotated[
-    SelectionRequest | TraceRequest | CheckRequest | ProjectAnalysisRequest,
+    SelectionRequest | TraceRequest | CheckRequest | ProjectAnalysisRequest | CatalogJob,
     Field(discriminator="kind"),
 ]
 
@@ -141,6 +143,8 @@ class TestSuite(BaseModel):
 
 
 class RunDetail(RunSummary):
+    catalog_id: str | None = None
+    catalog_revision: int | None = None
     project_analyses: list[ProjectAnalysis] = Field(default_factory=list)
     schema_version: str = "1"
     goal: str = ""

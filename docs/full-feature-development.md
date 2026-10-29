@@ -12,11 +12,12 @@ retain design detail, while this document owns the current backlog.
 **Current delivery:** the local CLI and browser can trace one Scrapy retry feature,
 profile the bundled Python/HTTPX crawler and select or reject a proposed adaptation.
 Phases 1–3, Stage 4A, F0 remediation and F1 local identity boundaries are implemented.
-F3 now adds public Python project structure and reviewed native offline test adapters.
+F3 adds public Python project structure and reviewed native offline test adapters.
+F4 adds owner-scoped source catalogs, bounded semantic discovery and immutable continuation.
 All fourteen findings from the three original audits have recorded repairs. GitHub
 authorization, repository indexing and opt-in private snapshots are implemented locally;
-real-account validation remains pending. General discovery, production patching and final
-red-to-green verification remain pending.
+real-account validation remains pending. Live general-discovery validation, target relevance,
+production patching and final red-to-green verification remain pending.
 
 The planned product connects GitHub accounts, pins authorized source/target projects,
 offers a code-backed feature catalog with all/relevant browsing, and produces one
@@ -48,10 +49,11 @@ The broader roadmap supersedes the original MVP's account/private-access exclusi
 | F0 foundations | S4-A01–A06 repaired; strict capture decoding, reliable JSON finalization, physical path checks and common CLI/API execution lock | Hard-stop cleanup and concurrent hostile path replacement remain outside this boundary |
 | F1 identity | Numeric GitHub identity, hashed expiring sessions, single-use PKCE state, encrypted credentials, CSRF, transactional refresh/disconnect/admission, owner-scoped results and drafts | Local mocked-provider verification is complete; real GitHub account validation remains deferred |
 | F2 local connection | GitHub App sign-in/index, installation states/setup validation, opt-in private pinned snapshots, restricted installation tokens/ephemeral Git broker, signed webhook inbox and provider revocation; fresh access checks and publication fencing | Real-account sign-in/private-grant/rotation/revocation exit checks remain pending; private fetch defaults off; active-call interruption and hosted lifecycle remain F6 |
-| F3 public projects | Owner-scoped immutable project IDs, root selection, `python-evidence-v1` structural analysis and reviewed `python-pytest-v1` / `python-unittest-v1` native offline adapters; crawler is an explicit example | Public Python profiles only; feature discovery/matching and acceptance-driven adaptation remain F4/F5/F7; incompatible suites retain their failures |
-| F5 browsing foundations | Global server-side run-history search/paging, URL state, compact status polling and 200-event browser window | Persistent feature catalog, all/relevant queries and scale checks are pending |
+| F3 public projects | Owner-scoped immutable project IDs, root selection, `python-evidence-v1` structural analysis and reviewed `python-pytest-v1` / `python-unittest-v1` native offline adapters; crawler is an explicit example | Public Python profiles only; target matching and acceptance-driven adaptation remain F5/F7; incompatible suites retain their failures |
+| F4 source catalogs | Owner-scoped SQLite revisions, bounded model hints and corroborated cards, aliases/hierarchy, coverage/spend ledgers, immutable cursor pages, cache and explicit continuation/on-demand traces | Public F3 Python pins only; controlled-provider verification; live semantic discovery and scale receipts remain pending |
+| F5 browsing foundations | Global server-side history and saved-catalog search/paging, URL state, lazy catalog details, compact status polling and 200-event browser window | Target/goal relevance, all/relevant modes, eligibility and scale acceptance remain pending |
 | F6 local admission | Workspace execution exclusion, four unfinished jobs per owner and sixteen globally, queued cancellation and cache invalidation on disconnect | Leases, fairness, in-flight cancellation, retention, private-code consent and hosted isolation remain pending |
-| F4, F7–F8 | Not implemented | Persistent feature discovery; real planner, frozen acceptance, constrained patches, repair, verified diff/download and optional explicit PR publishing |
+| F7–F8 | Not implemented | Real planner, frozen acceptance, constrained patches, repair, verified diff/download and optional explicit PR publishing |
 | F9 verification | Recorded local backend/browser/build checks, live sample selection and public preflight | Full connected-analysis and verified-adaptation release receipts are still required |
 
 Implementation anchors:
@@ -75,8 +77,9 @@ The default browser form and `project_analysis` API submit server-owned public p
 with an optional target. Source-only structural analysis needs no target or model key.
 The explicit `/example` workflow retains the reviewed `crawler-demo` fit contracts and
 retry-specific tracer/profiler/gates. Public project analysis does not select a feature.
-The eight-card schema capacity is a batch bound, not delivered multi-feature discovery.
-Run history is not a feature catalog.
+F4 uses a separate persistent catalog contract; each discovery response contains at most
+eight hints and each deep trace returns one validated card. The legacy eight-card trace
+bound is unchanged. Run history links to catalogs and their immutable revisions.
 
 ### Selection policy to preserve
 
@@ -234,8 +237,9 @@ development and release evidence:
 - Real GitHub sign-in/private grants and provider rotation/revocation remain unverified;
   local access checks are implemented. Private-code model consent, active-call interruption
   and retention/deletion remain pending.
-- General discovery, additional executable project profiles, immutable catalog queries,
-  assessed/unassessed counts and 10,000-row scale checks remain pending.
+- Live model validation of general discovery, additional executable project profiles,
+  target/goal assessment counts and 10,000-row scale checks remain pending. F4 saved
+  catalog queries are implemented and perform no model inference.
 - Historical tests do not establish a dependency-vulnerability review, every allowed model
   variant, production load behavior or hostile multi-user execution safety.
 
@@ -653,6 +657,70 @@ scope. Display **All discovered features** in the explanatory text. A bounded au
 scan cannot guarantee that it found every semantic capability in a large repository.
 The UI must show the scan's scope, completion state, exclusions and continuation.
 
+### F4 local implementation
+
+**Discover features** on the public-source form explicitly creates a source-only job.
+`POST /api/catalogs` binds the F3 source SHA/root/inventory/manifest/profile, owner scope,
+analyzer/prompt/schema versions and requested model identity. The worker reopens and
+verifies the pin, statically indexes Python symbols/imports and source-test paths, then
+submits bounded module/document packets through the existing read-only Meta tools.
+Repository code is never executed for discovery. Private F2 snapshots cannot enter it.
+
+Each response contains at most eight behavior hints, not one feature per symbol. Hints
+retain read-validated discovery references and stay **Unverified** until a separate trace
+validates a FeatureCard. Shared production-symbol identity plus the cited behavior key
+deduplicates entries; aliases and module groups remain explicit. Parent links resolve
+within each batch and cycles are rejected. Matching names alone do not merge different
+code identities. Documentation-only, partial, unsupported and failed evidence remain
+distinct. Supported cards require actual production symbols. Missing tests/notices are
+disclosed; source tests are cited, never claimed executed. Reuse/adaptation are unapproved.
+
+Defaults are 32 discovery files, at most 500 new records and eight deep traces per job;
+file admission accepts at most 256 files, catalogs at most 5,000 entries. Packets contain
+at most eight files, 60-line/6,000-byte heads per file and 40 static symbols. Unread bodies
+and truncated indexes remain explicit. The cumulative evidence allowance is 500,000 bytes
+with existing 200-line/24,000-byte windows. One job shares 32 model attempts, 400,000
+returned input tokens, 40,000 returned output tokens and 1,200 seconds across discovery,
+tools, retries and traces. Options can lower those allowances. These are caps, not
+measured throughput or completeness claims.
+
+Schema v6 admits queue entry, revision and owner-scoped idempotency record atomically.
+Batches checkpoint candidates/cards, failure reasons, examined/remaining paths and actual
+usage. Finished revisions cannot be overwritten. Interrupted/disconnected jobs settle
+without inference replay. **Continue discovery** creates a new revision, copies previous
+results and scans remaining supported paths under a new explicit allowance. A continuation
+with `trace_feature_ids` and `max_files: 0` performs on-demand corroboration. Per-job and
+cumulative spend and batch ancestry remain inspectable; failed packets stay unprocessed.
+At the catalog cap, adding entries stops but explicitly selected traces remain possible.
+Unsupported/unread areas retain limit messages rather than an exhaustive-scan promise.
+
+`GET /api/catalogs/{id}` returns versioned scope/counts/limits. Revision-required feature
+pages contain 25 summaries by default, at most 100, with global saved search, status/category
+filters and stable `(casefolded name, feature_id)` ordering. HMAC cursors bind owner,
+catalog/revision, normalized query, filters and page size. Details load separately with
+hash-checked read-backed evidence. The browser preserves revision/query/page/detail in
+its URL and polls compact run status while work is active. Reopening, searching and paging
+perform zero model calls. Full notices and attempt/call receipts remain in job exports.
+Optional sidecar failure preserves required JSON and usage. `deeply_traced` counts trace
+attempts, including failures; `trace_state` and evidence status distinguish their outcomes.
+
+Caches are owner-scoped and bind source/analyzer/model/scope/options identity; changed SHA
+or version cannot reuse old evidence. F5 still owns target/goal relevance, all/relevant
+modes, eligibility and scale acceptance. F6 owns private-code consent, hosted isolation
+and retention; F7 owns acceptance tests and verified changes. A supported source card
+establishes validated citation provenance, not semantic completeness or safe transfer.
+
+Implementation: [contracts](../backend/app/catalog_contracts.py),
+[discovery/corroboration](../backend/app/catalog_discovery.py),
+[revision store](../backend/app/catalog_store.py),
+[workflow](../backend/app/catalog_workflow.py), [API](../backend/app/catalog_routes.py)
+and [browser](../frontend/src/features/catalog/Catalog.tsx).
+Local checks use real disposable Git snapshots and controlled Meta responses, not paid
+live discovery or release-scale scans. See [F4 checks](../audit/full-feature-foundations/f4-checks.json),
+[backend JUnit](../audit/full-feature-foundations/f4-backend-junit.xml) and
+[desktop/mobile JUnit](../audit/full-feature-foundations/f4-browser-junit.xml).
+The design pipeline below remains the boundary for future profiles and broader validation.
+
 ### Discovery and validation pipeline
 
 1. Build a pinned, bounded inventory and deterministic indexes of manifests, symbols,
@@ -821,8 +889,10 @@ Implemented routes include session/auth, `/api/auth/disconnect`, repository list
 `/api/repository-snapshots/{id}` and `/api/webhooks/github`,
 capabilities/targets, run submission/history/detail, compact `/api/runs/{id}/status`,
 events, references and artifact list/text/download. The table also describes planned
-contracts. Installations/setup, snapshot create/descriptor and signed webhook routes now
-exist. `/progress`, refs, catalog/relevance/cancel/adaptation/PR endpoints remain planned.
+contracts. Installations/setup, snapshot create/descriptor, signed webhooks and F4 catalog
+create/detail/features/continuations now exist. On-demand source tracing uses a continuation
+with explicit `trace_feature_ids` and `max_files: 0`. `/progress`, refs, relevance, explicit
+cancel, adaptation and PR endpoints remain planned.
 Generate frontend types from actual
 OpenAPI, and preserve CLI/domain contracts through versioned adapters.
 
@@ -838,8 +908,8 @@ OpenAPI, and preserve CLI/domain contracts through versioned adapters.
 | Implemented `POST /api/repository-snapshots` | Pin a full SHA and project root to an authorized browse/index snapshot; branch/tag resolution remains planned |
 | `POST /api/catalogs` | Explicit budgeted discovery/index job for a source snapshot |
 | `GET /api/catalogs/{id}` | Revision, progress, counts, coverage, limits and versions |
-| `GET /api/catalogs/{id}/features?mode=all&assessment_id=...&q=...&cursor=...` | Bounded summary page; server filters/counts; mode accepts `all` or `relevant` |
-| `GET /api/catalogs/{id}/features/{feature_id}?assessment_id=...` | One candidate/card detail with trace and the selected assessment state |
+| Implemented `GET /api/catalogs/{id}/features?revision=N&q=...&status=...&category=...&cursor=...` | Bounded saved source summaries and same-revision counts; target-specific `mode`/`assessment_id` remain F5 |
+| Implemented `GET /api/catalogs/{id}/features/{feature_id}?revision=N` | One candidate/card with saved source evidence; selected assessment state remains F5 |
 | `POST /api/catalogs/{id}/continuations` | Explicit additional discovery scope/budget; new revision |
 | `POST /api/features/{id}/traces` | Bounded on-demand trace of a discovered candidate |
 | `POST /api/relevance-assessments` | Explicit target/goal-specific ranking/fit job with shortlist disclosure |
@@ -896,9 +966,9 @@ scope. The example's remaining matching entries are available through its cursor
 
 ### Persistence and migrations
 
-Transactional schema v4, owner-scoped runs/idempotency, auth records and repository
-cache/sync tables are implemented. F1 covers migration rollback/retry and rejection
-of future schemas. Extend explicit migrations for catalog, grants and job lifecycle;
+Transactional schema v6, owner-scoped runs/idempotency, auth records, repository
+cache/sync, public project pins and catalog tables are implemented. F1 covers migration rollback/retry and rejection
+of future schemas. Extend explicit migrations for further grants and job lifecycle;
 back up and verify existing data before further schema changes.
 
 Logical records to retain or add as the remaining packages land:
@@ -1056,8 +1126,8 @@ Required work:
 
 ## 13. Development sequence and deliverables
 
-Use these packages as the implementation checklist. F0/F1 and the local F2/F3 foundations
-are implemented; continue with the outstanding live gates and F4/F5 work. Update
+Use these packages as the implementation checklist. F0/F1 and the local F2/F3/F4 foundations
+are implemented; continue with the outstanding live gates and F5 work. Update
 this document with reviewed behavior and machine evidence as each package lands. Work
 that does not depend on another package can proceed independently, but release gates
 still require the listed prerequisites.
@@ -1068,8 +1138,8 @@ still require the listed prerequisites.
 | F1: identity and owner boundaries | Complete locally | Migrations, users/sessions, auth transactions, encrypted credentials, CSRF and owner-aware existing APIs/artifacts | F0 for release | Two users cannot read each other's data; legacy reports stay private; session/replay tests |
 | F2: GitHub connection | Implemented locally; live exit gate pending | App guide/config, authorization, installation states, repository picker, opt-in private fetch broker, webhook/revocation and access fencing | F1 | Controlled-provider/Git/browser checks recorded; real development-account sign-in, granted private fetch and provider rotation/revocation still required |
 | F3: supported real repositories | Implemented locally for public Python structural analysis and reviewed native suites | Owner-scoped pinned project/root contracts, capability levels, versioned pytest/unittest adapters; sample is optional | F0, F2 | Independent public source/target structural analysis and native-suite receipts; unsupported projects explained without inference; see section 6 for profile limits |
-| F4: persistent source catalog | Pending | Candidate discovery, hierarchy/deduplication, bounded corroboration, revisioned coverage/cache and continuation | F3 | Multiple independently supported features, partial/failure cases and paginated immutable catalog |
-| F5: relevance and scalable browsing | History/polling foundations only | Goal/target assessments, all/relevant modes, server query/filter/sort, lazy details, URL state and compact polling | F4 | Honest assessed/unassessed/eligible counts; zero model calls on view changes; scale/accessibility checks |
+| F4: persistent source catalog | Implemented locally for public Python; live model exit validation pending | Semantic hints, independently corroborated cards, hierarchy/aliases, bounded shared budgets, atomic revisions/cache, signed cursor pages, continuation and on-demand traces | F3 | Real disposable pinned Git fixtures with controlled Meta responses; supported/documentation-only/failed/no-test cases, immutable pages and two-account checks; retained F4 receipts |
+| F5: relevance and scalable browsing | History, catalog paging/lazy details and polling foundations only | Goal/target assessments, all/relevant modes, server query/filter/sort, lazy details, URL state and compact polling | F4 | Honest assessed/unassessed/eligible counts; zero model calls on view changes; scale/accessibility checks |
 | F6: job/hosting hardening | Local lock/admission only | Leased ownership where hosted, cancellation, quotas, current-access checks, retention, private-code consent, observability and cleanup | Starts with F1; required before multi-user release | Restart/cancel/revocation/tenant-load cases, operator recovery and private artifact lifecycle |
 | F7: verified adaptation | Pending | Real planner, behavior contract, frozen red acceptance, constrained patches, actual limits, regression green and capped repairs | F0, F3, F5; F6 for hosting | Real independent source-to-target red-to-green receipt; failed/exhausted cases retain evidence |
 | F8: change review and optional PR | Pending | Diff/review UI, patch download, notice export, explicit idempotent publishing | F7; GitHub write permission only for PR | Downloaded patch digest matches verified result; stale/unauthorized/repeated publishing behaves correctly |
@@ -1153,8 +1223,9 @@ is preferred. F3 now supplies public-project structural analysis and native offl
 adapters; active-call interruption and hosted lifecycle remain F6. Do not treat
 controlled-provider receipts as live private-access or hosting evidence.
 
-The next coding packages are F4/F5: persistent discovery and honest all/relevant browsing
-on the pinned F3 project contracts. F6 is a release dependency
+F4 now supplies persistent discovery on pinned F3 public Python projects. The next coding
+package is F5: target/goal assessment and honest all/relevant browsing. Live discovery
+validation remains an exit check. F6 is a release dependency
 for multi-user hosting. F7/F8 complete verified adaptation and actual change review.
 Optional 4B remains a bounded comparison extension, not a substitute for these packages.
 
