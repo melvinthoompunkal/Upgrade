@@ -14,9 +14,10 @@ profile the bundled Python/HTTPX crawler and select or reject a proposed adaptat
 Phases 1–3, Stage 4A, F0 remediation and F1 local identity boundaries are implemented.
 F3 adds public Python project structure and reviewed native offline test adapters.
 F4 adds owner-scoped source catalogs, bounded semantic discovery and immutable continuation.
+F5 adds saved target/goal relevance contexts and inference-free all/relevant browsing.
 All fourteen findings from the three original audits have recorded repairs. GitHub
 authorization, repository indexing and opt-in private snapshots are implemented locally;
-real-account validation remains pending. Live general-discovery validation, target relevance,
+real-account validation remains pending. Live general-discovery and relevance validation,
 production patching and final red-to-green verification remain pending.
 
 The planned product connects GitHub accounts, pins authorized source/target projects,
@@ -49,9 +50,9 @@ The broader roadmap supersedes the original MVP's account/private-access exclusi
 | F0 foundations | S4-A01–A06 repaired; strict capture decoding, reliable JSON finalization, physical path checks and common CLI/API execution lock | Hard-stop cleanup and concurrent hostile path replacement remain outside this boundary |
 | F1 identity | Numeric GitHub identity, hashed expiring sessions, single-use PKCE state, encrypted credentials, CSRF, transactional refresh/disconnect/admission, owner-scoped results and drafts | Local mocked-provider verification is complete; real GitHub account validation remains deferred |
 | F2 local connection | GitHub App sign-in/index, installation states/setup validation, opt-in private pinned snapshots, restricted installation tokens/ephemeral Git broker, signed webhook inbox and provider revocation; fresh access checks and publication fencing | Real-account sign-in/private-grant/rotation/revocation exit checks remain pending; private fetch defaults off; active-call interruption and hosted lifecycle remain F6 |
-| F3 public projects | Owner-scoped immutable project IDs, root selection, `python-evidence-v1` structural analysis and reviewed `python-pytest-v1` / `python-unittest-v1` native offline adapters; crawler is an explicit example | Public Python profiles only; target matching and acceptance-driven adaptation remain F5/F7; incompatible suites retain their failures |
+| F3 public projects | Owner-scoped immutable project IDs, root selection, `python-evidence-v1` structural analysis and reviewed `python-pytest-v1` / `python-unittest-v1` native offline adapters; crawler is an explicit example | Public Python profiles only; target relevance uses F5; acceptance-driven adaptation remains F7; incompatible suites retain their failures |
 | F4 source catalogs | Owner-scoped SQLite revisions, bounded model hints and corroborated cards, aliases/hierarchy, coverage/spend ledgers, immutable cursor pages, cache and explicit continuation/on-demand traces | Public F3 Python pins only; controlled-provider verification; live semantic discovery and scale receipts remain pending |
-| F5 browsing foundations | Global server-side history and saved-catalog search/paging, URL state, lazy catalog details, compact status polling and 200-event browser window | Target/goal relevance, all/relevant modes, eligibility and scale acceptance remain pending |
+| F5 local relevance | Owner-scoped immutable target/goal assessments, explicit shortlists/continuation, saved all/relevant modes, global filters/sorts, signed seek cursors, lazy fit details, URL state and compact polling | Controlled-provider validation; live semantic exit checks remain pending. General-project baseline, frozen acceptance and approved adaptation gates remain unknown until F7 |
 | F6 local admission | Workspace execution exclusion, four unfinished jobs per owner and sixteen globally, queued cancellation and cache invalidation on disconnect | Leases, fairness, in-flight cancellation, retention, private-code consent and hosted isolation remain pending |
 | F7–F8 | Not implemented | Real planner, frozen acceptance, constrained patches, repair, verified diff/download and optional explicit PR publishing |
 | F9 verification | Recorded local backend/browser/build checks, live sample selection and public preflight | Full connected-analysis and verified-adaptation release receipts are still required |
@@ -705,8 +706,8 @@ Optional sidecar failure preserves required JSON and usage. `deeply_traced` coun
 attempts, including failures; `trace_state` and evidence status distinguish their outcomes.
 
 Caches are owner-scoped and bind source/analyzer/model/scope/options identity; changed SHA
-or version cannot reuse old evidence. F5 still owns target/goal relevance, all/relevant
-modes, eligibility and scale acceptance. F6 owns private-code consent, hosted isolation
+or version cannot reuse old evidence. F5 supplies target/goal relevance and all/relevant
+modes as described in section 8; adaptation eligibility still requires the F7 gates. F6 owns private-code consent, hosted isolation
 and retention; F7 owns acceptance tests and verified changes. A supported source card
 establishes validated citation provenance, not semantic completeness or safe transfer.
 
@@ -814,6 +815,77 @@ three actual eligible entries; it can contain one or zero. A catalog-wide releva
 must have a separately defined policy and must not reuse the 93/100 sample result as a
 default or present model judgments as success probabilities.
 
+### F5 local implementation
+
+**Assess relevance** explicitly creates a queued `relevance_assessment` job for a frozen
+catalog revision and exact goal; the target is optional and absence is labeled goal-only.
+Schema v7 adds owner-scoped assessment/operation records and saved per-feature summary/detail
+projections. Admission, quota enforcement and job creation commit together. Existing runs,
+projects, catalogs, credentials and cursor signing keys survive migration.
+
+The `relevance-v1` policy shortlists at most eight saved summaries using exact goal-token
+overlap, source evidence state and stable feature ID. It then obtains separate bounded,
+read-backed semantic judgments using pinned source excerpts, a target packet of at most
+twelve file heads and registered read-only range tools. The threshold is 3 of 5 for
+**Relevant**, independent of fit-v1. These are model judgments, never probabilities.
+Every returned citation must match the pinned repository/SHA, a read window and any named
+AST symbol. Positive relevance needs production source evidence; relevant target judgments
+also need production target evidence. Source tests are cited, never executed in this job.
+The exact selected IDs, per-job/cumulative actual usage and requested/returned model IDs
+remain recorded. Default allowance is 32 attempts, 400,000 input / 40,000 output tokens
+and 1,200 seconds shared by the entire job, including retries and clarification.
+
+Assessment identity binds catalog revision/source identity, target origin/SHA/root/inventory,
+manifest/profile/adapter versions, exact goal fingerprint, policy/prompt/model versions and
+explicit `not_run` baseline identity. Changing context creates a new assessment. **Assess
+more** copies saved results into a new immutable context with a fresh disclosed budget;
+explicit selected reassessment replaces only that feature in the new context. Earlier
+contexts remain readable. Failed features remain `assessment_failed`; unprocessed features
+remain `unassessed`. Finished/interrupted/canceled jobs never replay automatically. GitHub
+mode uses existing connection-generation admission, checkpoint and result-publication fences.
+Private F2 snapshots still cannot enter this public-project/model workflow.
+
+All/Relevant query the same catalog membership through a saved assessment join. Counts
+separate successful assessments, failed assessments, unassessed entries, relevant entries
+and eligible entries. Search/category/evidence/assessment/fit filters are global. All sorts
+by `(category, casefolded name, feature_id)` by default; Relevant sorts by descending
+relevance, then `(casefolded name, feature_id)`. Name ordering is also available. Signed
+seek cursors bind owner/catalog/revision/assessment/mode/all filters/sort/page size. List
+queries read only safe summaries; one selected feature loads source and fit detail lazily. Alias lists stay in detail;
+assessment evidence previews cap at 24 references / 60,000 UTF-8 text bytes and retain
+hash-checked excerpts. Per-feature exports also feed the existing evidence inspector.
+Browser URL state preserves context, mode, filters, cursor and feature. Search is debounced
+300 ms, stale requests are aborted, mobile details have Back/Escape/focus return, and job
+polling uses the existing compact run-status endpoint.
+
+General F3 projects currently have **zero eligible adaptations**: fit-v1 arithmetic and
+thresholds are reused, all ten controller gates and complete rejections are saved, but no
+bound ordinary baseline, frozen assertion-red acceptance, approved scope/dependency plan or
+approved source-use policy is fabricated. An already-present feature explicitly fails the
+gap gate, even at 100/100 fit ratings. F7 must supply those missing contracts before an
+entry can pass every gate. Recommendation rows contain only actual eligible IDs.
+
+Implementation: [contracts](../backend/app/relevance_contracts.py),
+[store](../backend/app/relevance_store.py), [judgment and fit policy](../backend/app/relevance_analysis.py),
+[workflow](../backend/app/relevance_workflow.py), [saved queries](../backend/app/catalog_query.py)
+and [browser](../frontend/src/features/catalog/AssessmentPanel.tsx).
+Controlled-provider regressions and local seeded scale/browser checks validate this boundary;
+no real-account or live Meta relevance receipt is claimed. October 28 verification retained
+[the source/hash manifest](../audit/full-feature-foundations/f5-checks.json),
+[469 full backend checks](../audit/full-feature-foundations/f5-tests.xml), followed by
+[55 passing final affected-suite checks](../audit/full-feature-foundations/f5-focused-tests.xml).
+There were 70 passing controlled/offline browser checks and two passing recorded-result
+read-only checks, including eight F5 checks across desktop/mobile plus tablet keyboard
+coverage. Two explicit F3 live-public-fetch checks remained opt-in skips. The recorded-result
+checks were rerun successfully after starting their required local backend, with model
+credentials and the worker disabled. Build, TypeScript, Ruff and diff checks passed.
+[Scale measurements](../audit/full-feature-foundations/f5-scale.json) used 30 queries at
+each size; the 10,000-row case measured 34.437 ms p95 and a 10,792-byte default summary page.
+The 10,000-row fixture deliberately
+exceeds discovery's 5,000-entry cap and does not represent a paid discovery run. Query timings
+exclude network latency; representative browser main-thread profiling and multi-user fairness
+remain release checks.
+
 ## 9. Page design that remains usable with many entries
 
 ### Browsing layout
@@ -891,7 +963,8 @@ capabilities/targets, run submission/history/detail, compact `/api/runs/{id}/sta
 events, references and artifact list/text/download. The table also describes planned
 contracts. Installations/setup, snapshot create/descriptor, signed webhooks and F4 catalog
 create/detail/features/continuations now exist. On-demand source tracing uses a continuation
-with explicit `trace_feature_ids` and `max_files: 0`. `/progress`, refs, relevance, explicit
+with explicit `trace_feature_ids` and `max_files: 0`. F5 adds relevance submission,
+assessment/detail reads and catalog assessment queries. `/progress`, refs, explicit
 cancel, adaptation and PR endpoints remain planned.
 Generate frontend types from actual
 OpenAPI, and preserve CLI/domain contracts through versioned adapters.
@@ -908,11 +981,12 @@ OpenAPI, and preserve CLI/domain contracts through versioned adapters.
 | Implemented `POST /api/repository-snapshots` | Pin a full SHA and project root to an authorized browse/index snapshot; branch/tag resolution remains planned |
 | `POST /api/catalogs` | Explicit budgeted discovery/index job for a source snapshot |
 | `GET /api/catalogs/{id}` | Revision, progress, counts, coverage, limits and versions |
-| Implemented `GET /api/catalogs/{id}/features?revision=N&q=...&status=...&category=...&cursor=...` | Bounded saved source summaries and same-revision counts; target-specific `mode`/`assessment_id` remain F5 |
-| Implemented `GET /api/catalogs/{id}/features/{feature_id}?revision=N` | One candidate/card with saved source evidence; selected assessment state remains F5 |
+| Implemented `GET /api/catalogs/{id}/features?revision=N&assessment_id=...&mode=...&q=...&status=...&category=...&sort=...&cursor=...` | Bounded safe summaries, exact revision/context counts, evidence/assessment/fit filters, category/name/relevance sorting; no inference |
+| Implemented `GET /api/catalogs/{id}/features/{feature_id}?revision=N` | One candidate/card with saved source evidence; target-specific details use the separate assessment feature route |
 | `POST /api/catalogs/{id}/continuations` | Explicit additional discovery scope/budget; new revision |
 | `POST /api/features/{id}/traces` | Bounded on-demand trace of a discovered candidate |
-| `POST /api/relevance-assessments` | Explicit target/goal-specific ranking/fit job with shortlist disclosure |
+| Implemented `POST /api/relevance-assessments` | Explicit budgeted target/goal-specific relevance and conservative fit job; `base_assessment` assesses more, `feature_ids` requests selected reassessments |
+| Implemented `GET /api/relevance-assessments/{id}` and `/{id}/features/{feature_id}` | Saved context/counts/shortlist/usage and lazy feature judgment, controller fit gates and complete rejection reasons |
 | `POST /api/runs`, `GET /api/runs?...` | Owner-scoped jobs/history, global search, typed kinds and query-level cursors |
 | Implemented `GET /api/runs/{id}/status` | Compact state/revision/counts without full evidence arrays |
 | Existing detail/events/references/artifact routes | Enforce owner/current repository access; add bounded collection routes |
@@ -966,7 +1040,7 @@ scope. The example's remaining matching entries are available through its cursor
 
 ### Persistence and migrations
 
-Transactional schema v6, owner-scoped runs/idempotency, auth records, repository
+Transactional schema v7, owner-scoped runs/idempotency, auth records, repository
 cache/sync, public project pins and catalog tables are implemented. F1 covers migration rollback/retry and rejection
 of future schemas. Extend explicit migrations for further grants and job lifecycle;
 back up and verify existing data before further schema changes.
@@ -1126,8 +1200,8 @@ Required work:
 
 ## 13. Development sequence and deliverables
 
-Use these packages as the implementation checklist. F0/F1 and the local F2/F3/F4 foundations
-are implemented; continue with the outstanding live gates and F5 work. Update
+Use these packages as the implementation checklist. F0/F1 and the local F2-F5 foundations
+are implemented; continue with the outstanding live gates and F6/F7 work. Update
 this document with reviewed behavior and machine evidence as each package lands. Work
 that does not depend on another package can proceed independently, but release gates
 still require the listed prerequisites.
@@ -1139,7 +1213,7 @@ still require the listed prerequisites.
 | F2: GitHub connection | Implemented locally; live exit gate pending | App guide/config, authorization, installation states, repository picker, opt-in private fetch broker, webhook/revocation and access fencing | F1 | Controlled-provider/Git/browser checks recorded; real development-account sign-in, granted private fetch and provider rotation/revocation still required |
 | F3: supported real repositories | Implemented locally for public Python structural analysis and reviewed native suites | Owner-scoped pinned project/root contracts, capability levels, versioned pytest/unittest adapters; sample is optional | F0, F2 | Independent public source/target structural analysis and native-suite receipts; unsupported projects explained without inference; see section 6 for profile limits |
 | F4: persistent source catalog | Implemented locally for public Python; live model exit validation pending | Semantic hints, independently corroborated cards, hierarchy/aliases, bounded shared budgets, atomic revisions/cache, signed cursor pages, continuation and on-demand traces | F3 | Real disposable pinned Git fixtures with controlled Meta responses; supported/documentation-only/failed/no-test cases, immutable pages and two-account checks; retained F4 receipts |
-| F5: relevance and scalable browsing | History, catalog paging/lazy details and polling foundations only | Goal/target assessments, all/relevant modes, server query/filter/sort, lazy details, URL state and compact polling | F4 | Honest assessed/unassessed/eligible counts; zero model calls on view changes; scale/accessibility checks |
+| F5: relevance and scalable browsing | Implemented locally; live semantic validation pending | Goal/target assessments, all/relevant modes, server query/filter/sort, lazy details, URL state and compact polling | F4 | Honest assessed/unassessed/eligible counts; zero model calls on view changes; scale/accessibility checks |
 | F6: job/hosting hardening | Local lock/admission only | Leased ownership where hosted, cancellation, quotas, current-access checks, retention, private-code consent, observability and cleanup | Starts with F1; required before multi-user release | Restart/cancel/revocation/tenant-load cases, operator recovery and private artifact lifecycle |
 | F7: verified adaptation | Pending | Real planner, behavior contract, frozen red acceptance, constrained patches, actual limits, regression green and capped repairs | F0, F3, F5; F6 for hosting | Real independent source-to-target red-to-green receipt; failed/exhausted cases retain evidence |
 | F8: change review and optional PR | Pending | Diff/review UI, patch download, notice export, explicit idempotent publishing | F7; GitHub write permission only for PR | Downloaded patch digest matches verified result; stale/unauthorized/repeated publishing behaves correctly |
@@ -1223,9 +1297,9 @@ is preferred. F3 now supplies public-project structural analysis and native offl
 adapters; active-call interruption and hosted lifecycle remain F6. Do not treat
 controlled-provider receipts as live private-access or hosting evidence.
 
-F4 now supplies persistent discovery on pinned F3 public Python projects. The next coding
-package is F5: target/goal assessment and honest all/relevant browsing. Live discovery
-validation remains an exit check. F6 is a release dependency
+F4 supplies persistent discovery and F5 supplies target/goal assessments and honest
+all/relevant browsing on pinned F3 public Python projects. Live discovery and relevance
+validation remain exit checks. The next packages are F6 lifecycle hardening and F7 adaptation. F6 is a release dependency
 for multi-user hosting. F7/F8 complete verified adaptation and actual change review.
 Optional 4B remains a bounded comparison extension, not a substitute for these packages.
 

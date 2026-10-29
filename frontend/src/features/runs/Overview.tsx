@@ -19,6 +19,26 @@ import { CatalogRunOverview } from '../catalog/CatalogRunOverview'
 export function Overview({ run }: { run: Run }) {
   if (run.kind === 'project_analysis') return <ProjectOverview run={run} />
   if (run.kind === 'catalog_discovery') return <CatalogRunOverview run={run} />
+  if (run.kind === 'relevance_assessment')
+    return (
+      <section className="surface p-5 space-y-4">
+        <h2>
+          {run.status === 'finished' ? 'Relevance assessment is saved.' : 'Assessing relevance.'}
+        </h2>
+        <p>
+          Open the saved catalog to review the assessed shortlist, unassessed remainder, relevance
+          and fit gates. This job applies no changes.
+        </p>
+        {run.catalog_id && (
+          <Link
+            className="text-action"
+            to={`/catalogs/${run.catalog_id}?revision=${run.catalog_revision}&assessment=${run.relevance_assessment_id}`}
+          >
+            Open saved assessment
+          </Link>
+        )}
+      </section>
+    )
   const features = run.features ?? []
   const feature =
     features.find((item) => item.feature_id === run.fit?.selected_feature_id) ?? features[0]

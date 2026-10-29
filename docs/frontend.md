@@ -56,7 +56,13 @@ do not bind it to a public interface. No hosted Site was created.
   cursor pages and lazy evidence details use saved data without model calls. **Continue
   discovery** or **Corroborate this feature** creates a new budgeted revision; earlier
   revisions remain readable. Full notices and receipts are linked through job exports.
-  This is source discovery; target relevance, eligibility and adaptation remain later work.
+  Use **Assess relevance** to add a goal and optional supported public target. Saved
+  **All features** / **Relevant to your project** views share this catalog revision.
+  Search, category, evidence/assessment/fit filters, sorts, paging and feature details perform
+  no model calls. Counts distinguish assessed, failed and not-yet-assessed entries.
+  **Assess more** or **Assess this feature** explicitly starts a fresh budgeted job; changing
+  the goal or target creates a new context. General-project adaptation eligibility remains
+  blocked by the missing baseline/frozen-acceptance/approved-plan gates until F7.
 - **Runs:** persisted history, global server search, workflow filters, bounded pagination, stable URLs,
   and refresh recovery. Existing known CLI report directories are imported at
   backend startup in local mode and labeled recorded CLI runs. GitHub accounts see only
@@ -97,7 +103,9 @@ baseline failures. Unavailable evidence and unrecorded values remain explicit.
 `backend/app/api/` provides capabilities, targets, run creation/history, ordered
 event pages, typed result projections, reference inspection, artifact previews,
 and downloads. `/api/catalogs` adds explicit discovery/continuation jobs and revisioned
-summary/detail reads on the same queue, execution lock and owner boundaries. HTTP types are generated from FastAPI's OpenAPI schema into
+summary/detail reads on the same queue, execution lock and owner boundaries.
+`/api/relevance-assessments` adds explicit goal/target jobs and saved assessment/detail
+reads; catalog queries accept `assessment_id`, `mode`, filters and sort. HTTP types are generated from FastAPI's OpenAPI schema into
 `frontend/src/api/schema.d.ts`; regenerate with `npm run generate:api` while the
 backend is running.
 
@@ -107,7 +115,8 @@ Selection emits progress at actual check/trace/profile/assessment boundaries.
 
 Public project pins live under `data/projects/`; schema v5 stores their owner-scoped
 descriptors in SQLite. Schema v6 adds owner-scoped catalog/revision/feature/operation
-records and persistent signed-cursor keys. Full commit SHAs are fixed at inspection,
+records and persistent signed-cursor keys. Schema v7 adds immutable relevance contexts,
+per-feature judgments and atomic owner-scoped assessment idempotency. Full commit SHAs are fixed at inspection,
 and the worker reopens those objects without fetching a branch again. GitHub private pins remain browse-only
 through the separate opt-in F2 workflow.
 

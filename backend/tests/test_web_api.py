@@ -58,6 +58,7 @@ def test_capabilities_are_configuration_not_connectivity(client):
         "local_baseline",
         "project_analysis",
         "catalog_discovery",
+        "relevance_assessment",
     }
     assert "offline-test-key" not in json.dumps(capabilities)
     assert "verified" not in capabilities

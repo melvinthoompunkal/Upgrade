@@ -106,6 +106,7 @@ class RunStore:
             "local_baseline": "Working-file baseline",
             "pinned_baseline": "Committed target baseline",
             "catalog_discovery": "Source feature discovery",
+            "relevance_assessment": "Feature relevance assessment",
         }.get(request.kind, "Source analysis")
         summary = RunSummary(
             id=uuid4().hex,

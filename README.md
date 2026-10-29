@@ -46,8 +46,10 @@ dependencies, collection requirements and skipped/failed tests cannot produce gr
 
 F4 adds **Discover features** on a supported source pin: persistent source-only catalogs,
 bounded Meta discovery/corroboration, immutable paginated revisions, saved evidence and
-explicit continuation. Saved browsing performs no model calls. Target relevance and
-adaptation remain later packages. See [the F4 implementation record](docs/full-feature-development.md#f4-local-implementation).
+explicit continuation. Saved browsing performs no model calls. F5 adds explicit target/goal assessments,
+honest assessed/unassessed counts and saved All/Relevant modes with global filters and
+sorts. General-project eligibility remains blocked by the F7 acceptance/verification gates;
+adaptation remains a later package. See [the F4 implementation record](docs/full-feature-development.md#f4-local-implementation).
 
 ## Setup
 

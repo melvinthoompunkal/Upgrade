@@ -87,7 +87,7 @@ export function RunWorkspace() {
         <div className="my-5">
           <Link
             className="button-secondary"
-            to={`/catalogs/${run.catalog_id}?revision=${run.catalog_revision}`}
+            to={`/catalogs/${run.catalog_id}?revision=${run.catalog_revision}${run.relevance_assessment_id ? `&assessment=${run.relevance_assessment_id}` : ''}`}
           >
             Open saved feature catalog
           </Link>
@@ -139,8 +139,9 @@ export function RunWorkspace() {
           {views
             .filter(
               (tab) =>
-                !['project_analysis', 'catalog_discovery'].includes(run.kind) ||
-                !['features', 'changes'].includes(tab),
+                !['project_analysis', 'catalog_discovery', 'relevance_assessment'].includes(
+                  run.kind,
+                ) || !['features', 'changes'].includes(tab),
             )
             .map((tab) => (
               <NavLink

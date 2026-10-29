@@ -22,6 +22,7 @@ from app.contracts import Ref, RepoSnapshot
 from app.errors import GraftError
 from app.evidence_contracts import Coverage, FeatureCard
 from app.project_contracts import ProjectAnalysis
+from app.relevance_contracts import RelevanceJob
 from app.selection_contracts import AssessmentBatch, FitResult, TargetProfile
 from app.tools.runner_artifacts import read_regular_file
 
@@ -41,6 +42,7 @@ TITLES = {
     "meta_smoke": "Meta connectivity check",
     "project_analysis": "Public project analysis",
     "catalog_discovery": "Source feature discovery",
+    "relevance_assessment": "Feature relevance assessment",
 }
 
 
@@ -164,6 +166,7 @@ class RunArtifacts:
         if not (
             ("/" not in name and name.endswith((".json", ".md")))
             or name.startswith(("trace-bundles/", "notices/", "test-captures/", "repositories/"))
+            or re.fullmatch(r"assessments/[a-f0-9]{32}\.json", name)
         ) or any(part in {".git", ".env", "objects", "snapshot"} for part in Path(name).parts):
             raise HTTPException(404, "Artifact is not exportable.")
         try:
@@ -326,6 +329,7 @@ class RunArtifacts:
             "matcher-assessment.json",
             "source-project-analysis.json",
             "target-project-analysis.json",
+            *(name for name in self.hashes if name.startswith("assessments/")),
         ):
             data = self.load(name)
             if data is not None:
@@ -337,6 +341,13 @@ class RunArtifacts:
         report = self.report
         values["catalog_id"] = report.get("catalog_id")
         values["catalog_revision"] = report.get("catalog_revision")
+        values["relevance_assessment_id"] = report.get("assessment_id")
+        if self.summary.kind == "relevance_assessment" and self.row["request"]:
+            try:
+                job = RelevanceJob.model_validate_json(self.row["request"])
+                values["relevance_assessment_id"] = job.assessment_id
+            except ValidationError:
+                self.warnings.append("The relevance job binding could not be validated.")
         if self.summary.kind == "catalog_discovery" and self.row["request"]:
             try:
                 job = CatalogJob.model_validate_json(self.row["request"])

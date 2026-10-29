@@ -14,6 +14,7 @@ from app.catalog_contracts import (
 from app.catalog_discovery import discovery_paths
 from app.catalog_store import CatalogStore
 from app.projects import project_store
+from app.relevance_contracts import BrowseMode, FeatureSort, FitStatus, RelevanceStatus
 
 router = APIRouter(prefix="/api/catalogs")
 
@@ -95,6 +96,11 @@ def features(
     category: str | None = Query(None, max_length=60),
     limit: int = Query(25, ge=1, le=100),
     cursor: str | None = Query(None, max_length=2048),
+    assessment_id: str | None = Query(None, pattern=r"^[a-f0-9]{32}$"),
+    mode: BrowseMode = "all",
+    sort: FeatureSort | None = None,
+    relevance_status: RelevanceStatus | None = None,
+    fit_status: FitStatus | None = None,
 ):
     return CatalogStore(request.app.state.runs).page(
         request.state.principal.owner_id,
@@ -105,6 +111,11 @@ def features(
         category=category,
         limit=limit,
         cursor=cursor,
+        assessment_id=assessment_id,
+        mode=mode,
+        sort=sort,
+        relevance_status=relevance_status,
+        fit_status=fit_status,
     )
 
 

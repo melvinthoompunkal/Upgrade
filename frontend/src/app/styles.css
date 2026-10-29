@@ -2,6 +2,9 @@
 
 .catalog-page { min-width: 0; overflow-wrap: anywhere; }
 .catalog-page pre { max-width: 100%; overflow-x: auto; white-space: pre; padding: 12px; background: #f4f6f9; }
+@media (max-width: 767px) {
+  .catalog-detail-open .catalog-list { display: none; }
+}
 
 @theme {
   --font-sans: "IBM Plex Sans", sans-serif;

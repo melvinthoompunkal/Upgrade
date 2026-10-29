@@ -3,7 +3,7 @@
 import sqlite3
 
 LOCAL_OWNER = "local-workspace"
-SCHEMA_VERSION = 6
+SCHEMA_VERSION = 7
 
 
 def migrate(db: sqlite3.Connection) -> None:
@@ -99,4 +99,20 @@ def migrate(db: sqlite3.Connection) -> None:
         PRIMARY KEY(owner_id,key))""")
     db.execute("CREATE TABLE IF NOT EXISTS catalog_cursor_key (id INTEGER PRIMARY KEY, key BLOB)")
     db.execute("INSERT OR IGNORE INTO catalog_cursor_key VALUES (1,randomblob(32))")
+    db.execute("""CREATE TABLE IF NOT EXISTS relevance_assessments (
+        id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, metadata TEXT NOT NULL,
+        run_id TEXT NOT NULL UNIQUE)""")
+    db.execute("CREATE INDEX IF NOT EXISTS owner_assessments ON relevance_assessments(owner_id,id)")
+    db.execute("""CREATE TABLE IF NOT EXISTS relevance_features (
+        assessment_id TEXT NOT NULL, feature_id TEXT NOT NULL,
+        relevance_status TEXT NOT NULL, relevance_score INTEGER NOT NULL,
+        fit_status TEXT NOT NULL, summary TEXT NOT NULL, detail TEXT NOT NULL,
+        sha256 TEXT NOT NULL, PRIMARY KEY(assessment_id,feature_id))""")
+    db.execute("""CREATE INDEX IF NOT EXISTS relevance_page ON relevance_features(
+        assessment_id,relevance_status,relevance_score DESC,feature_id)""")
+    db.execute("""CREATE TABLE IF NOT EXISTS relevance_operations (
+        owner_id TEXT NOT NULL, key TEXT NOT NULL, fingerprint TEXT NOT NULL,
+        assessment_id TEXT NOT NULL, PRIMARY KEY(owner_id,key))""")
+    db.execute("""CREATE INDEX IF NOT EXISTS catalog_category_page ON catalog_features(
+        catalog_id,revision,category,name,feature_id)""")
     db.execute(f"PRAGMA user_version={SCHEMA_VERSION}")

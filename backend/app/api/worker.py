@@ -21,6 +21,8 @@ from app.models.meta_client import MetaClient
 from app.pinned_baseline import record_pinned_baseline
 from app.project_analysis import record_project_analysis
 from app.projects import ProjectStore
+from app.relevance_store import RelevanceStore
+from app.relevance_workflow import record_relevance
 from app.report_publication import publish_json_report
 from app.selection_artifacts import ArtifactStore, prepare_directory
 from app.smoke import run_smoke
@@ -73,6 +75,12 @@ class LocalWorker:
     async def execute(
         self, request: RunRequest, progress, *, owner: str = "local-workspace", access_epoch=None
     ) -> tuple[dict, Path]:
+        if request.kind == "relevance_assessment":
+            return await record_relevance(
+                request, RelevanceStore(self.store),
+                ProjectStore(self.store, self.root.parent / "projects"),
+                owner, self.root, self.settings, progress, access_epoch=access_epoch,
+            )
         if request.kind == "catalog_discovery":
             return await record_catalog(
                 request,
@@ -178,7 +186,7 @@ class LocalWorker:
                         )
                 self.store.transition(owned_run, stage=stage, message=message)
 
-            if request.kind in {"project_analysis", "catalog_discovery"}:
+            if request.kind in {"project_analysis", "catalog_discovery", "relevance_assessment"}:
                 report, path = asyncio.run(
                     self.execute(request, progress, owner=row["owner_id"], access_epoch=epoch)
                 )

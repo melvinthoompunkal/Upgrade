@@ -9,6 +9,7 @@ from app.catalog_contracts import CatalogJob
 from app.contracts import ModelCall, Ref, RepoSnapshot
 from app.evidence_contracts import Coverage, FeatureCard
 from app.project_contracts import ProjectAnalysis, ProjectAnalysisRequest
+from app.relevance_contracts import RelevanceJob
 from app.selection_contracts import AssessmentBatch, FitResult, TargetProfile
 
 RunKind = Literal[
@@ -19,6 +20,7 @@ RunKind = Literal[
     "meta_smoke",
     "project_analysis",
     "catalog_discovery",
+    "relevance_assessment",
 ]
 
 
@@ -60,7 +62,12 @@ class CheckRequest(BaseModel):
 
 
 RunRequest = Annotated[
-    SelectionRequest | TraceRequest | CheckRequest | ProjectAnalysisRequest | CatalogJob,
+    SelectionRequest
+    | TraceRequest
+    | CheckRequest
+    | ProjectAnalysisRequest
+    | CatalogJob
+    | RelevanceJob,
     Field(discriminator="kind"),
 ]
 
@@ -143,6 +150,7 @@ class TestSuite(BaseModel):
 
 
 class RunDetail(RunSummary):
+    relevance_assessment_id: str | None = None
     catalog_id: str | None = None
     catalog_revision: int | None = None
     project_analyses: list[ProjectAnalysis] = Field(default_factory=list)

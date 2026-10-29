@@ -13,6 +13,7 @@ const entries: CatalogPage['items'] = Array.from({ length: 28 }, (_, index) => (
   aliases: [],
   evidence_status: index < 2 ? 'supported' : 'unverified',
   trace_state: index < 2 ? 'validated' : 'untraced',
+  assessment: null,
 }))
 const catalog: Catalog = {
   id,

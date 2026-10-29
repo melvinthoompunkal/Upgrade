@@ -1,8 +1,6 @@
 """Atomic owner-scoped catalog jobs, immutable revisions and bounded saved projections."""
 
-import base64
 import hashlib
-import hmac
 import json
 from uuid import uuid4
 
@@ -16,7 +14,6 @@ from app.catalog_contracts import (
     CatalogJob,
     CatalogView,
     FeatureDetail,
-    FeaturePage,
     FeatureSummary,
 )
 from app.errors import EvidenceError
@@ -264,6 +261,7 @@ class CatalogStore:
                 summary = FeatureSummary.model_validate(
                     feature.model_dump(include=set(FeatureSummary.model_fields))
                 )
+                summary.aliases = []
                 db.execute(
                     "INSERT OR REPLACE INTO catalog_features VALUES (?,?,?,?,?,?,?,?,?,?)",
                     (
@@ -341,79 +339,7 @@ class CatalogStore:
             ).fetchall()
             return [self._feature(db, view, row[0]) for row in ids]
 
-    def page(
-        self,
-        owner,
-        catalog_id,
-        revision,
-        *,
-        q="",
-        status=None,
-        category=None,
-        limit=25,
-        cursor=None,
-    ) -> FeaturePage:
-        view = self.get(owner, catalog_id, revision)
-        if view.state not in TERMINAL:
-            raise HTTPException(409, "Feature pages become available when this revision finishes.")
-        q = " ".join(q.split()).casefold()
-        binding = fingerprint([owner, catalog_id, view.revision, q, status, category, limit])
-        conditions, values = ["catalog_id=?", "revision=?"], [catalog_id, view.revision]
-        if q:
-            conditions.append("instr(search_text,?)>0")
-            values.append(q)
-        if status:
-            conditions.append("evidence_status=?")
-            values.append(status)
-        if category:
-            conditions.append("category=?")
-            values.append(category)
-        with self.runs.connect() as db:
-            secret = db.execute("SELECT key FROM catalog_cursor_key WHERE id=1").fetchone()[0]
-            total = db.execute(
-                "SELECT count(*) FROM catalog_features WHERE " + " AND ".join(conditions),
-                values,
-            ).fetchone()[0]
-            if cursor:
-                try:
-                    payload, signature = cursor.split(".")
-                    if not hmac.compare_digest(
-                        signature, hmac.new(secret, payload.encode(), hashlib.sha256).hexdigest()
-                    ):
-                        raise ValueError
-                    context, name, feature_id = json.loads(base64.urlsafe_b64decode(payload))
-                    if (
-                        context != binding
-                        or not isinstance(name, str)
-                        or not isinstance(feature_id, str)
-                    ):
-                        raise ValueError
-                except (ValueError, TypeError, UnicodeError):
-                    raise HTTPException(
-                        422, "Invalid cursor for this revision and query."
-                    ) from None
-                conditions.append("(name,feature_id)>(?,?)")
-                values.extend((name, feature_id))
-            rows = db.execute(
-                "SELECT name,feature_id,summary FROM catalog_features WHERE "
-                + " AND ".join(conditions)
-                + " ORDER BY name,feature_id LIMIT ?",
-                (*values, limit + 1),
-            ).fetchall()
-            following = None
-            if len(rows) > limit:
-                last = rows[limit - 1]
-                payload = base64.urlsafe_b64encode(
-                    canonical([binding, last["name"], last["feature_id"]]).encode()
-                ).decode()
-                following = (
-                    payload + "." + hmac.new(secret, payload.encode(), hashlib.sha256).hexdigest()
-                )
-        return FeaturePage(
-            catalog_id=catalog_id,
-            catalog_revision=view.revision,
-            items=[FeatureSummary.model_validate_json(row["summary"]) for row in rows[:limit]],
-            counts=view.counts,
-            matching_filter=total,
-            next_cursor=following,
-        )
+    def page(self, owner, catalog_id, revision, **query):
+        from app.catalog_query import feature_page
+
+        return feature_page(self, owner, catalog_id, revision, **query)

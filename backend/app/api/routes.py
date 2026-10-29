@@ -43,6 +43,7 @@ def capabilities(request: Request):
             "meta_smoke",
             "project_analysis",
             "catalog_discovery",
+            "relevance_assessment",
         ],
         model_configured=settings.model_configured,
         model_id=settings.meta_model_id,
@@ -79,8 +80,8 @@ def create_run(
     response: Response,
     idempotency_key: str = Header(min_length=16, max_length=100, pattern=r"^[A-Za-z0-9_-]+$"),
 ):
-    if body.kind == "catalog_discovery":
-        raise HTTPException(422, "Use the catalog endpoints to create discovery jobs.")
+    if body.kind in {"catalog_discovery", "relevance_assessment"}:
+        raise HTTPException(422, "Use the catalog or relevance endpoints to create these jobs.")
     epoch = authorize_job(
         request, model_required=body.kind in {"fit_select", "source_trace", "meta_smoke"}
     )

@@ -26,6 +26,7 @@ from app.auth.webhooks import router as webhook_router
 from app.catalog_routes import router as catalog_router
 from app.config import Settings
 from app.projects import router as project_router
+from app.relevance_routes import router as relevance_router
 from app.selection_artifacts import prepare_directory
 from app.tools.runner import PROJECT_ROOT
 
@@ -89,6 +90,7 @@ def create_app(
     application.include_router(router)
     application.include_router(project_router)
     application.include_router(catalog_router)
+    application.include_router(relevance_router)
 
     @application.get("/health", response_model=HealthResponse)
     async def health() -> HealthResponse:

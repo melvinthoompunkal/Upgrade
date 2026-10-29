@@ -498,6 +498,57 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/relevance-assessments': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Create Assessment */
+    post: operations['create_assessment_api_relevance_assessments_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/relevance-assessments/{assessment_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Assessment */
+    get: operations['assessment_api_relevance_assessments__assessment_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/relevance-assessments/{assessment_id}/features/{feature_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Feature Assessment */
+    get: operations['feature_assessment_api_relevance_assessments__assessment_id__features__feature_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/health': {
     parameters: {
       query?: never
@@ -576,6 +627,171 @@ export interface components {
     AssessmentBatch: {
       assessments: components['schemas']['FrozenList_CandidateAssessment__MinLen_min_length_1_']
     }
+    /** AssessmentCounts */
+    AssessmentCounts: {
+      /**
+       * Discovered
+       * @default 0
+       */
+      discovered: number
+      /**
+       * Deeply Assessed
+       * @default 0
+       */
+      deeply_assessed: number
+      /**
+       * Relevant
+       * @default 0
+       */
+      relevant: number
+      /**
+       * Eligible
+       * @default 0
+       */
+      eligible: number
+      /**
+       * Assessment Failed
+       * @default 0
+       */
+      assessment_failed: number
+      /**
+       * Unassessed
+       * @default 0
+       */
+      unassessed: number
+    }
+    /** AssessmentCreate */
+    AssessmentCreate: {
+      /** Catalog Id */
+      catalog_id: string
+      /** Catalog Revision */
+      catalog_revision: number
+      /** Target Project */
+      target_project?: string | null
+      /** Goal */
+      goal: string
+      /** Base Assessment */
+      base_assessment?: string | null
+      /** Feature Ids */
+      feature_ids?: string[]
+      options?: components['schemas']['AssessmentOptions']
+    }
+    /** AssessmentOptions */
+    AssessmentOptions: {
+      /**
+       * Feature Limit
+       * @default 8
+       */
+      feature_limit: number
+      /**
+       * Max Requests
+       * @default 32
+       */
+      max_requests: number
+      /**
+       * Max Input Tokens
+       * @default 400000
+       */
+      max_input_tokens: number
+      /**
+       * Max Output Tokens
+       * @default 40000
+       */
+      max_output_tokens: number
+      /**
+       * Max Seconds
+       * @default 1200
+       */
+      max_seconds: number
+    }
+    /** AssessmentSummary */
+    AssessmentSummary: {
+      /**
+       * Relevance Status
+       * @default unassessed
+       * @enum {string}
+       */
+      relevance_status: 'unassessed' | 'relevant' | 'less_relevant' | 'assessment_failed'
+      /** Relevance Score */
+      relevance_score: number | null
+      /**
+       * Reason
+       * @default
+       */
+      reason: string
+      /**
+       * Target Status
+       * @default unknown
+       * @enum {string}
+       */
+      target_status: 'already_present' | 'potential_gap' | 'unknown' | 'no_target'
+      /**
+       * Fit Status
+       * @default unassessed
+       * @enum {string}
+       */
+      fit_status: 'unassessed' | 'ineligible' | 'eligible'
+    }
+    /** AssessmentView */
+    AssessmentView: {
+      /** Id */
+      id: string
+      /** Catalog Id */
+      catalog_id: string
+      /** Catalog Revision */
+      catalog_revision: number
+      /** Run Id */
+      run_id: string
+      /** Target Project */
+      target_project: string | null
+      /** Target Sha */
+      target_sha: string | null
+      /** Target Root */
+      target_root: string | null
+      /** Target Origin */
+      target_origin: string | null
+      /** Goal */
+      goal: string
+      /** Identity */
+      identity: {
+        [key: string]: unknown
+      }
+      options: components['schemas']['AssessmentOptions']
+      /** Shortlist */
+      shortlist: string[]
+      /** Base Assessment */
+      base_assessment: string | null
+      /**
+       * State
+       * @default queued
+       * @enum {string}
+       */
+      state: 'queued' | 'running' | 'complete' | 'partial' | 'failed' | 'canceled'
+      /** Created At */
+      created_at: string
+      counts: components['schemas']['AssessmentCounts']
+      /** Top3 */
+      top3: string[]
+      /** Limit Reasons */
+      limit_reasons: string[]
+      /** Usage */
+      usage: {
+        [key: string]: number
+      }
+      /** Cumulative Usage */
+      cumulative_usage: {
+        [key: string]: number
+      }
+      /** Returned Model Ids */
+      returned_model_ids: string[]
+      /** Failure Code */
+      failure_code: string | null
+      /**
+       * Qualification
+       * @default relevance-v1: ratings of 3–5 are relevant, 0–2 less relevant. Judgments are not probabilities or a claim of global best fit. Only the disclosed shortlist is assessed. General projects have no frozen acceptance/baseline binding or approved adaptation plan; these fit gates cannot pass.
+       */
+      qualification: string
+    }
     /** CandidateAssessment */
     CandidateAssessment: {
       /** Feature Id */
@@ -610,6 +826,7 @@ export interface components {
         | 'meta_smoke'
         | 'project_analysis'
         | 'catalog_discovery'
+        | 'relevance_assessment'
       )[]
       /**
        * Patch Supported
@@ -877,6 +1094,51 @@ export interface components {
       /** Sha256 */
       sha256: string
     }
+    /** FeatureAssessment */
+    FeatureAssessment: {
+      /**
+       * Relevance Status
+       * @default unassessed
+       * @enum {string}
+       */
+      relevance_status: 'unassessed' | 'relevant' | 'less_relevant' | 'assessment_failed'
+      /** Relevance Score */
+      relevance_score: number | null
+      /**
+       * Reason
+       * @default
+       */
+      reason: string
+      /**
+       * Target Status
+       * @default unknown
+       * @enum {string}
+       */
+      target_status: 'already_present' | 'potential_gap' | 'unknown' | 'no_target'
+      /**
+       * Fit Status
+       * @default unassessed
+       * @enum {string}
+       */
+      fit_status: 'unassessed' | 'ineligible' | 'eligible'
+      /** Feature Id */
+      feature_id: string
+      fit: components['schemas']['CandidateScore'] | null
+      /** Gates */
+      gates: components['schemas']['GateEvidence'][]
+      /** Rejections */
+      rejections: string[]
+      judgment: components['schemas']['RelevanceJudgment'] | null
+      /** Failure Code */
+      failure_code: string | null
+      /** Evidence */
+      evidence: components['schemas']['EvidenceExcerpt'][]
+      /**
+       * Evidence Limit Reached
+       * @default false
+       */
+      evidence_limit_reached: boolean
+    }
     /** FeatureCard */
     FeatureCard: {
       /** Feature Id */
@@ -930,6 +1192,7 @@ export interface components {
        * @enum {string}
        */
       trace_state: 'untraced' | 'validated' | 'failed'
+      assessment: components['schemas']['AssessmentSummary'] | null
       /** Behavior Key */
       behavior_key: string
       /** Discovery Refs */
@@ -962,6 +1225,20 @@ export interface components {
       matching_filter: number
       /** Next Cursor */
       next_cursor: string | null
+      /** Assessment Id */
+      assessment_id?: string | null
+      /**
+       * Mode
+       * @default all
+       * @enum {string}
+       */
+      mode: 'all' | 'relevant'
+      /** Assessment Counts */
+      assessment_counts?: {
+        [key: string]: number
+      } | null
+      /** Limit Reasons */
+      limit_reasons?: string[]
     }
     /** FeatureSummary */
     FeatureSummary: {
@@ -991,6 +1268,7 @@ export interface components {
        * @enum {string}
        */
       trace_state: 'untraced' | 'validated' | 'failed'
+      assessment: components['schemas']['AssessmentSummary'] | null
     }
     /** FitCriteria */
     FitCriteria: {
@@ -1030,12 +1308,42 @@ export interface components {
     FrozenList_ObservedCase__MinLen_min_length_1_: components['schemas']['ObservedCase'][]
     FrozenList_ObservedGapEvidence_: components['schemas']['ObservedGapEvidence'][]
     FrozenList_Ref_: components['schemas']['Ref'][]
+    FrozenList_Ref__MaxLen_max_length_12_: components['schemas']['Ref'][]
     FrozenList_Ref__MinLen_min_length_1_: components['schemas']['Ref'][]
     FrozenList_RejectedCandidate_: components['schemas']['RejectedCandidate'][]
     FrozenList_TargetCapability_: components['schemas']['TargetCapability'][]
     FrozenList_TargetGap_: components['schemas']['TargetGap'][]
     FrozenList_TargetModule__MinLen_min_length_1_: components['schemas']['TargetModule'][]
     FrozenList_str_: string[]
+    /**
+     * GateEvidence
+     * @description Controller evaluation; unknown evidence never passes a selection gate.
+     */
+    GateEvidence: {
+      /**
+       * Name
+       * @enum {string}
+       */
+      name:
+        | 'source_provenance'
+        | 'target_provenance'
+        | 'supported_execution'
+        | 'passing_baseline'
+        | 'target_gap'
+        | 'isolated_adaptation'
+        | 'existing_dependencies'
+        | 'source_use_policy'
+        | 'acceptance_readiness'
+        | 'sufficient_coverage'
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: 'pass' | 'fail' | 'unknown'
+      /** Reason */
+      reason: string
+      evidence: components['schemas']['FrozenList_Ref_']
+    }
     /** GateResult */
     GateResult: {
       /**
@@ -1369,6 +1677,33 @@ export interface components {
       feature_id: string
       reasons: components['schemas']['FrozenList_Annotated_str__FieldInfo_annotation_NoneType__required_True__metadata__MinLen_min_length_1___MaxLen_max_length_2000______MinLen_min_length_1_']
     }
+    /** RelevanceJob */
+    RelevanceJob: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'relevance_assessment'
+      /** Assessment Id */
+      assessment_id: string
+    }
+    /** RelevanceJudgment */
+    RelevanceJudgment: {
+      /** Feature Id */
+      feature_id: string
+      /** Relevance */
+      relevance: number
+      /** Reason */
+      reason: string
+      source_refs: components['schemas']['FrozenList_Ref__MinLen_min_length_1_']
+      target_refs: components['schemas']['FrozenList_Ref__MaxLen_max_length_12_']
+      /**
+       * Target Status
+       * @enum {string}
+       */
+      target_status: 'already_present' | 'potential_gap' | 'unknown' | 'no_target'
+      criteria: components['schemas']['FitCriteria'] | null
+    }
     /** RepoSnapshot */
     RepoSnapshot: {
       /** Repo Id */
@@ -1483,6 +1818,7 @@ export interface components {
         | 'meta_smoke'
         | 'project_analysis'
         | 'catalog_discovery'
+        | 'relevance_assessment'
       /** Title */
       title: string
       /**
@@ -1513,6 +1849,8 @@ export interface components {
       /** Eligible Feature Count */
       eligible_feature_count?: number | null
       error?: components['schemas']['Problem'] | null
+      /** Relevance Assessment Id */
+      relevance_assessment_id?: string | null
       /** Catalog Id */
       catalog_id?: string | null
       /** Catalog Revision */
@@ -1585,6 +1923,7 @@ export interface components {
         | 'meta_smoke'
         | 'project_analysis'
         | 'catalog_discovery'
+        | 'relevance_assessment'
       /** Title */
       title: string
       /**
@@ -2348,6 +2687,7 @@ export interface operations {
           | components['schemas']['CheckRequest']
           | components['schemas']['ProjectAnalysisRequest']
           | components['schemas']['CatalogJob']
+          | components['schemas']['RelevanceJob']
       }
     }
     responses: {
@@ -2771,6 +3111,12 @@ export interface operations {
         category?: string | null
         limit?: number
         cursor?: string | null
+        assessment_id?: string | null
+        mode?: 'all' | 'relevant'
+        sort?: ('category' | 'name' | 'relevance') | null
+        relevance_status?:
+          ('unassessed' | 'relevant' | 'less_relevant' | 'assessment_failed') | null
+        fit_status?: ('unassessed' | 'ineligible' | 'eligible') | null
       }
       header?: never
       path: {
@@ -2821,6 +3167,104 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['FeatureDetail']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  create_assessment_api_relevance_assessments_post: {
+    parameters: {
+      query?: never
+      header: {
+        'idempotency-key': string
+      }
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AssessmentCreate']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['AssessmentView']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  assessment_api_relevance_assessments__assessment_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        assessment_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['AssessmentView']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  feature_assessment_api_relevance_assessments__assessment_id__features__feature_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        assessment_id: string
+        feature_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['FeatureAssessment']
         }
       }
       /** @description Validation Error */

@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.contracts import Contract, FrozenList, Ref, validate_repo_path
 from app.evidence_contracts import FeatureCard
+from app.relevance_types import AssessmentSummary
 
 Id = Annotated[str, Field(pattern=r"^[a-f0-9]{32}$")]
 EvidenceStatus = Literal["unverified", "supported", "partial", "unsupported"]
@@ -74,6 +75,7 @@ class FeatureSummary(BaseModel):
     aliases: list[str] = Field(default_factory=list)
     evidence_status: EvidenceStatus = "unverified"
     trace_state: Literal["untraced", "validated", "failed"] = "untraced"
+    assessment: AssessmentSummary | None = None
 
 
 class EvidenceExcerpt(BaseModel):
@@ -147,3 +149,7 @@ class FeaturePage(BaseModel):
     counts: CatalogCounts
     matching_filter: int
     next_cursor: str | None
+    assessment_id: str | None = None
+    mode: Literal["all", "relevant"] = "all"
+    assessment_counts: dict[str, int] | None = None
+    limit_reasons: list[str] = Field(default_factory=list)

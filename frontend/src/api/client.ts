@@ -22,6 +22,8 @@ export type Feature = Schemas['FeatureCard']
 export type Catalog = Schemas['CatalogView']
 export type CatalogPage = Schemas['FeaturePage']
 export type CatalogFeature = Schemas['FeatureDetail']
+export type Assessment = Schemas['AssessmentView']
+export type FeatureAssessment = Schemas['FeatureAssessment']
 export type RunRequest =
   operations['create_run_api_runs_post']['requestBody']['content']['application/json']
 
@@ -83,4 +85,5 @@ export const kindLabel: Record<RunSummary['kind'], string> = {
   meta_smoke: 'Meta check',
   project_analysis: 'Project analysis',
   catalog_discovery: 'Source discovery',
+  relevance_assessment: 'Relevance assessment',
 }
