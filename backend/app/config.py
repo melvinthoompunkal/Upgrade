@@ -30,7 +30,16 @@ class Settings(BaseSettings):
     github_client_id: str = ""
     github_client_secret: SecretStr | None = Field(default=None, repr=False)
     github_app_slug: str = ""
+    github_app_id: int | None = Field(default=None, gt=0)
+    github_private_key_path: Path | None = Field(default=None, repr=False)
+    github_webhook_secret: SecretStr | None = Field(default=None, repr=False)
+    github_private_fetch_enabled: bool = False
     token_encryption_keys: SecretStr | None = Field(default=None, repr=False)
+
+    @field_validator("github_app_id", "github_private_key_path", mode="before")
+    @classmethod
+    def empty_optional_setting(cls, value: object) -> object:
+        return None if isinstance(value, str) and not value.strip() else value
 
     @field_validator("app_base_url")
     @classmethod
@@ -67,6 +76,12 @@ class Settings(BaseSettings):
                 )
             if not re.fullmatch(r"[A-Za-z0-9-]+", self.github_app_slug):
                 raise ValueError("Invalid GitHub App slug.")
+            if self.github_private_fetch_enabled and not all(
+                (self.github_app_id, self.github_private_key_path, self.github_webhook_secret)
+            ):
+                raise ValueError("Private fetch requires App ID, private key and webhook secret.")
+        elif self.github_private_fetch_enabled:
+            raise ValueError("Private fetch requires GitHub authentication mode.")
         return self
 
     @field_validator("model_api_key", mode="before")

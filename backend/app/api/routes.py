@@ -18,6 +18,8 @@ from app.api.contracts import (
     Target,
 )
 from app.api.storage import now
+from app.auth.snapshots import access_error
+from app.errors import GraftError
 from app.tools.git import Git
 from app.tools.runner import PROJECT_ROOT
 
@@ -91,11 +93,20 @@ def create_run(
         raise HTTPException(
             409, "Configure MODEL_API_KEY in backend/.env before starting a model run."
         )
+    epoch = None
+    if request.app.state.settings.auth_mode == "github":
+        try:
+            epoch = request.app.state.auth.current_access(
+                request.state.principal.owner_id, request.app.state.github
+            )
+        except GraftError as error:
+            raise access_error(error) from None
     run = request.app.state.runs.enqueue(
         body,
         idempotency_key,
         owner_id=request.state.principal.owner_id,
         require_connected=request.app.state.settings.auth_mode == "github",
+        access_epoch=epoch,
     )
     response.headers["Location"] = f"/api/runs/{run.id}"
     return run

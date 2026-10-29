@@ -1,7 +1,8 @@
 # Upgrade browser workspace
 
 The local browser application lives in `frontend/`. Optional GitHub sign-in and repository
-indexing are available as a development preview; see [GitHub setup](github-setup.md).
+indexing are available locally; F2 adds installation states and opt-in pinned private
+snapshots. See [GitHub setup](github-setup.md) for configuration and the pending live checks.
 Local mode remains the default and the full connected-analysis release is not complete.
 The UI uses React 19, TypeScript,
 Vite 7, Tailwind 4, Phosphor icons, locally packaged IBM Plex fonts, and Motion for
@@ -66,6 +67,11 @@ do not bind it to a public interface. No hosted Site was created.
   be submitted as arbitrary analysis targets. Signing out and disconnecting are separate.
   On an account change, prior run details, history and repository views are cleared
   before the new account's responses arrive. Form drafts remain scoped to their owner.
+  **Check installations** explains suspension/missing permissions. With the explicit
+  private-fetch setting enabled, **Pin a repository snapshot** fetches a full SHA/root
+  for browse/index use, without Meta transmission. Disconnect attempts provider revocation
+  and reports when manual completion in GitHub settings is needed. Mobile navigation scrolls
+  so account controls remain reachable.
 
 The `selected` outcome means the proposed feature passed analysis policy. Retry
 diagnostic assertions may be expected failures and remain distinct from ordinary
@@ -131,6 +137,10 @@ These tests do not call Meta or Docker. The new foundation tests also cover auth
 browser binding, CSRF, token refresh/rotation, two-owner isolation on result surfaces,
 legacy migration, multi-page repository sync, stale cache and disconnect races. The
 browser uses compact status polling and retains at most 200 recent events.
+F2 tests additionally exercise restricted installation tokens and JWT signatures, the
+ephemeral Git credential helper, private fetches against disposable local Git storage,
+webhook tamper/replay/rollback, cross-owner snapshots and revocation during fetch/worker
+publication. No live provider account is exercised by those tests.
 The [F1 identity audit record](full-feature-development.md#f1-identity-follow-up) covers
 populated two-owner artifact/excerpt access, failure and migration boundaries, and
 desktop/mobile checks for stale results and drafts during account switching.

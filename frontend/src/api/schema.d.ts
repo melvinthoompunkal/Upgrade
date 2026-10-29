@@ -123,6 +123,91 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/webhooks/github': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Github Webhook */
+    post: operations['github_webhook_api_webhooks_github_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/repository-snapshots': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Create Snapshot */
+    post: operations['create_snapshot_api_repository_snapshots_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/repository-snapshots/{snapshot_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Get Snapshot */
+    get: operations['get_snapshot_api_repository_snapshots__snapshot_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/github/installations': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Installations */
+    get: operations['installations_api_github_installations_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/github/setup': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Setup */
+    get: operations['setup_api_github_setup_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/capabilities': {
     parameters: {
       query?: never
@@ -585,6 +670,28 @@ export interface components {
       /** Model Configured */
       model_configured: boolean
     }
+    /** InstallationPage */
+    InstallationPage: {
+      /** Items */
+      items: components['schemas']['InstallationView'][]
+      /** Next Page */
+      next_page: number | null
+    }
+    /** InstallationView */
+    InstallationView: {
+      /** Id */
+      id: number
+      /** Account */
+      account: {
+        [key: string]: string
+      }
+      /** Repository Selection */
+      repository_selection: string
+      /** Suspended */
+      suspended: boolean
+      /** Contents Readable */
+      contents_readable: boolean
+    }
     /** ModelCall */
     ModelCall: {
       /**
@@ -733,6 +840,11 @@ export interface components {
       default_branch: string
       /** Archived */
       archived: boolean
+      /**
+       * Size
+       * @default 0
+       */
+      size: number
       /** Installation Id */
       installation_id: number
       /**
@@ -978,6 +1090,66 @@ export interface components {
       connection: 'local' | 'signed_out' | 'connected' | 'reconnect_required'
       /** Install Url */
       install_url: string | null
+      /**
+       * Private Fetch Enabled
+       * @default false
+       */
+      private_fetch_enabled: boolean
+    }
+    /** SnapshotRequest */
+    SnapshotRequest: {
+      /** Repository Id */
+      repository_id: number
+      /** Commit Sha */
+      commit_sha: string
+      /**
+       * Role
+       * @enum {string}
+       */
+      role: 'source' | 'target'
+      /**
+       * Project Root
+       * @default
+       */
+      project_root: string
+    }
+    /** SnapshotView */
+    SnapshotView: {
+      /** Id */
+      id: string
+      /** Repository Id */
+      repository_id: number
+      /** Installation Id */
+      installation_id: number
+      /** Full Name */
+      full_name: string
+      /** Private */
+      private: boolean
+      /** Commit Sha */
+      commit_sha: string
+      /**
+       * Role
+       * @enum {string}
+       */
+      role: 'source' | 'target'
+      /** Project Root */
+      project_root: string
+      /**
+       * Capability
+       * @default browse_index
+       * @constant
+       */
+      capability: 'browse_index'
+      /** File Count */
+      file_count: number
+      /** Text Bytes */
+      text_bytes: number
+      /** Inventory Sha256 */
+      inventory_sha256: string
+      /** Limits Reached */
+      limits_reached: string[]
+      /** Created At */
+      created_at: number
     }
     /** Target */
     Target: {
@@ -1343,6 +1515,152 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['RepositoryPage']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  github_webhook_api_webhooks_github_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      202: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
+        }
+      }
+    }
+  }
+  create_snapshot_api_repository_snapshots_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SnapshotRequest']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['SnapshotView']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  get_snapshot_api_repository_snapshots__snapshot_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        snapshot_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['SnapshotView']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  installations_api_github_installations_get: {
+    parameters: {
+      query?: {
+        page_number?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['InstallationPage']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  setup_api_github_setup_get: {
+    parameters: {
+      query: {
+        installation_id: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
         }
       }
       /** @description Validation Error */

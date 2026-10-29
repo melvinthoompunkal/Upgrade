@@ -26,7 +26,9 @@ is mutually excluded, history search is server-side, and an optional GitHub conn
 preview adds account ownership, sessions, encrypted credentials and repository indexing.
 Local mode remains the default. See [GitHub setup](docs/github-setup.md) and
 [the consolidated audit record](docs/full-feature-development.md#2-consolidated-audit-findings) for exact limits.
-General discovery, private Git retrieval and verified adaptations remain pending.
+F2 adds opt-in private pinned snapshots, installation states, signed lifecycle webhooks
+and provider revocation/current-access checks. Private retrieval defaults off; real-account
+validation remains pending. General discovery and verified adaptations remain pending.
 
 ## Setup
 

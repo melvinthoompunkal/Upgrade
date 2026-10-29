@@ -185,6 +185,153 @@ test('history search queries the server and keeps URL context', async ({ page })
   await expect(page.getByRole('link', { name: /Older project result/ }).first()).toBeVisible()
 })
 
+test('private snapshot fetch is explicit and shows pinned browse-only support', async ({
+  page,
+}, testInfo) => {
+  await mockApi(page)
+  await page.route('**/api/session', (route) =>
+    route.fulfill({ json: { ...account, private_fetch_enabled: true } }),
+  )
+  const submissions: string[] = []
+  await page.route('**/api/repositories**', (route) =>
+    route.fulfill({
+      json: {
+        items: [
+          {
+            id: 41,
+            full_name: 'river/project',
+            owner: { login: 'river' },
+            private: true,
+            archived: false,
+            default_branch: 'main',
+            installation_id: 7,
+            capability: 'browse_index',
+            support_reason: 'An execution adapter is required for analysis.',
+          },
+        ],
+        next_cursor: null,
+        revision: 'snapshot-a',
+        discovered_count: 1,
+        sync_status: 'complete',
+        updated_at: null,
+      },
+    }),
+  )
+  await page.route('**/api/repository-snapshots', async (route) => {
+    const request = route.request()
+    expect(request.headers()['x-csrf-token']).toBe('fixture-csrf')
+    expect(request.postDataJSON()).toEqual({
+      repository_id: 41,
+      commit_sha: 'a'.repeat(40),
+      role: 'target',
+      project_root: 'packages/library',
+    })
+    submissions.push(request.url())
+    await route.fulfill({
+      status: 201,
+      json: {
+        id: 'pinned-fixture',
+        repository_id: 41,
+        full_name: 'river/project',
+        installation_id: 7,
+        private: true,
+        commit_sha: 'a'.repeat(40),
+        role: 'target',
+        project_root: 'packages/library',
+        capability: 'browse_index',
+        file_count: 12,
+        text_bytes: 4500,
+        inventory_sha256: 'b'.repeat(64),
+        limits_reached: [],
+        created_at: 1,
+      },
+    })
+  })
+  await page.goto('/repositories')
+  await page.getByText('Pin a repository snapshot', { exact: true }).click()
+  await page.getByLabel('Full commit SHA').fill('a'.repeat(40))
+  await page.getByLabel('Project root (optional)').fill('packages/library')
+  await page.getByLabel('Repository role').selectOption('target')
+  expect(submissions).toEqual([])
+  await page.getByRole('button', { name: 'Fetch pinned snapshot' }).click()
+  await expect(page.getByText(/Pinned 12 text files/)).toBeVisible()
+  expect(submissions).toHaveLength(1)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  await page.screenshot({
+    path: `../data/frontend-qa/${testInfo.project.name}-f2-snapshot.png`,
+    fullPage: true,
+  })
+})
+
+test('installation states explain suspension and missing permissions', async ({ page }) => {
+  await mockApi(page)
+  await page.route('**/api/session', (route) => route.fulfill({ json: account }))
+  await page.route('**/api/repositories**', (route) =>
+    route.fulfill({
+      json: {
+        items: [],
+        next_cursor: null,
+        revision: null,
+        discovered_count: 0,
+        sync_status: 'no_installations',
+        updated_at: null,
+      },
+    }),
+  )
+  await page.route('**/api/github/installations?**', (route) =>
+    route.fulfill({
+      json: {
+        items: [
+          {
+            id: 7,
+            account: { login: 'suspended-org' },
+            repository_selection: 'selected',
+            suspended: true,
+            contents_readable: true,
+          },
+          {
+            id: 8,
+            account: { login: 'permission-org' },
+            repository_selection: 'selected',
+            suspended: false,
+            contents_readable: false,
+          },
+        ],
+        next_page: null,
+      },
+    }),
+  )
+  await page.goto('/repositories')
+  await page.getByRole('button', { name: 'Check installations' }).click()
+  await expect(page.getByText('suspended-org: Suspended')).toBeVisible()
+  await expect(page.getByText('permission-org: Contents permission required')).toBeVisible()
+})
+
+test('disconnect reports when provider revocation needs manual completion', async ({ page }) => {
+  await mockApi(page)
+  let disconnected = false
+  await page.route('**/api/session', (route) =>
+    route.fulfill({
+      json: {
+        ...account,
+        connection: disconnected ? 'reconnect_required' : 'connected',
+      },
+    }),
+  )
+  await page.route('**/api/auth/disconnect', async (route) => {
+    disconnected = true
+    await route.fulfill({
+      json: { status: 'disconnected', provider_revocation: 'manual_revocation_required' },
+    })
+  })
+  await page.goto('/')
+  if (test.info().project.name === 'mobile')
+    await page.getByRole('button', { name: 'Open navigation' }).click()
+  await page.getByRole('button', { name: 'Disconnect GitHub' }).click()
+  await expect(page.getByText(/GitHub could not confirm revocation/)).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Reconnect GitHub' })).toBeVisible()
+})
+
 test('event catch-up stays bounded to the latest 200 entries', async ({ page }) => {
   await mockApi(page)
   await page.route('**/api/runs/fixture-run/events?**', async (route) => {

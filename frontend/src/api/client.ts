@@ -15,6 +15,8 @@ export type Event = Schemas['Event']
 export type EventPage = Schemas['EventPage']
 export type Session = Schemas['SessionView']
 export type RepositoryPage = Schemas['RepositoryPage']
+export type Snapshot = Schemas['SnapshotView']
+export type InstallationPage = Schemas['InstallationPage']
 export type Feature = Schemas['FeatureCard']
 export type RunRequest =
   operations['create_run_api_runs_post']['requestBody']['content']['application/json']

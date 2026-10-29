@@ -51,6 +51,7 @@ class RunStore:
         *,
         owner_id: str = LOCAL_OWNER,
         require_connected: bool = False,
+        access_epoch: int | None = None,
     ) -> RunSummary:
         body = request.model_dump_json()
         fingerprint = hashlib.sha256(body.encode()).hexdigest()
@@ -58,9 +59,13 @@ class RunStore:
             db.execute("BEGIN IMMEDIATE")
             if require_connected:
                 connected = db.execute(
-                    "SELECT connected FROM users WHERE id=?", (owner_id,)
+                    "SELECT connected,access_epoch FROM users WHERE id=?", (owner_id,)
                 ).fetchone()
-                if not connected or not connected[0]:
+                if (
+                    not connected
+                    or not connected[0]
+                    or (access_epoch is not None and connected["access_epoch"] != access_epoch)
+                ):
                     raise HTTPException(409, "Reconnect GitHub before starting another run.")
             previous = db.execute(
                 "SELECT * FROM runs WHERE owner_id=? AND key=?", (owner_id, key)
@@ -97,6 +102,11 @@ class RunStore:
                 "VALUES (?,?,?,?,?,?)",
                 (summary.id, key, fingerprint, body, summary.model_dump_json(), owner_id),
             )
+            if require_connected:
+                db.execute(
+                    "INSERT INTO run_authorizations VALUES (?,?,?)",
+                    (summary.id, owner_id, connected["access_epoch"]),
+                )
             self.event(db, summary.id, "inputs", "Queued for the local worker.")
             return summary
 
@@ -151,9 +161,28 @@ class RunStore:
             reverse=True,
         )
 
-    def transition(self, run_id: str, *, stage: str, message: str, **changes) -> None:
+    def transition(
+        self,
+        run_id: str,
+        *,
+        stage: str,
+        message: str,
+        expected_access_epoch: int | None = None,
+        publication: tuple[str, str] | None = None,
+        **changes,
+    ) -> None:
         with self.connect() as db:
             db.execute("BEGIN IMMEDIATE")
+            if expected_access_epoch is not None:
+                allowed = db.execute(
+                    "SELECT 1 FROM runs JOIN users ON runs.owner_id=users.id "
+                    "WHERE runs.id=? AND users.connected=1 AND users.access_epoch=?",
+                    (run_id, expected_access_epoch),
+                ).fetchone()
+                if not allowed:
+                    from app.auth.crypto import ReconnectRequired
+
+                    raise ReconnectRequired("GitHub access changed before result publication.")
             row = db.execute("SELECT summary FROM runs WHERE id=?", (run_id,)).fetchone()
             summary = RunSummary.model_validate_json(row[0])
             updated = summary.model_copy(
@@ -164,7 +193,15 @@ class RunStore:
                     "revision": summary.revision + 1,
                 }
             )
-            db.execute("UPDATE runs SET summary=? WHERE id=?", (updated.model_dump_json(), run_id))
+            if publication is not None:
+                db.execute(
+                    "UPDATE runs SET summary=?,report=?,digest=? WHERE id=?",
+                    (updated.model_dump_json(), *publication, run_id),
+                )
+            else:
+                db.execute(
+                    "UPDATE runs SET summary=? WHERE id=?", (updated.model_dump_json(), run_id)
+                )
             self.event(db, run_id, stage, message)
 
     def claim(self, *, mode: str = "local"):
@@ -233,8 +270,21 @@ class RunStore:
             )
             self.event(db, row["id"], "complete", "Cancelled after GitHub disconnect.")
 
-    def attach(self, run_id: str, relative: str, digest: str) -> None:
+    def attach(
+        self, run_id: str, relative: str, digest: str, *, access_epoch: int | None = None
+    ) -> None:
         with self.connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            if access_epoch is not None:
+                allowed = db.execute(
+                    "SELECT 1 FROM runs JOIN users ON runs.owner_id=users.id "
+                    "WHERE runs.id=? AND users.connected=1 AND users.access_epoch=?",
+                    (run_id, access_epoch),
+                ).fetchone()
+                if not allowed:
+                    from app.auth.crypto import ReconnectRequired
+
+                    raise ReconnectRequired("GitHub access changed before result publication.")
             db.execute("UPDATE runs SET report=?,digest=? WHERE id=?", (relative, digest, run_id))
 
     def import_report(self, summary: RunSummary, relative: str, digest: str) -> None:

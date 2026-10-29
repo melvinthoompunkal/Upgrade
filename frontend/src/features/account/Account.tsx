@@ -42,7 +42,12 @@ export function AccountActions() {
     setBusy(true)
     setError('')
     try {
-      await api(path, { method: 'POST' })
+      const result = await api<{ provider_revocation?: string }>(path, { method: 'POST' })
+      if (result.provider_revocation === 'manual_revocation_required') {
+        setError(
+          'Local access removed. GitHub could not confirm revocation; remove the authorization in GitHub Settings → Applications.',
+        )
+      }
       if (path.endsWith('logout')) window.location.assign('/')
       else refresh()
     } catch (reason) {

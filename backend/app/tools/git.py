@@ -44,6 +44,7 @@ class Git:
         input: bytes | None = None,
         max_bytes: int = 8 * 1024 * 1024,
         timeout: float = 120,
+        credential_channel: dict[str, str] | None = None,
     ) -> bytes:
         command = [
             "git",
@@ -67,13 +68,15 @@ class Git:
             "core.autocrlf=false",
             "-c",
             "core.symlinks=false",
+            "-c",
+            "http.followRedirects=false",
             *args,
         ]
         try:
             result = subprocess.run(
                 command,
                 cwd=cwd,
-                env=self.env,
+                env={**self.env, **(credential_channel or {})},
                 input=input,
                 capture_output=True,
                 timeout=timeout,

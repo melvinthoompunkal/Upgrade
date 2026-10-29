@@ -118,10 +118,39 @@ class RepositoryManager:
             raise RepositoryError("Only public HTTPS GitHub repository URLs are supported.")
         if not re.fullmatch(r"[0-9a-f]{40}(?:[0-9a-f]{24})?", sha):
             raise RepositoryError("Source revision must be a full commit SHA.")
+        return self.fetch_snapshot(url, sha, role=role, prefix=prefix)
+
+    def fetch_snapshot(
+        self,
+        url: str,
+        sha: str,
+        *,
+        role: str,
+        prefix: str = "",
+        credential_channel: dict[str, str] | None = None,
+    ) -> PinnedRepository:
+        """Internal broker entry; callers authorize GitHub identity before supplying credentials."""
+        if (
+            role not in {"source", "target"}
+            or not re.fullmatch(
+                r"https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(?:\.git)?", url
+            )
+            or not re.fullmatch(r"[0-9a-f]{40}(?:[0-9a-f]{24})?", sha)
+        ):
+            raise RepositoryError("Invalid immutable GitHub snapshot input.")
+        if prefix:
+            validate_repo_path(prefix)
         storage = self.directory / f"{role}.git"
         self.git.run("init", "--bare", "--template=", str(storage))
         self.git.run(
-            "fetch", "--depth=1", "--no-tags", "--no-recurse-submodules", url, sha, cwd=storage
+            "fetch",
+            "--depth=1",
+            "--no-tags",
+            "--no-recurse-submodules",
+            url,
+            sha,
+            cwd=storage,
+            credential_channel=credential_channel,
         )
         actual = self.git.run("rev-parse", "FETCH_HEAD^{commit}", cwd=storage).decode().strip()
         if actual != sha:

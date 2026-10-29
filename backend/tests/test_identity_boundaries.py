@@ -304,7 +304,7 @@ def test_failed_legacy_migration_rolls_back_and_can_be_retried(tmp_path):
     }
     assert store.page(owner_id="github-owner")[0] == []
     with store.connect() as db:
-        assert db.execute("PRAGMA user_version").fetchone()[0] == 3
+        assert db.execute("PRAGMA user_version").fetchone()[0] == 4
         assert (
             db.execute("SELECT message FROM events WHERE sequence=17").fetchone()[0]
             == "legacy event"

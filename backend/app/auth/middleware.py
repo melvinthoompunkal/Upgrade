@@ -24,6 +24,9 @@ class SessionMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
         settings = request.app.state.settings
         request.state.principal = LOCAL_PRINCIPAL
+        if request.url.path == "/api/webhooks/github":
+            # The webhook route authenticates raw-body HMAC, independent of cookies/CSRF.
+            return private_response(await call_next(request))
         if settings.auth_mode == "github":
             request.state.principal = await asyncio.to_thread(
                 request.app.state.auth.principal, request.cookies.get(SESSION_COOKIE, "")

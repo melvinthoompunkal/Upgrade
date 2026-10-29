@@ -3,7 +3,7 @@
 import sqlite3
 
 LOCAL_OWNER = "local-workspace"
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 
 
 def migrate(db: sqlite3.Connection) -> None:
@@ -62,4 +62,16 @@ def migrate(db: sqlite3.Connection) -> None:
     )
     for statement in statements:
         db.execute(statement)
+    if "access_epoch" not in {row[1] for row in db.execute("PRAGMA table_info(users)")}:
+        db.execute("ALTER TABLE users ADD COLUMN access_epoch INTEGER NOT NULL DEFAULT 0")
+    db.execute("""CREATE TABLE IF NOT EXISTS github_webhook_deliveries (
+        delivery_id TEXT PRIMARY KEY, body_digest TEXT NOT NULL, event TEXT NOT NULL,
+        received REAL NOT NULL)""")
+    db.execute("""CREATE TABLE IF NOT EXISTS repository_snapshots (
+        id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, github_id INTEGER NOT NULL,
+        installation_id INTEGER NOT NULL, descriptor TEXT NOT NULL, created REAL NOT NULL)""")
+    db.execute("""CREATE INDEX IF NOT EXISTS owner_snapshots
+        ON repository_snapshots(owner_id,github_id)""")
+    db.execute("""CREATE TABLE IF NOT EXISTS run_authorizations (
+        run_id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, access_epoch INTEGER NOT NULL)""")
     db.execute(f"PRAGMA user_version={SCHEMA_VERSION}")

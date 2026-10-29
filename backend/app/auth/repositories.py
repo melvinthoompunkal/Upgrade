@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from app.auth.crypto import ReconnectRequired
-from app.auth.github import GitHubError
+from app.auth.github import GitHubError, GitHubRateLimited
 from app.errors import GraftError
 from app.execution import ProcessLock
 
@@ -32,6 +32,7 @@ class GrantedRepository(BaseModel):
     private: bool
     default_branch: str = Field(min_length=1, max_length=255)
     archived: bool
+    size: int = Field(default=0, ge=0)
 
 
 class RepositoryItem(GrantedRepository):
@@ -259,5 +260,9 @@ def sync_repositories(request: Request, restart: bool = False):
     try:
         index(request).advance(user, restart=restart)
     except GraftError as error:
+        if isinstance(error, GitHubRateLimited):
+            raise HTTPException(
+                429, str(error), headers={"Retry-After": str(error.retry_after)}
+            ) from None
         raise HTTPException(409, str(error)) from None
     return index(request).page(user)

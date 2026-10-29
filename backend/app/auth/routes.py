@@ -29,6 +29,7 @@ class SessionView(BaseModel):
     csrf_token: str | None
     connection: Literal["local", "signed_out", "connected", "reconnect_required"]
     install_url: str | None
+    private_fetch_enabled: bool = False
 
 
 def destination(value: str) -> str:
@@ -87,6 +88,7 @@ def session(request: Request):
         )
         if not local
         else None,
+        private_fetch_enabled=request.app.state.settings.github_private_fetch_enabled,
     )
 
 
@@ -156,8 +158,10 @@ def logout(request: Request, response: Response):
 def disconnect(request: Request):
     if request.app.state.settings.auth_mode != "github":
         raise HTTPException(409, "No GitHub account is connected in local mode.")
-    request.app.state.auth.disconnect(request.state.principal.owner_id)
-    return {"status": "disconnected"}
+    revocation = request.app.state.auth.disconnect_provider(
+        request.state.principal.owner_id, request.app.state.github
+    )
+    return {"status": "disconnected", "provider_revocation": revocation}
 
 
 def valid_csrf(request: Request) -> bool:

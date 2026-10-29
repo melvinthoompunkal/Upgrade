@@ -1,130 +1,157 @@
 # GitHub connection development setup
 
-The implemented connection is a development preview: sign-in, sessions, owner-scoped
-sample runs, and a paginated index of the repositories both the user and App can access.
-Private code retrieval, general project analysis, webhooks, hosted operation, generated
-patches and PR creation are not enabled. Registering the App does not enable those features.
+The local connection supports sign-in, expiring sessions, owner-scoped sample runs,
+repository sync/search, installation state, signed lifecycle webhooks and provider grant
+revocation. F2 also implements explicitly enabled private snapshot retrieval. Real GitHub
+account validation remains pending; leave private retrieval disabled until that check.
+General analysis of connected projects and hosted operation remain later packages.
 
 ## Register a development GitHub App
 
-Create a GitHub App in your GitHub developer settings. Use a separate registration for
-development. For the Vite setup, use exactly these URLs:
+Use a separate development registration and one canonical browser origin:
 
-| Setting | Value |
+| Setting | Vite development value |
 |---|---|
 | Homepage | `http://127.0.0.1:5173` |
 | User authorization callback | `http://127.0.0.1:5173/api/auth/github/callback` |
-| Repository Contents permission | Read-only |
-| Repository Metadata permission | Read-only |
+| Post-install setup URL | `http://127.0.0.1:5173/api/github/setup` |
+| Repository Contents / Metadata | Read-only |
 | User access token expiration | Enabled |
 
-This preview does not consume installation setup callbacks or webhooks. Disable webhook
-delivery for this development registration. Install the App on selected repositories.
-Sign-in and installation are separate: after sign-in, use **Repositories → Manage
-repository access**, grant access on GitHub, then return and select **Sync repositories**.
-No ordinary user needs a personal access token.
+Install on selected repositories. Sign-in and installation are separate: use
+**Repositories → Manage repository access**, grant access on GitHub, return and sync.
+The setup callback verifies its installation ID against the signed-in user's accessible
+installations; a query parameter never creates a grant. If setup returns before sign-in,
+sign in and return to Repositories to sync. No personal access token is needed.
 
-The authorization flow uses PKCE S256 and `offline_access` to request expiring tokens.
-GitHub describes the [user/App access intersection and authorization flow](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/generating-a-user-access-token-for-a-github-app)
-and [expiring user tokens](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/refreshing-user-access-tokens).
+For lifecycle processing, configure a reachable HTTPS webhook URL ending in
+`/api/webhooks/github` (an explicitly configured development relay is suitable), with
+a generated webhook secret. Subscribe to installation, installation-repository and
+repository lifecycle events. GitHub App authorization-revoked events are delivered by
+default. The backend verifies the raw-body SHA-256 HMAC before accepting deliveries.
+Without a webhook relay, keep private retrieval disabled; sign-in/indexing still work.
+
+See GitHub's [authorization flow](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/generating-a-user-access-token-for-a-github-app),
+[installation tokens](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/generating-an-installation-access-token-for-a-github-app)
+and [webhook validation](https://docs.github.com/en/webhooks/using-webhooks/validating-webhook-deliveries).
 
 ## Configure the backend
 
-Install the locked backend dependencies. Generate a credential-encryption key locally:
+Install the locked environment and generate an encryption key locally:
 
 ```powershell
 uv sync --project backend --locked
 backend/.venv/Scripts/python.exe -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
 ```
 
-Put that key and the App's client credentials in the ignored `backend/.env` file:
+Put the following in the ignored `backend/.env`, preserving existing Meta settings:
 
 ```dotenv
 AUTH_MODE=github
 APP_BASE_URL=http://127.0.0.1:5173
-GITHUB_CLIENT_ID=<from your App registration>
-GITHUB_CLIENT_SECRET=<from your App registration>
-GITHUB_APP_SLUG=<your App slug>
-TOKEN_ENCRYPTION_KEYS=<the generated key>
+GITHUB_CLIENT_ID=<from App registration>
+GITHUB_CLIENT_SECRET=<from App registration>
+GITHUB_APP_SLUG=<App slug>
+TOKEN_ENCRYPTION_KEYS=<generated Fernet key>
+GITHUB_PRIVATE_FETCH_ENABLED=false
 ```
 
-These are the names actually read by the backend. The plan's proposed singular
-`TOKEN_ENCRYPTION_KEY` is superseded by the rotation-capable `TOKEN_ENCRYPTION_KEYS`.
-App IDs, private keys and webhook secrets are not consumed by this preview. Preserve
-the existing Meta settings. Never put credentials in frontend variables, Git remotes,
-screenshots, issues or chat.
+F2 consumes these additional optional settings. Generate the RSA private key in the
+App settings and store it outside source control and artifact directories:
 
-Start the backend with access logging disabled so authorization codes never appear
-in Uvicorn request logs, then start Vite as documented in [frontend.md](frontend.md):
+```dotenv
+GITHUB_APP_ID=<numeric App ID>
+GITHUB_PRIVATE_KEY_PATH=<absolute path to App RSA PEM file>
+GITHUB_WEBHOOK_SECRET=<generated webhook secret>
+```
+
+When validating real private access, explicitly set `GITHUB_PRIVATE_FETCH_ENABLED=true`.
+The backend requires GitHub mode and all three settings above for this switch. Merely
+registering the App does not enable private retrieval or general project analysis.
+There are no frontend secrets or token input fields. Never paste credentials into chat,
+remotes, screenshots or reports.
+
+Start with authorization-query access logging disabled:
 
 ```powershell
 uv run --project backend --locked uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8000 --no-access-log
 ```
 
-Use `127.0.0.1` consistently. Vite proxies `/api` to the backend; the browser's origin
-and `APP_BASE_URL` must match exactly. For the compiled app served directly by FastAPI,
-set `APP_BASE_URL=http://127.0.0.1:8000` and register that exact callback separately.
-Any additional proxy must redact callback query strings and credential headers too.
-Do not expose this development preview as a hosted multi-user service.
+Start Vite as described in [frontend.md](frontend.md). Use `127.0.0.1` consistently;
+the browser origin and `APP_BASE_URL` must match. Vite proxies `/api`. For the compiled
+app served by FastAPI, configure the exact `http://127.0.0.1:8000` origin/callback
+instead. Any relay/proxy must also redact callback queries and credential headers.
 
-## Implemented behavior and limits
+## Connection and private snapshot behavior
 
-- Application sessions use opaque HttpOnly, SameSite=Lax, host-only cookies. HTTPS
-  origins use Secure cookies; loopback HTTP is allowed for development. Session tokens
-  are hashed in SQLite, expire after seven days absolutely or 24 hours idle, and rotate
-  after sign-in. Mutations require the exact Origin and a per-session CSRF token.
-- Ten-minute auth transactions are single use and bound to a separate browser cookie.
-  Identity uses the numeric GitHub user ID, so renamed logins keep their ownership.
-  Unusable encrypted state is consumed and rejected with a sanitized sign-in error;
-  it cannot be replayed after a missing key or malformed verifier.
-- GitHub access/refresh tokens are encrypted with authenticated, user-bound Fernet
-  envelopes. Refresh is serialized and token pairs are replaced atomically. A failed
-  refresh requires reconnecting. GitHub tokens never enter API DTOs or the browser.
-  Stored credential payloads are validated before use. Failure cleanup and queued-work
-  cancellation share the refresh transaction, so an older failed refresh cannot remove
-  a newly completed sign-in. Disconnect and queue cancellation also commit together;
-  new job admission rechecks connection inside its own database transaction.
-- **Sign out** invalidates the current browser session. **Disconnect GitHub** removes
-  local credentials and repository cache and cancels queued work. It does not uninstall
-  a shared organization App. Provider-side grant revocation and in-flight cancellation
-  are still pending; revoke the authorization in GitHub settings when necessary.
-- Repository sync performs at most four provider page requests per action. **Continue
-  sync** resumes its saved cursor. It caps discovery at 10,000 rows/1,000 installations
-  and labels partial/limited results. The server searches all indexed rows and returns
-  pages of 25. Browsing does not refresh GitHub or invoke Meta. Expired cache entries
-  are hidden after 15 minutes; explicit sync refreshes access metadata.
-- Indexed repositories are **browse/index** only. They are not added to the sample
-  analysis target selector. Installation-token fetching, signed webhooks, immediate
-  provider revocation processing, private-code consent, retention and hosted isolation
-  remain release requirements in [the full feature plan](full-feature-development.md).
-- Authentication/CSRF errors carry the same no-store and no-referrer headers as other
-  API responses. Malformed CSRF headers are rejected without a server error. Switching
-  accounts clears the previous history/detail views before loading new results and
-  keeps each account's form draft in its own browser-storage namespace.
+- Sessions use hashed opaque identifiers in HttpOnly, SameSite=Lax, host-only cookies,
+  Secure on HTTPS. Local loopback HTTP is supported. Sessions expire after seven days
+  absolutely or 24 hours idle. Mutations require exact Origin and session CSRF.
+- Ten-minute, browser-bound PKCE transactions are single use. Numeric GitHub identity
+  owns data across login renames. Credentials use authenticated, owner-bound encryption;
+  refresh, token-pair replacement and disconnect are transactional.
+- **Sign out** invalidates the current application session. **Disconnect GitHub** attempts
+  to revoke that user's provider authorization, then clears local credentials/cache and
+  cancels queued work. It never uninstalls an organization's shared App. If GitHub cannot
+  confirm revocation, the UI says to remove authorization in GitHub Settings → Applications.
+- Repository sync performs at most four page requests per action. Continue resumes the
+  saved cursor. The index caps at 10,000 repositories/1,000 installations and labels
+  partial/limited states. Search, owner and visibility filters run on the server; pages
+  contain at most 25 rows. Cached rows expire after 15 minutes. Browsing invokes no Meta.
+- **Check installations** shows suspension, missing Contents permission and repository
+  selection. No accessible installations may also mean organization approval is pending;
+  Upgrade does not infer approval state that GitHub has not returned.
+- With private retrieval enabled, each repository exposes **Pin a repository snapshot**.
+  Supply a full lowercase commit SHA, source/target role and optional project-root prefix.
+  `POST /api/repository-snapshots` fetches that immutable revision; it does not resolve
+  branch names. The descriptor records SHA/root, inventory hash/counts and limits.
+- Retrieval checks both fresh user-token repository access and the actual App installation
+  before minting a one-repository, Contents-read installation token. A per-fetch loopback
+  askpass channel keeps the token out of files, URLs, argv, remotes and environment values.
+  The helper and channel are destroyed and token revocation is attempted in `finally`.
+  If token revocation is unavailable, the discarded token expires within its provider lifetime.
+- Git fetches only data into bare managed storage, with redirects, hooks, submodules and
+  ambient credentials disabled. No source code, setup command or test is executed. Retrieval
+  preflight rejects provider-reported repositories over 100 MiB; fetched storage is checked
+  against 200 MiB, inventories cap at 4,000 entries/50 MiB text. The storage check is after
+  fetch, not a hard operating-system disk quota during transfer.
+- Successful private snapshots live in `data/private-repositories/`, separate from public
+  run artifacts. Only an owner-scoped descriptor route is exposed. Every descriptor read
+  rechecks current user/App access. Snapshot files are not downloadable through run routes
+  and are not sent to Meta. Analysis capability remains **browse/index**.
+- Signed webhook deliveries deduplicate by delivery ID plus body hash in a durable SQLite
+  inbox. Invalidation and deduplication commit together; raw payloads are not retained.
+  Installation/repository changes clear affected owners' indexes, increment access
+  generations and cancel queued work. Resync is required before old descriptors reopen.
+  Authorization revocation disconnects the matching numeric user. Reordered deliveries
+  never restore cached grants. Fresh provider checks handle missed webhooks on each
+  private operation, job admission, worker start and result publication.
+- Fetches already in progress settle within the Git timeout and cannot publish through a
+  changed generation. Failed fetches remove only their owned temporary code. Worker stage
+  boundaries check known access changes, and publication is fenced transactionally.
+  Interrupting an active provider call/container, hosted leases and durable cancellation
+  remain F6 work. Private snapshots cannot currently be submitted to model workflows.
+- Rate limits return sanitized 429 responses with Retry-After; there is no immediate
+  rate-limit retry loop. Read-only 502/503/504 requests allow one retry; mutations do not.
 
-## Migrate, rotate and recover
+## Migrate, rotate and verify
 
-On first startup, the SQLite v1 database migrates transactionally to schema v3.
-Existing rows, events, report paths and hashes are preserved under `local-workspace`.
-They never become visible to a GitHub user. Local report discovery runs only in local
-mode. Switch `AUTH_MODE=local` on a loopback server to inspect those local reports;
-there is no automatic ownership claim/import endpoint.
+SQLite migrates transactionally to schema v4, preserving prior runs/events under their
+existing owners. Legacy local records remain `local-workspace` and are never claimed by
+a GitHub account. V4 adds access generations, delivery deduplication, snapshot descriptors
+and run authorization bindings. Queued GitHub jobs without a generation binding fail
+closed before execution; abandoned running jobs remain interrupted without paid replay.
 
-Back up `data/web/runs.sqlite3` using SQLite's backup API and retain the corresponding
-artifact tree before a deployment/migration. Keep encryption keys in a separate secure
-backup. Hosted backup/restore and deletion policies are not certified by this preview.
+Back up `data/web/runs.sqlite3` using SQLite's backup API and retain its artifact/private
+snapshot directories. Keep encryption keys separately. For key rotation, prepend the new
+Fernet key to `TOKEN_ENCRYPTION_KEYS`; successful reads reencrypt older records. Retain old
+keys until rotation completes or require reconnecting. App key rotation replaces the
+configured PEM file; new operations sign fresh short-lived JWTs. Hosted retention/deletion,
+backup/restore certification and private-code model consent remain F6 requirements.
 
-For rotation, prepend a new Fernet key to the comma-separated keyring and restart.
-New credentials use the first key; successful credential reads reencrypt older records.
-Keep old keys until every retained record has been rotated, or require reconnecting
-affected users. Losing all applicable keys requires reconnecting; there is no plaintext
-fallback. Fernet's [key rotation documentation](https://cryptography.io/en/latest/fernet/#cryptography.fernet.MultiFernet)
-describes the underlying authenticated-encryption mechanism.
-
-Controlled provider tests cover this flow. A real account sign-in and granted private
-repository check are still required; no real GitHub App credentials were available
-for the implementation receipt.
-The [F1 identity audit record](full-feature-development.md#f1-identity-follow-up) records
-the October 28 cookie/expiry/replay, populated cross-owner resource, refresh/disconnect race,
-migration rollback/retry and desktop/mobile account-switch checks. This follow-up
-does not add a schema migration or change local-mode configuration.
+The [current F2 verification record](full-feature-development.md#f2-local-private-access-lifecycle)
+uses controlled HTTP responses, disposable local Git repositories and isolated browsers.
+It does not establish real-account success. The remaining live exit check is: sign in with
+a development account, fetch one granted private SHA, reject an ungranted/foreign ID,
+rotate credentials, revoke/remove repository access, and confirm descriptors/work cannot
+reopen or publish under the old grant. Keep local mode until ready to perform that check.

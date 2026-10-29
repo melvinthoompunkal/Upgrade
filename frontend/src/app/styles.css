@@ -45,7 +45,7 @@
 
 @layer components {
   .app-shell { display: grid; grid-template-columns: 236px minmax(0, 1fr); min-height: 100dvh; }
-  .sidebar { @apply sticky top-0 flex flex-col border-r border-line; height: 100dvh; padding: 34px 20px 0; background: #f9fafc; }
+  .sidebar { @apply sticky top-0 flex flex-col border-r border-line; height: 100dvh; overflow-y: auto; padding: 34px 20px 0; background: #f9fafc; }
   .brand { @apply flex items-center font-semibold; gap: 10px; padding: 0 10px; font-size: 27px; letter-spacing: -1.2px; }
   .brand-mark { @apply flex items-center justify-center rounded-lg bg-accent text-white; width: 32px; height: 32px; }
   .brand-period { @apply text-accent; margin-left: -9px; }

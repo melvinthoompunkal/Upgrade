@@ -16,10 +16,13 @@ from app.api.storage import RunStore
 from app.api.worker import LocalWorker
 from app.auth.crypto import CredentialCipher
 from app.auth.github import GitHubClient
+from app.auth.installations import router as installation_router
 from app.auth.middleware import SessionMiddleware
 from app.auth.repositories import router as repository_router
 from app.auth.routes import router as auth_router
+from app.auth.snapshots import router as snapshot_router
 from app.auth.store import AuthStore
+from app.auth.webhooks import router as webhook_router
 from app.config import Settings
 from app.selection_artifacts import prepare_directory
 from app.tools.runner import PROJECT_ROOT
@@ -44,6 +47,7 @@ def create_app(
     async def lifespan(app: FastAPI):
         app.state.settings = settings
         app.state.artifact_root = data_root / "artifacts"
+        app.state.private_repository_root = data_root / "private-repositories"
         prepare_directory(app.state.artifact_root)
         app.state.runs = RunStore(data_root / "web/runs.sqlite3")
         if settings.auth_mode == "local":
@@ -53,7 +57,14 @@ def create_app(
                 app.state.runs, CredentialCipher(settings.token_encryption_keys.get_secret_value())
             )
             app.state.github = GitHubClient(settings)
-        app.state.worker = LocalWorker(app.state.runs, app.state.artifact_root, settings)
+        app.state.worker = LocalWorker(
+            app.state.runs,
+            app.state.artifact_root,
+            settings,
+            connection_check=(lambda owner: app.state.auth.current_access(owner, app.state.github))
+            if settings.auth_mode == "github"
+            else None,
+        )
         if start_worker:
             app.state.worker.start()
         yield
@@ -69,6 +80,9 @@ def create_app(
     )
     application.include_router(auth_router)
     application.include_router(repository_router)
+    application.include_router(webhook_router)
+    application.include_router(snapshot_router)
+    application.include_router(installation_router)
     application.include_router(router)
 
     @application.get("/health", response_model=HealthResponse)

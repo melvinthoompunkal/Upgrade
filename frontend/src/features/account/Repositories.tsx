@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { ArrowSquareOut, GithubLogo, MagnifyingGlass } from '@phosphor-icons/react'
-import { api, type RepositoryPage } from '../../api/client'
+import { api, type InstallationPage, type RepositoryPage } from '../../api/client'
 import { useWorkspace } from '../../app/workspace-context'
 import { Empty, ErrorState, Notice, Skeleton } from '../../components/ui'
+import { PinRepository } from './PinRepository'
 
 export function Repositories() {
   const { session } = useWorkspace()
@@ -13,6 +14,8 @@ export function Repositories() {
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
   const [revision, setRevision] = useState(0)
+  const [installations, setInstallations] = useState<InstallationPage | null>(null)
+  const [checking, setChecking] = useState(false)
   const query = params.toString()
   const cursor = Math.max(0, Number(params.get('cursor')) || 0)
   useEffect(() => {
@@ -58,6 +61,17 @@ export function Repositories() {
       setSyncing(false)
     }
   }
+  async function checkInstallations(number = 1) {
+    setChecking(true)
+    try {
+      setInstallations(await api<InstallationPage>(`/github/installations?page_number=${number}`))
+      setError('')
+    } catch (reason) {
+      setError((reason as Error).message)
+    } finally {
+      setChecking(false)
+    }
+  }
   return (
     <div className="page">
       <div className="page-heading flex-wrap">
@@ -65,7 +79,11 @@ export function Repositories() {
           <h1>Your repositories</h1>
           <p>Projects that both your GitHub account and the Upgrade app can access.</p>
         </div>
-        <button className="button-primary" onClick={() => void sync()} disabled={syncing}>
+        <button
+          className="button-primary"
+          onClick={() => void sync()}
+          disabled={syncing || session?.connection !== 'connected'}
+        >
           {syncing
             ? 'Syncing repositories…'
             : page?.sync_status === 'partial'
@@ -94,7 +112,46 @@ export function Repositories() {
             <ArrowSquareOut size={15} />
           </a>
         )}
+        <button
+          className="text-accent"
+          disabled={checking || session?.connection !== 'connected'}
+          onClick={() => void checkInstallations()}
+        >
+          {checking ? 'Checking installations…' : 'Check installations'}
+        </button>
       </div>
+      {installations && (
+        <div className="surface p-5 mb-5 text-sm" aria-live="polite">
+          {installations.items.length ? (
+            <ul className="grid gap-2">
+              {installations.items.map((installation) => (
+                <li key={installation.id}>
+                  {installation.account.login}:{' '}
+                  {installation.suspended
+                    ? 'Suspended'
+                    : !installation.contents_readable
+                      ? 'Contents permission required'
+                      : `${installation.repository_selection} repositories`}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>
+              No approved installations are accessible. Use Manage repository access; an
+              organization may require administrator approval.
+            </p>
+          )}
+          {installations.next_page && (
+            <button
+              className="button-secondary mt-4"
+              disabled={checking}
+              onClick={() => void checkInstallations(installations.next_page!)}
+            >
+              Next installations
+            </button>
+          )}
+        </div>
+      )}
       {error && (
         <div className="mb-5">
           <ErrorState message={error} retry={() => setRevision((value) => value + 1)} />
@@ -111,6 +168,14 @@ export function Repositories() {
               onChange={(event) => change('q', event.target.value)}
             />
           </div>
+          <input
+            aria-label="Repository owner"
+            className="max-w-44"
+            placeholder="Owner or organization"
+            maxLength={100}
+            value={params.get('owner') ?? ''}
+            onChange={(event) => change('owner', event.target.value)}
+          />
           <select
             aria-label="Repository visibility"
             className="max-w-44"
@@ -145,6 +210,7 @@ export function Repositories() {
                     {repo.archived ? 'Archived' : repo.default_branch} / Browse and index
                   </p>
                   <p className="text-muted mt-2 text-xs">{repo.support_reason}</p>
+                  {session?.private_fetch_enabled && <PinRepository repo={repo} />}
                 </div>
               </li>
             ))}

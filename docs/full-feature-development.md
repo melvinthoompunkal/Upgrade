@@ -13,8 +13,9 @@ retain design detail, while this document owns the current backlog.
 profile the bundled Python/HTTPX crawler and select or reject a proposed adaptation.
 Phases 1–3, Stage 4A, F0 remediation and F1 local identity boundaries are implemented.
 All fourteen findings from the three original audits have recorded repairs. GitHub
-authorization and repository indexing are a development preview. General discovery,
-private retrieval, production patching and final red-to-green verification remain pending.
+authorization, repository indexing and opt-in private snapshots are implemented locally;
+real-account validation remains pending. General discovery, production patching and final
+red-to-green verification remain pending.
 
 The planned product connects GitHub accounts, pins authorized source/target projects,
 offers a code-backed feature catalog with all/relevant browsing, and produces one
@@ -45,7 +46,7 @@ The broader roadmap supersedes the original MVP's account/private-access exclusi
 | Frontend and local API | React workspace, SQLite queue/history/events, shared workflow services, evidence inspector, tests/logs, exports and explicit diagnostics | One local API worker; hosted execution and adaptation UI are pending |
 | F0 foundations | S4-A01–A06 repaired; strict capture decoding, reliable JSON finalization, physical path checks and common CLI/API execution lock | Hard-stop cleanup and concurrent hostile path replacement remain outside this boundary |
 | F1 identity | Numeric GitHub identity, hashed expiring sessions, single-use PKCE state, encrypted credentials, CSRF, transactional refresh/disconnect/admission, owner-scoped results and drafts | Local mocked-provider verification is complete; real GitHub account validation remains deferred |
-| F2 connection preview | Configurable GitHub App sign-in flow, bounded resumable user/App repository intersection sync, search and visibility filters | No private Git broker/fetch, installation tokens, signed webhooks, provider revocation or current-access lifecycle |
+| F2 local connection | GitHub App sign-in/index, installation states/setup validation, opt-in private pinned snapshots, restricted installation tokens/ephemeral Git broker, signed webhook inbox and provider revocation; fresh access checks and publication fencing | Real-account sign-in/private-grant/rotation/revocation exit checks remain pending; private fetch defaults off; active-call interruption and hosted lifecycle remain F6 |
 | F3 public preflight | Role-qualified public snapshots, project-root prefixes and `python-static-v1` manifest inspection; urllib3/HTTPX examples inventoried | Browse/index only; no independent executable adapter or general analysis support |
 | F5 browsing foundations | Global server-side run-history search/paging, URL state, compact status polling and 200-event browser window | Persistent feature catalog, all/relevant queries and scale checks are pending |
 | F6 local admission | Workspace execution exclusion, four unfinished jobs per owner and sixteen globally, queued cancellation and cache invalidation on disconnect | Leases, fairness, in-flight cancellation, retention, private-code consent and hosted isolation remain pending |
@@ -176,6 +177,45 @@ refresh/key-rotation and owner-idempotency cases remain covered. See
 [identity boundaries](../backend/tests/test_identity_boundaries.py),
 [auth tests](../backend/tests/test_auth.py) and [account browser tests](../frontend/tests/account.spec.ts).
 
+### F2 local private-access lifecycle
+
+October 28 implementation extends F1 without enabling private retrieval in the user's
+configuration. The App ID, RSA key path, webhook secret and explicit private-fetch switch
+are consumed settings; [GitHub setup](github-setup.md) documents the exact names.
+This is an uncommitted follow-up based on `62bbda7345c4a75ec6603bacb91e7e70f5183728`;
+the machine manifest identifies its tested source bytes.
+
+| Boundary | Delivered behavior |
+|---|---|
+| Private Git retrieval | Owner-indexed numeric repository ID, fresh user/App checks, full SHA and role/root binding; repository-scoped Contents-read token, ephemeral askpass channel, credential-free remote/argv/environment and final token revocation attempt |
+| Private storage | Bare snapshots and inventories under `data/private-repositories`, outside run exports; owner-only descriptor API rechecks live access and never sends code to Meta |
+| Installation state | Bounded user-authorized installation pages, suspended/missing-permission states and setup callback validation; a foreign setup ID creates no grant |
+| Provider lifecycle | Raw-body HMAC, bounded payload, durable delivery-ID/body-hash deduplication and atomic invalidation; affected cache cleared, generation advanced and queued work canceled |
+| Disconnect | Revokes the user's provider authorization under the refresh/reconnect lock; local access settles even on provider failure, with explicit manual-revocation guidance; no shared App uninstall |
+| Current access | Fresh provider checks before private fetch, descriptor access, admission, worker start and publication; generation checks reject mid-fetch and stale-worker results |
+| Failure cleanup | Failed/invalidated fetches discard their owned code and broker helpers, including Windows read-only Git objects; incomplete descriptors never publish |
+| Migration | Transactional v4 adds access generations, webhook inbox, snapshot descriptors and run authorization bindings; previous owner/run/event records are preserved |
+
+Tests use controlled HTTP responses, generated test RSA keys, real disposable local Git
+repositories and isolated desktop/mobile Chrome. They cover token restriction/JWT signatures,
+foreign IDs, lost user grants, suspension, renamed repositories, fetch/publication races,
+provider-disconnect failure, webhook tamper/replay/rollback and credentials absent from
+helper files, Git arguments/environment and retained snapshots. A browser regression exposed
+offscreen mobile account actions; the navigation now scrolls.
+
+Machine evidence: [backend JUnit](../audit/full-feature-foundations/f2-connection-tests.xml),
+[focused lifecycle/identity JUnit](../audit/full-feature-foundations/f2-lifecycle-tests.xml),
+[desktop/mobile JUnit](../audit/full-feature-foundations/f2-browser-tests.xml) and
+[source/check manifest](../audit/full-feature-foundations/f2-connection-checks.json).
+These are local implementation checks, not a real GitHub private-fetch receipt.
+
+Private fetch is opt-in and remains off by default. The live F2 exit gate still requires
+development-account sign-in, a granted private SHA, ungranted/foreign rejection and real
+rotation/revocation checks. Snapshots remain browse/index only and cannot enter the existing
+model workflows. Active calls settle at their bounded timeout; immediate provider/container
+interruption, retention/deletion, private-code model consent and hosted isolation remain F6.
+The post-fetch storage check is not an OS disk quota during transfer.
+
 ### Remaining risks and incomplete work
 
 No original finding above remains recorded as open. These disclosed limits still need
@@ -188,8 +228,9 @@ development and release evidence:
   provenance, not semantic completeness; an examined file may have unread lines.
 - Scope/dependency gates currently assess a proposal. Actual diff, dependency and
   unchanged-test red-to-green checks remain F7 work.
-- Real GitHub sign-in/private grants remain unverified; provider revocation, current
-  private-access checks, private-code model consent and retention/deletion remain pending.
+- Real GitHub sign-in/private grants and provider rotation/revocation remain unverified;
+  local access checks are implemented. Private-code model consent, active-call interruption
+  and retention/deletion remain pending.
 - General discovery, independent executable project adapters, immutable catalog queries,
   assessed/unassessed counts and 10,000-row scale checks remain pending.
 - Historical tests do not establish a dependency-vulnerability review, every allowed model
@@ -197,10 +238,11 @@ development and release evidence:
 
 ## 3. Verification and provenance
 
-Results below are dated historical receipts. For this consolidation, source inspection
+Results below are dated receipts. For the original documentation consolidation, source inspection
 and a fresh hash comparison matched all 128 files in the latest F1 source manifest;
 the saved backend/browser JUnit digests and totals also matched. No application suite,
-browser, Docker, network fetch or paid inference was rerun for this documentation change.
+browser, Docker, network fetch or paid inference was rerun for that documentation-only change.
+The subsequent F2 implementation has fresh local checks listed below.
 
 | Milestone / date | Recorded result | Retained evidence |
 |---|---|---|
@@ -214,6 +256,7 @@ browser, Docker, network fetch or paid inference was rerun for this documentatio
 | First foundation pass, Oct 28 | 342 backend tests; later focused profiler 20 and selection 16; browser 34 plus 2 recorded-result checks; build/lint; fresh Docker baseline and public preflight | Tracked [checks](../audit/full-feature-foundations/checks.json), [backend JUnit](../audit/full-feature-foundations/backend-tests.xml), [browser JUnit](../audit/full-feature-foundations/browser-tests.xml), [recorded-result browser JUnit](../audit/full-feature-foundations/browser-live-tests.xml), [profiler](../audit/full-feature-foundations/profile-v2-tests.xml), [selection protocol](../audit/full-feature-foundations/workflow-v2-tests.xml) |
 | F0 follow-up, Oct 28 | 358 backend tests, zero failures/errors/skips; lint/format passed | Tracked [checks](../audit/full-feature-foundations/f0-follow-up-checks.json), [JUnit](../audit/full-feature-foundations/f0-follow-up-tests.xml) |
 | F1 follow-up, Oct 28 | 384 backend tests and 36 desktop/mobile browser tests, zero failures/errors/skips; TypeScript/build/lint/format passed | Tracked [checks](../audit/full-feature-foundations/f1-identity-checks.json), [backend JUnit](../audit/full-feature-foundations/f1-identity-tests.xml), [browser JUnit](../audit/full-feature-foundations/f1-browser-tests.xml) |
+| F2 local lifecycle, Oct 28 | 423 full backend checks; final 122 auth/lifecycle/API checks after the documented-endpoint and atomic-publication refinements; 42 desktop/mobile browser checks; zero failures/errors/skips; build/lint/format passed | Tracked [checks](../audit/full-feature-foundations/f2-connection-checks.json), [backend JUnit](../audit/full-feature-foundations/f2-connection-tests.xml), [final focused JUnit](../audit/full-feature-foundations/f2-lifecycle-tests.xml), [browser JUnit](../audit/full-feature-foundations/f2-browser-tests.xml) |
 
 Counts belong to their implementation states; they are neither additive across suites
 nor competing current totals. F0/F1 checks used controlled GitHub/Meta/Docker boundaries;
@@ -349,26 +392,28 @@ in their GitHub account. List the repositories both that user and the app can ac
 ### Credentials and configuration needed
 
 Current settings are `AUTH_MODE`, `APP_BASE_URL`, `GITHUB_CLIENT_ID`,
-`GITHUB_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `TOKEN_ENCRYPTION_KEYS` and the existing
+`GITHUB_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `GITHUB_APP_ID`, `GITHUB_PRIVATE_KEY_PATH`,
+`GITHUB_WEBHOOK_SECRET`, `GITHUB_PRIVATE_FETCH_ENABLED`, `TOKEN_ENCRYPTION_KEYS` and the existing
 Meta settings; see [GitHub setup](github-setup.md) for exact consumed names and rotation.
-The table distinguishes implemented configuration from remaining F2 proposals.
+The table describes implemented local configuration; private fetch defaults off.
 Credential values belong only in local configuration or the deployment secret store.
 
 | Item | Who supplies it | Purpose and storage |
 |---|---|---|
 | `AUTH_MODE` | Operator; implemented | `local` default or configured GitHub preview |
-| `GITHUB_APP_ID` | App owner; proposed F2 setting | App authentication for installation-token support |
+| `GITHUB_APP_ID` | App owner | Numeric App identity for installation tokens |
 | `GITHUB_APP_SLUG` | App owner | Non-secret identifier used to build installation/settings links |
 | `GITHUB_CLIENT_ID` | App registration | Non-secret identifier used by the authorization flow |
 | `GITHUB_CLIENT_SECRET` | App owner generates it | Backend-only authorization-code exchange/refresh credential |
-| Proposed private-key path or secret-store reference | App owner generates a private key | Backend signs app JWTs to obtain installation tokens; keep key outside repository/artifacts |
-| Proposed `GITHUB_WEBHOOK_SECRET` | Operator generates it | Authenticate webhook deliveries; separate from client/session secrets |
+| `GITHUB_PRIVATE_KEY_PATH` | App owner generates a private key | Backend signs RS256 App JWTs; keep the PEM outside repository/artifacts |
+| `GITHUB_WEBHOOK_SECRET` | Operator generates it | Authenticate webhook deliveries; separate from client/session secrets |
+| `GITHUB_PRIVATE_FETCH_ENABLED` | Operator; false by default | Explicitly enables private snapshot retrieval after setup |
 | `TOKEN_ENCRYPTION_KEYS` | Operator; implemented | Newest-first authenticated-encryption keyring; retained older keys support rotation |
 | `APP_BASE_URL` | Operator; implemented | Validated origin; callback derived as `/api/auth/github/callback`; no separate `GITHUB_CALLBACK_URL` setting |
 | `MODEL_API_KEY` | Operator; existing setting | Meta inference only; not a GitHub credential and never forwarded to target runners |
 | Session identifier and CSRF secret | Generated by Upgrade | Opaque random per-session browser credential; store only session-token hashes server-side |
 | GitHub user/refresh tokens | Issued after each user's authorization | Encrypted backend-only credentials; never returned in API DTOs |
-| Installation access token | Proposed F2 broker mints as needed | Short-lived, selected-repository credential for approved background fetches |
+| Installation access token | F2 broker mints per fetch | Short-lived, one-repository Contents-read credential; discarded and revocation attempted afterward |
 
 A separate OAuth App is unnecessary for this design. A user-supplied `GITHUB_TOKEN`
 is unnecessary for normal sign-in. If a developer-only PAT fallback is later needed,
@@ -407,7 +452,8 @@ just because the app has a write permission.
 ### Login and session flow
 
 The local flow is implemented and tested with controlled provider responses. Real
-GitHub account validation and provider-side disconnect/revocation remain F2 exit work.
+GitHub account validation remains F2 exit work. Provider disconnect/revocation is
+implemented locally and verified with controlled responses.
 
 1. `GET /api/auth/github/start` creates a short-lived, single-use server-side auth
    transaction containing random state, PKCE verifier, expiry and an allowlisted
@@ -431,8 +477,8 @@ GitHub account validation and provider-side disconnect/revocation remain F2 exit
    infinite retry loop. Keep application-session expiry independent of provider expiry.
 8. Separate **Sign out** from **Disconnect GitHub**. Sign out invalidates that browser
    session. Local disconnect removes stored authorization/cache, blocks admission and
-   cancels queued work transactionally. Provider revocation, in-flight cancellation
-   and deletion options remain required F2/F6 work.
+   cancels queued work transactionally. Provider revocation is attempted with explicit
+   failure guidance; active-call cancellation and deletion options remain F6 work.
    It must not uninstall an organization's shared app for everybody.
 
 Implemented local policy: auth transactions expire after ten minutes; application
@@ -442,8 +488,8 @@ from proxy/access logs. Login, list browsing and result reopening must not trigg
 
 ### Installation, repository discovery and private Git access
 
-Repository intersection sync/search is implemented as a preview. Private retrieval,
-current entitlement checks and provider lifecycle handling below remain requirements.
+Repository intersection sync/search and the local private-access lifecycle are implemented.
+The requirements below describe that design and the remaining live/F6 release checks.
 
 - Use user-authorized `GET /user/installations` and
   `GET /user/installations/{installation_id}/repositories` to establish the user's
@@ -706,10 +752,13 @@ name the cause and one useful next action. A provider failure is not an empty ca
 ### API boundaries: implemented versus planned
 
 Implemented routes include session/auth, `/api/auth/disconnect`, repository list/sync,
+`/api/github/installations`, `/api/github/setup`, `/api/repository-snapshots`,
+`/api/repository-snapshots/{id}` and `/api/webhooks/github`,
 capabilities/targets, run submission/history/detail, compact `/api/runs/{id}/status`,
 events, references and artifact list/text/download. The table also describes planned
-contracts; `/progress`, installations/refs/snapshot/catalog/relevance/cancel/webhook/
-adaptation/PR endpoints are not implemented. Generate frontend types from actual
+contracts. Installations/setup, snapshot create/descriptor and signed webhook routes now
+exist. `/progress`, refs, catalog/relevance/cancel/adaptation/PR endpoints remain planned.
+Generate frontend types from actual
 OpenAPI, and preserve CLI/domain contracts through versioned adapters.
 
 | Route | Purpose |
@@ -721,7 +770,7 @@ OpenAPI, and preserve CLI/domain contracts through versioned adapters.
 | `GET /api/repositories?q=...&owner=...&cursor=...` | Paginated authorized repository index and sync completeness |
 | `POST /api/repositories/sync` | Idempotent bounded refresh, without model inference |
 | `GET /api/repositories/{id}/refs` | Bounded authorized branch/tag selection |
-| `POST /api/repository-snapshots` | Resolve selected ref and project root to an authorized immutable input |
+| Implemented `POST /api/repository-snapshots` | Pin a full SHA and project root to an authorized browse/index snapshot; branch/tag resolution remains planned |
 | `POST /api/catalogs` | Explicit budgeted discovery/index job for a source snapshot |
 | `GET /api/catalogs/{id}` | Revision, progress, counts, coverage, limits and versions |
 | `GET /api/catalogs/{id}/features?mode=all&assessment_id=...&q=...&cursor=...` | Bounded summary page; server filters/counts; mode accepts `all` or `relevant` |
@@ -782,7 +831,7 @@ scope. The example's remaining matching entries are available through its cursor
 
 ### Persistence and migrations
 
-Transactional schema v3, owner-scoped runs/idempotency, auth records and repository
+Transactional schema v4, owner-scoped runs/idempotency, auth records and repository
 cache/sync tables are implemented. F1 covers migration rollback/retry and rejection
 of future schemas. Extend explicit migrations for catalog, grants and job lifecycle;
 back up and verify existing data before further schema changes.
@@ -952,7 +1001,7 @@ still require the listed prerequisites.
 |---|---|---|---|---|
 | F0: reconcile and repair foundations | Complete locally | Close S4-A01–A06, canonical failure/capture handling, truthful counts/status docs and common execution ownership | Existing implementation | Six regression reproductions closed; CLI/API sanitized failures and preservation checks |
 | F1: identity and owner boundaries | Complete locally | Migrations, users/sessions, auth transactions, encrypted credentials, CSRF and owner-aware existing APIs/artifacts | F0 for release | Two users cannot read each other's data; legacy reports stay private; session/replay tests |
-| F2: GitHub connection | Partial preview | App registration guide/config, authorization, install/reconnect states, repository sync/picker, private fetch broker and revocation | F1 | Real development-account sign-in; granted private repo fetch; ungranted/foreign IDs rejected; token rotation/revocation checks |
+| F2: GitHub connection | Implemented locally; live exit gate pending | App guide/config, authorization, installation states, repository picker, opt-in private fetch broker, webhook/revocation and access fencing | F1 | Controlled-provider/Git/browser checks recorded; real development-account sign-in, granted private fetch and provider rotation/revocation still required |
 | F3: supported real repositories | Partial static preflight | Generic snapshot/root contracts, capability levels and versioned adapters; sample becomes optional example | F0, F2 | Independent supported Python target/source analyzed without crawler hard-coding; unsupported projects explained before inference |
 | F4: persistent source catalog | Pending | Candidate discovery, hierarchy/deduplication, bounded corroboration, revisioned coverage/cache and continuation | F3 | Multiple independently supported features, partial/failure cases and paginated immutable catalog |
 | F5: relevance and scalable browsing | History/polling foundations only | Goal/target assessments, all/relevant modes, server query/filter/sort, lazy details, URL state and compact polling | F4 | Honest assessed/unassessed/eligible counts; zero model calls on view changes; scale/accessibility checks |
@@ -1032,11 +1081,12 @@ Mark remaining unsupported profiles and untested provider/deployment combination
 
 ## 15. Next implementation and documentation policy
 
-Next in the connected-analysis sequence is the remaining **F2 private-access lifecycle**:
-controlled credential broker, installation tokens, signed webhooks, provider revocation,
-current-access checks and safe in-flight handling. Real development-account verification
-remains deferred while local mode is preferred; independent F3 adapter work can proceed
-on public snapshots. Do not enable private retrieval or hosting on preview evidence alone.
+The **F2 private-access lifecycle is implemented locally**. Its remaining exit work is
+real development-account sign-in, granted/ungranted private-fetch checks and provider
+rotation/revocation validation. Private retrieval remains off by default while local mode
+is preferred. The next independent coding package is F3's supported-project adapter on
+public snapshots; active-call interruption and hosted lifecycle remain F6. Do not treat
+controlled-provider receipts as live private-access or hosting evidence.
 
 F3 must then demonstrate an independent supported project without crawler assumptions;
 F4/F5 add persistent discovery and honest all/relevant browsing. F6 is a release dependency

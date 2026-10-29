@@ -11,7 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from app.api.migrations import LOCAL_OWNER
 from app.api.storage import RunStore
 from app.auth.crypto import CredentialCipher, ReconnectRequired
-from app.auth.github import GitHubClient, GitHubError, GitHubTokens, GitHubUser
+from app.auth.github import GitHubClient, GitHubDenied, GitHubError, GitHubTokens, GitHubUser
 
 SESSION_COOKIE = "upgrade_session"
 AUTH_COOKIE = "upgrade_auth"
@@ -110,7 +110,7 @@ class AuthStore:
             db.execute(
                 """INSERT INTO users(id,github_id,login,name,connected) VALUES (?,?,?,?,1)
                 ON CONFLICT(github_id) DO UPDATE SET login=excluded.login,
-                name=excluded.name,connected=1""",
+                name=excluded.name,connected=1,access_epoch=users.access_epoch+1""",
                 (owner, user.id, user.login, user.name),
             )
             db.execute(
@@ -198,7 +198,7 @@ class AuthStore:
 
     def _disconnect(self, db, owner: str) -> None:
         db.execute("DELETE FROM credentials WHERE user_id=?", (owner,))
-        db.execute("UPDATE users SET connected=0 WHERE id=?", (owner,))
+        db.execute("UPDATE users SET connected=0,access_epoch=access_epoch+1 WHERE id=?", (owner,))
         db.execute("DELETE FROM repository_sync WHERE owner_id=?", (owner,))
         db.execute("DELETE FROM repository_cache WHERE owner_id=?", (owner,))
         self.runs.cancel_queued_in(db, owner)
@@ -207,3 +207,47 @@ class AuthStore:
         with self.runs.connect() as db:
             db.execute("BEGIN IMMEDIATE")
             self._disconnect(db, owner)
+
+    def disconnect_provider(self, owner: str, github: GitHubClient) -> str:
+        # Keep provider revocation and local cleanup under the refresh/reconnect lock.
+        # A failed provider call still removes local access and explicitly reports that
+        # the remote grant must be removed in GitHub settings.
+        with self.runs.connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            status = "revoked"
+            try:
+                github.revoke_authorization(self._credential_token(db, owner, github))
+            except (GitHubError, ReconnectRequired):
+                status = "manual_revocation_required"
+            self._disconnect(db, owner)
+        return status
+
+    def current_access(self, owner: str, github: GitHubClient) -> int:
+        with self.runs.connect() as db:
+            row = db.execute("SELECT * FROM users WHERE id=?", (owner,)).fetchone()
+        if not row or not row["connected"]:
+            raise ReconnectRequired("Reconnect GitHub before continuing.")
+        epoch = row["access_epoch"]
+        try:
+            profile = github.profile(self.access_token(owner, github))
+            if profile.id != row["github_id"]:
+                raise GitHubDenied("GitHub identity changed. Reconnect GitHub.")
+        except GitHubDenied:
+            with self.runs.connect() as db:
+                db.execute("BEGIN IMMEDIATE")
+                current = db.execute(
+                    "SELECT access_epoch FROM users WHERE id=?", (owner,)
+                ).fetchone()
+                if current and current[0] == epoch:
+                    self._disconnect(db, owner)
+            raise ReconnectRequired("GitHub authorization was revoked. Reconnect GitHub.") from None
+        self.check_epoch(owner, epoch)
+        return epoch
+
+    def check_epoch(self, owner: str, epoch: int) -> None:
+        with self.runs.connect() as db:
+            row = db.execute(
+                "SELECT connected,access_epoch FROM users WHERE id=?", (owner,)
+            ).fetchone()
+        if not row or not row["connected"] or row["access_epoch"] != epoch:
+            raise ReconnectRequired("GitHub access changed. Reconnect or sync before retrying.")
