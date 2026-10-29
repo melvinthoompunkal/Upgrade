@@ -5,6 +5,7 @@ import subprocess
 from pathlib import Path
 
 from app.errors import RepositoryError
+from app.jobs.processes import run_process
 
 
 class Git:
@@ -73,14 +74,13 @@ class Git:
             *args,
         ]
         try:
-            result = subprocess.run(
+            result = run_process(
                 command,
                 cwd=cwd,
                 env={**self.env, **(credential_channel or {})},
                 input=input,
-                capture_output=True,
                 timeout=timeout,
-                check=False,
+                max_bytes=max_bytes,
             )
         except (OSError, subprocess.TimeoutExpired):
             raise RepositoryError("Git operation unavailable or exceeded its timeout.") from None

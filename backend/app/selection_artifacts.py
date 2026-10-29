@@ -21,6 +21,9 @@ def prepare_directory(directory: Path) -> Path:
     for part in (directory.absolute(), *directory.absolute().parents):
         if part.is_symlink() or part.is_junction():
             raise EvidenceError("Artifact directories must not contain links or junctions.")
+    from app.jobs.resources import own_artifact_directory
+
+    own_artifact_directory(directory)
     directory.mkdir(parents=True, exist_ok=True)
     return physical_root(directory)
 
@@ -32,9 +35,15 @@ class ArtifactStore:
         self.hashes: dict[str, str] = {}
 
     def publish(self, artifact_id: str, content: bytes) -> ArtifactDigest:
+        from app.jobs.control import checkpoint
+
+        checkpoint()
         validate_repo_path(artifact_id)
         root = prepare_directory(self.directory)
         path = root / artifact_id
+        from app.jobs.resources import check_artifact_size
+
+        check_artifact_size(root, len(content), replacing=path)
         prepare_directory(path.parent)
         if path.is_symlink() or path.is_junction() or (path.exists() and not path.is_file()):
             raise EvidenceError("Artifact destination must be a regular file.")
@@ -67,6 +76,26 @@ class ArtifactStore:
     def adopt(self, artifact_id: str) -> ArtifactDigest:
         digest = hashlib.sha256(read_regular_file(self.directory, artifact_id)).hexdigest()
         self.hashes[artifact_id] = digest
+        from app.jobs.control import CURRENT
+
+        context = CURRENT.get()
+        if context and context.run_id and context.artifact_root:
+            relative = self.directory.absolute().relative_to(context.artifact_root.absolute())
+            if len(relative.parts) == 1:
+                with context.store.connect() as db:
+                    from app.jobs.control import fence_in
+
+                    db.execute("BEGIN IMMEDIATE")
+                    fence_in(db)
+                    db.execute(
+                        "INSERT OR REPLACE INTO published_artifacts VALUES (?,?,?,?)",
+                        (
+                            context.run_id,
+                            relative.as_posix(),
+                            artifact_id,
+                            digest,
+                        ),
+                    )
         return ArtifactDigest(artifact_id=artifact_id, sha256=digest)
 
     def verify(self) -> None:

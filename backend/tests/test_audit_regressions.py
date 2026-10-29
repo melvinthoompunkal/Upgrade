@@ -129,6 +129,9 @@ def test_each_stream_io_failure_is_owned_and_reported(tmp_path, monkeypatch, fil
         def wait(self, timeout=None):
             return 0
 
+        def poll(self):
+            return 0
+
         def kill(self):
             pass
 

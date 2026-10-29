@@ -458,7 +458,7 @@ def test_worker_dispatch_publication_and_run_projection(
 
     monkeypatch.setattr(relevance_workflow, "MetaClient", client_factory)
     worker = LocalWorker(store.runs, tmp_path / "artifacts", settings())
-    worker.process(store.runs.row(view.run_id))
+    worker.process(store.runs.claim())
     row = store.runs.row(view.run_id)
     assert json.loads(row["summary"])["outcome"] == "complete"
     detail = RunArtifacts(worker.root, row).detail()

@@ -3,7 +3,7 @@
 import sqlite3
 
 LOCAL_OWNER = "local-workspace"
-SCHEMA_VERSION = 7
+SCHEMA_VERSION = 8
 
 
 def migrate(db: sqlite3.Connection) -> None:
@@ -115,4 +115,7 @@ def migrate(db: sqlite3.Connection) -> None:
         assessment_id TEXT NOT NULL, PRIMARY KEY(owner_id,key))""")
     db.execute("""CREATE INDEX IF NOT EXISTS catalog_category_page ON catalog_features(
         catalog_id,revision,category,name,feature_id)""")
+    from app.jobs.schema import migrate_jobs
+
+    migrate_jobs(db)
     db.execute(f"PRAGMA user_version={SCHEMA_VERSION}")

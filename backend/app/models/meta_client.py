@@ -11,7 +11,9 @@ from pydantic import BaseModel, ValidationError
 
 from app.config import META_BASE_URL, Settings
 from app.contracts import ModelCall, ModelResult, TokenUsage
-from app.errors import ConfigurationError, MetaRequestError, ModelOutputError
+from app.errors import ConfigurationError, GraftError, MetaRequestError, ModelOutputError
+from app.jobs.privacy import check_transmission
+from app.jobs.quotas import charge, metric
 from app.models.budget import ModelBudget
 from app.models.schema import response_format
 
@@ -59,8 +61,14 @@ class MetaClient:
         )
         if not 1 <= output_limit <= 8000:
             raise ConfigurationError("Model output-token limit must be between 1 and 8000.")
+        check_transmission(messages)
         for attempt in range(1, self._settings.meta_max_retries + 2):
             self.budget.reserve()
+            try:
+                charge("model_attempts")
+            except GraftError:
+                self.budget.requests -= 1
+                raise
             entry = {"stage": stage, "attempt": attempt, "status": "started", "usage": None}
             self.attempts.append(entry)
             attempt_started = perf_counter()
@@ -73,6 +81,7 @@ class MetaClient:
                     **options,
                 )
             except APIError as exc:
+                metric("model_unknown_usage")
                 entry["status"] = (
                     "http_error" if isinstance(exc, APIStatusError) else "transport_error"
                 )
@@ -98,6 +107,10 @@ class MetaClient:
                         "Could not read a valid Meta API response. Check network/proxy settings."
                     )
                 raise MetaRequestError(detail) from None
+            except asyncio.CancelledError:
+                entry["status"] = "cancelled_usage_unknown"
+                metric("model_unknown_usage")
+                raise
             finally:
                 entry["elapsed_ms"] = round((perf_counter() - attempt_started) * 1000)
             break
@@ -121,10 +134,14 @@ class MetaClient:
                 ),
             )
         except (ValidationError, ValueError):
+            metric("model_unknown_usage")
             entry["status"] = "invalid_metadata"
             raise ModelOutputError("Meta response metadata is missing or inconsistent.") from None
         self.calls.append(call)
         self.budget.record(call)
+        charge("model_input_tokens", call.usage.prompt_tokens, actual=True)
+        charge("model_output_tokens", call.usage.completion_tokens, actual=True)
+        metric("model_latency_ms", call.elapsed_ms)
         entry.update(status="received", response_id=call.response_id, usage=call.usage.model_dump())
         if completion.model != self._settings.meta_model_id:
             raise ModelOutputError("Meta returned a different model than configured.", call=call)

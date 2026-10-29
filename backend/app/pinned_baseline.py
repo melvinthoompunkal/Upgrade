@@ -294,9 +294,9 @@ def main() -> int:
     )
     args = parser.parse_args()
     try:
-        from app.execution import ProcessLock
+        from app.execution import cli_execution
 
-        with ProcessLock(PROJECT_ROOT / "data/execution.lock"):
+        with cli_execution(PROJECT_ROOT):
             directory = PROJECT_ROOT / "data/artifacts" / f"pinned-baseline-{uuid4().hex}"
             prepare_directory(directory)
             manager = RepositoryManager(directory / "repositories")

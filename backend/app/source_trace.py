@@ -13,7 +13,7 @@ from pydantic import ValidationError
 
 from app.config import Settings
 from app.errors import EvidenceError, GraftError
-from app.execution import ProcessLock
+from app.execution import cli_execution
 from app.models.meta_client import MetaClient
 from app.report_publication import publish_json_report
 from app.selection_artifacts import ArtifactStore, prepare_directory
@@ -220,7 +220,7 @@ def main() -> int:
     )
     args = parser.parse_args()
     try:
-        with ProcessLock(PROJECT_ROOT / "data/execution.lock"):
+        with cli_execution(PROJECT_ROOT):
             report, path = asyncio.run(record_source_trace(TraceInputs(**vars(args))))
     except (GraftError, OSError, ValueError) as error:
         print(

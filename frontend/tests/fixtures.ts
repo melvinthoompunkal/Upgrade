@@ -26,6 +26,7 @@ export const fixtureRun: Run = {
   kind: 'fit_select',
   title: 'Test fixture: crawler recovery',
   status: 'finished',
+  cancel_requested: false,
   stage: 'complete',
   outcome: 'selected',
   created_at: '2026-10-27T16:20:00Z',
@@ -149,6 +150,7 @@ export const capabilities: Capabilities = {
   checked_at: '2026-10-28T16:00:00Z',
   image_receipt_present: true,
   worker_available: true,
+  diagnostics_allowed: true,
   patch_supported: false,
 }
 const target: Target = {

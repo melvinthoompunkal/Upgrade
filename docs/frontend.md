@@ -127,8 +127,9 @@ submission keys. OS locks exclude another API worker and concurrent CLI executio
 The execution lock is always the workspace's `data/execution.lock`, including when
 the API stores reports in a custom data directory.
 The worker waits before claiming while a CLI owns execution. Explicit workflow context
-keeps settings and report roots consistent between CLI/API adapters. Graceful shutdown
-drains its active workflow. On restart,
+keeps settings and report roots consistent between CLI/API adapters. F6 adds leased claims,
+independent heartbeats and fair owner scheduling. Shutdown interrupts its active workflow
+and waits for owned cleanup. On restart,
 running jobs whose prior worker stopped are marked interrupted; paid analysis is
 never replayed automatically. Queued work can be claimed normally. Run IDs in the
 API identify queue records; controller report IDs remain in exported provenance.
@@ -182,11 +183,60 @@ This delivers the local frontend and its browser bridge, not completion of every
 package in the original integration plan. Stage 4 audit findings U0 are repaired;
 the [consolidated audit record](full-feature-development.md#stage-4-and-f0-closure)
 records the original findings, reproductions and verification.
-The Phase 5 planner/Implementer/Verifier, expanded feature catalog, public targets,
-and arbitrary local targets remain unavailable.
+The planner/Implementer/Verifier and arbitrary local targets remain unavailable. Public
+Python projects use the documented structural/native-suite profiles and saved F4/F5
+catalog/relevance workflows; these do not produce verified adaptations.
 
 The worker is a thread owned by the local API process, rather than a distributed
 worker service. CLI entry points now share the API execution lock. Hard process
-termination does not perform Docker cleanup; inspect and stop any owned leftover
-runner container before starting a replacement execution. Do not treat SQLite
+termination can leave Docker resources; F6 records generated container ownership before
+creation and reconciles registered leftovers under the execution lock before new work.
+Failed cleanup stops worker admission and retains its recovery record. Do not treat SQLite
 queue persistence as resumable model execution or a production deployment system.
+
+## Local operations and recovery
+
+Run workspaces have **Cancel run**. Queued cancellation settles immediately; running
+cancellation waits for the controller to interrupt owned work and preserve intact,
+registered evidence. Closing a page keeps its job running. A completed/canceled/interrupted
+job never automatically replays inference. Start a new run or explicit continuation to retry.
+
+**System checks → Saved data and limits** reviews this account's queue/storage reservations
+and daily provider usage. Deletion requires explicit confirmation and no unfinished jobs.
+It removes saved runs, catalogs, assessments, pinned code, exports and consent records,
+with a deletion receipt. It preserves sign-in and current daily usage counters. Other
+accounts' data is unaffected. Private snapshots expire after 30 days by default; public
+workspace data expires after 30 days without a new saved operation. Active jobs delay cleanup.
+
+The local worker periodically applies retention while idle. Settings are documented in
+[`backend/.env.example`](../backend/.env.example). `DEPLOYMENT_MODE` accepts only `local`.
+Paid Meta diagnostics in GitHub mode require an operator ID grant; normal analyses use
+their own disclosed allowance. Private snapshot model transmission remains disabled.
+
+Stop the backend before using the offline operator commands, from the project root:
+
+```powershell
+uv run --project backend --locked python -m app.jobs.operations metrics
+uv run --project backend --locked python -m app.jobs.operations reconcile
+uv run --project backend --locked python -m app.jobs.operations prune
+uv run --project backend --locked python -m app.jobs.operations backup --destination C:\UpgradeBackups\2026-10-29
+uv run --project backend --locked python -m app.jobs.operations restore --source C:\UpgradeBackups\2026-10-29 --destination C:\UpgradeRestore\2026-10-29
+```
+
+Use `--data-root` for a custom API data directory. Both worker and workspace execution locks
+must be available. Metrics contain IDs/counts/timing/storage metadata, without source text
+or credentials. Reconcile interrupts abandoned claims, removes exact registered containers
+and discards unfinished snapshot operations; it does not replay inference. Prune applies
+retention and preserves unfinished owner jobs.
+
+Backup copies both databases plus managed code/artifact trees and records file hashes;
+keep backups private, outside source control, and expire them within 30 days. Keep token
+encryption/App keys separately. Restore validates hashes and SQLite integrity into a new
+directory, settles unfinished jobs as interrupted, and reapplies newer deletion receipts
+from `--data-root`. Retain that current directory/receipts when restoring older copies.
+Backups older than 30 days are rejected. Inspect the restored data and restart using that
+data root only after validation; the live directory is never overwritten by restore.
+
+These commands and controlled tests establish the local boundary. Real hard-stop/provider
+cleanup, hosted isolation, production backup/key recovery and deployment rollback still
+need deployment-specific validation. See [the F6 record](full-feature-development.md#f6-local-implementation).

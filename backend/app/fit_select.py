@@ -13,7 +13,7 @@ from pydantic import ValidationError
 
 from app.config import Settings
 from app.errors import EvidenceError, GraftError
-from app.execution import ProcessLock
+from app.execution import cli_execution
 from app.fit_matcher import MATCH_PROMPT_VERSION, SOURCE_POLICY_VERSION, FitMatcher
 from app.models.budget import ModelBudget
 from app.models.meta_client import MetaClient
@@ -386,7 +386,7 @@ def main() -> int:
     )
     try:
         inputs = SelectionInputs(**vars(parser.parse_args()))
-        with ProcessLock(PROJECT_ROOT / "data/execution.lock"):
+        with cli_execution(PROJECT_ROOT):
             report, path = asyncio.run(record_fit_selection(inputs))
     except (GraftError, OSError, ValueError, TypeError) as exc:
         print(

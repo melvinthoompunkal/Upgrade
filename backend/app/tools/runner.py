@@ -11,6 +11,9 @@ from threading import Event, Thread
 from time import perf_counter
 from uuid import uuid4
 
+from app.jobs.containers import forget_container, register_container
+from app.jobs.control import checkpoint
+from app.jobs.processes import run_process
 from app.tools.runner_artifacts import (
     MAX_ARTIFACT_BYTES,
     RunnerError,
@@ -43,14 +46,17 @@ CONTAINER_TIMEOUT_SECONDS = 60
 
 def docker(*arguments: str) -> str:
     try:
-        result = subprocess.run(
-            ["docker", *arguments], capture_output=True, text=True, timeout=20, check=False
+        result = run_process(
+            ["docker", *arguments],
+            timeout=20,
+            max_bytes=2 * 1024 * 1024,
+            cancellable=arguments[0] not in {"rm", "kill", "inspect"},
         )
     except (OSError, subprocess.TimeoutExpired):
         raise RunnerError("Docker Desktop is unavailable or did not respond in time.") from None
     if result.returncode:
         raise RunnerError("Docker operation failed. Check Docker Desktop and the prepared image.")
-    return result.stdout.strip()
+    return result.stdout.decode("utf-8", errors="replace").strip()
 
 
 def prepared_image(receipt_path: Path) -> str:
@@ -207,6 +213,7 @@ def _capture_streams(name: str, timeout: float, outputs: dict) -> tuple[int, str
         try:
             deadline = perf_counter() + timeout
             while True:
+                checkpoint()
                 if overflow.is_set() or failed.is_set():
                     _stop_container(name)
                     process.kill()
@@ -226,6 +233,10 @@ def _capture_streams(name: str, timeout: float, outputs: dict) -> tuple[int, str
             process.kill()
             process.wait(timeout=10)
         finally:
+            if process.poll() is None:
+                _stop_container(name)
+                process.kill()
+                process.wait(timeout=10)
             if overflow.is_set() or failed.is_set():
                 _stop_container(name)
             for thread in threads:
@@ -253,6 +264,7 @@ def run_suite(
     results.mkdir(mode=0o777)
     results.chmod(0o777)
     name = f"graft-test-{uuid4().hex}"
+    checkpoint()
     command = container_command(
         name=name,
         suite=suite,
@@ -261,6 +273,7 @@ def run_suite(
         acceptance=acceptance,
         results=results,
     )
+    resource = register_container(name)
     started = perf_counter()
     cases = ()
     status = "error"
@@ -289,9 +302,14 @@ def run_suite(
         try:
             docker("rm", "--force", name)
         except RunnerError:
-            raise RunnerError(
-                f"Could not remove runner container {name}; remove it manually."
-            ) from None
+            # A canceled/failed create may never have produced a container. Confirm absence
+            # using only this generated exact name; an unavailable daemon remains a failure.
+            remaining = docker("ps", "-a", "--filter", f"name=^/{name}$", "--format", "{{.Names}}")
+            if remaining:
+                raise RunnerError(
+                    f"Could not remove runner container {name}; remove it manually."
+                ) from None
+        forget_container(resource)
     # Keep bounded logs useful even when parsing the test report failed.
     for path in ("stdout.txt", "stderr.txt", "results/junit.xml"):
         if (directory / path).exists():

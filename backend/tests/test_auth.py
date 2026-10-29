@@ -44,6 +44,7 @@ def authenticated_app(tmp_path):
         github_client_id="fixture-client-id",
         github_client_secret="fixture-client-secret",
         github_app_slug="upgrade-fixture",
+        operator_github_ids=(67, 312),
         token_encryption_keys=Fernet.generate_key().decode(),
     )
     state = {"id": 67, "login": "river-builds", "requests": []}

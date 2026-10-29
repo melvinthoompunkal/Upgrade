@@ -13,6 +13,7 @@ import { useWorkspace } from '../../app/workspace-context'
 import { Empty, ErrorState, Notice, RunBadge, Skeleton } from '../../components/ui'
 import { Inspector } from '../evidence/Inspector'
 import { useRun } from './useRun'
+import { RunActions } from './RunActions'
 import { Overview } from './Overview'
 import { Features } from '../evidence/Features'
 import { Evidence } from '../evidence/Evidence'
@@ -129,6 +130,7 @@ export function RunWorkspace() {
           </Notice>
         </div>
       )}
+      <RunActions key={run.id} run={run} />
       {(run.warnings ?? []).map((warning) => (
         <div key={warning} className="my-4">
           <Notice>{warning}</Notice>

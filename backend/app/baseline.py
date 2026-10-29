@@ -111,9 +111,9 @@ def main() -> int:
     )
     args = parser.parse_args()
     try:
-        from app.execution import ProcessLock
+        from app.execution import cli_execution
 
-        with ProcessLock(PROJECT_ROOT / "data/execution.lock"):
+        with cli_execution(PROJECT_ROOT):
             report, path = record_baseline(args.image_receipt)
     except (GraftError, OSError, ValueError) as error:
         detail = str(error) if isinstance(error, GraftError) else "Unable to prepare runner files."

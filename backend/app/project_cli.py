@@ -8,7 +8,7 @@ from pydantic import ValidationError
 from app.api.migrations import LOCAL_OWNER
 from app.api.storage import RunStore
 from app.errors import GraftError
-from app.execution import ProcessLock
+from app.execution import cli_execution
 from app.project_analysis import record_project_analysis
 from app.project_contracts import ProjectAnalysisRequest, ProjectRequest
 from app.projects import ProjectStore
@@ -45,7 +45,7 @@ def main() -> int:
             )
             if url
         ]
-        with ProcessLock(PROJECT_ROOT / "data/execution.lock"):
+        with cli_execution(PROJECT_ROOT):
             store = ProjectStore(
                 RunStore(PROJECT_ROOT / "data/web/runs.sqlite3"), PROJECT_ROOT / "data/projects"
             )

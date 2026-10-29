@@ -7,6 +7,7 @@ from starlette.responses import JSONResponse
 
 from app.auth.routes import valid_csrf
 from app.auth.store import LOCAL_PRINCIPAL, SESSION_COOKIE
+from app.jobs.control import ExecutionContext, execution_context
 
 PUBLIC = {"/api/session", "/api/auth/github/start", "/api/auth/github/callback"}
 
@@ -48,5 +49,9 @@ class SessionMiddleware(BaseHTTPMiddleware):
                             {"detail": "Reload Upgrade before trying this action."}, status_code=403
                         )
                     )
-        response = await call_next(request)
+        principal = request.state.principal
+        with execution_context(ExecutionContext(
+            principal.owner_id if principal else "anonymous", request.app.state.runs,
+        )):
+            response = await call_next(request)
         return private_response(response)

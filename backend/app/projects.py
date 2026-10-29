@@ -13,6 +13,8 @@ from app.api.security import require_local_origin
 from app.api.storage import RunStore, now
 from app.errors import GraftError
 from app.execution import ProcessLock
+from app.jobs.control import CURRENT
+from app.jobs.resources import Resources
 from app.project_contracts import ProjectAnalysisRequest, ProjectRequest, ProjectSelection
 from app.project_support import inspect_project
 from app.selection_artifacts import prepare_directory
@@ -42,6 +44,10 @@ class ProjectStore:
 
     def create(self, owner: str, inputs: ProjectRequest) -> ProjectSelection:
         directory = prepare_directory(self.root) / uuid4().hex
+        resources = Resources(self.runs)
+        reservation = resources.reserve(owner, "projects", directory.name, 200 * 1024 * 1024)
+        if context := CURRENT.get():
+            context.storage_roots[directory] = 200 * 1024 * 1024
         prepare_directory(directory)
         try:
             selection = self._fetch(directory, inputs)
@@ -50,6 +56,7 @@ class ProjectStore:
                     "INSERT INTO projects VALUES (?,?,?)",
                     (selection.id, owner, selection.model_dump_json()),
                 )
+            resources.complete(reservation)
             return selection
         except Exception:
             # Only this generated operation directory is eligible for recursive cleanup.
@@ -64,6 +71,7 @@ class ProjectStore:
                 operation(path)
 
             shutil.rmtree(target, onexc=clear_readonly)
+            resources.forget(reservation)
             raise
 
     def _fetch(self, directory: Path, inputs: ProjectRequest) -> ProjectSelection:

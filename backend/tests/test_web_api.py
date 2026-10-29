@@ -3,6 +3,7 @@
 import json
 from pathlib import Path
 from threading import Event
+from time import monotonic
 
 import pytest
 from fastapi.testclient import TestClient
@@ -23,6 +24,15 @@ REQUEST = {
     "target": "crawler-demo",
     "goal": "Improve recovery from temporary errors.",
 }
+
+
+def wait_finished(store, run_id):
+    deadline = monotonic() + 5
+    while monotonic() < deadline:
+        if json.loads(store.row(run_id)["summary"])["status"] == "finished":
+            return
+        Event().wait(0.01)
+    raise AssertionError("Worker did not finish within the test deadline.")
 
 
 @pytest.fixture(autouse=True)
@@ -311,6 +321,8 @@ def test_worker_completes_a_shared_service_result_and_records_progress(tmp_path)
     worker.start()
     try:
         assert started.wait(5)
+        release.set()
+        wait_finished(store, store.summaries()[0].id)
     finally:
         release.set()
         worker.stop()
@@ -359,6 +371,7 @@ def test_shared_cli_execution_lock_defers_worker_claim(tmp_path, monkeypatch):
         assert json.loads(store.row(queued.id)["summary"])["status"] == "queued"
     try:
         assert started.wait(5)
+        wait_finished(store, queued.id)
     finally:
         worker.stop()
     assert store.summaries()[0].outcome == "passed"

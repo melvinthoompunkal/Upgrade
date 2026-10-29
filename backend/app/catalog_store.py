@@ -17,6 +17,7 @@ from app.catalog_contracts import (
     FeatureSummary,
 )
 from app.errors import EvidenceError
+from app.jobs.control import fence_in
 
 VERSIONS = {"analyzer": "python-catalog-v1", "prompt": "discovery-v1", "schema": "catalog-v1"}
 TERMINAL = {"complete_for_scope", "partial", "failed", "canceled"}
@@ -243,6 +244,7 @@ class CatalogStore:
     ) -> CatalogView:
         with self.runs.connect() as db:
             db.execute("BEGIN IMMEDIATE")
+            fence_in(db)
             current = self._get(db, owner, view.id, view.revision)
             if current.state in TERMINAL:
                 raise EvidenceError("A frozen catalog revision cannot be overwritten.")

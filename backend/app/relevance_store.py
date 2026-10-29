@@ -11,6 +11,7 @@ from app.api.storage import now
 from app.catalog_store import TERMINAL as CATALOG_TERMINAL
 from app.catalog_store import CatalogStore, fingerprint
 from app.errors import EvidenceError
+from app.jobs.control import fence_in
 from app.relevance_contracts import (
     AssessmentCounts,
     AssessmentView,
@@ -68,7 +69,9 @@ class RelevanceStore:
         run = json.loads(row["summary"])
         if view.state not in TERMINAL and run["status"] == "finished":
             view.state = "canceled" if run.get("outcome") in {"canceled", "cancelled"} else "failed"
-            view.failure_code = (run.get("error") or {}).get("code", "interrupted")
+            view.failure_code = (run.get("error") or {}).get(
+                "code", "canceled" if view.state == "canceled" else "interrupted"
+            )
             db.execute(
                 "UPDATE relevance_assessments SET metadata=? WHERE id=?",
                 (view.model_dump_json(), view.id),
@@ -226,6 +229,7 @@ class RelevanceStore:
     def save(self, owner, view, feature=None, *, access_epoch=None):
         with self.runs.connect() as db:
             db.execute("BEGIN IMMEDIATE")
+            fence_in(db)
             current = self._get(db, owner, view.id)
             if current.state in TERMINAL:
                 raise EvidenceError("A finished assessment cannot be overwritten.")

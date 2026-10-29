@@ -1,6 +1,7 @@
 """OS-owned exclusion shared by command-line and browser workflows."""
 
 import os
+from contextlib import contextmanager
 from pathlib import Path
 
 from app.errors import GraftError
@@ -51,3 +52,24 @@ class ProcessLock:
 
     def __exit__(self, *_):
         self.close()
+
+
+@contextmanager
+def cli_execution(root: Path):
+    """CLI and API spend use the same local account ledger and execution policy."""
+    from app.api.storage import RunStore
+    from app.config import Settings
+    from app.jobs.control import ExecutionContext, execution_context
+
+    with ProcessLock(root / "data/execution.lock"):
+        settings = Settings()
+        store = RunStore(root / "data/web/runs.sqlite3", settings)
+        with execution_context(
+            ExecutionContext(
+                "local-workspace",
+                store,
+                artifact_root=root / "data/artifacts",
+                max_seconds=settings.job_max_seconds,
+            )
+        ):
+            yield

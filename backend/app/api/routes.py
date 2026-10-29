@@ -17,6 +17,7 @@ from app.api.contracts import (
     Target,
 )
 from app.api.storage import now
+from app.jobs.policy import operator_allowed
 from app.projects import project_store
 from app.tools.git import Git
 from app.tools.runner import PROJECT_ROOT
@@ -50,6 +51,9 @@ def capabilities(request: Request):
         checked_at=now(),
         image_receipt_present=(PROJECT_ROOT / "data/runner-image.json").is_file(),
         worker_available=request.app.state.worker.available,
+        diagnostics_allowed=operator_allowed(
+            request.app.state.runs, request.state.principal.owner_id, settings
+        ),
     )
 
 
@@ -82,6 +86,10 @@ def create_run(
 ):
     if body.kind in {"catalog_discovery", "relevance_assessment"}:
         raise HTTPException(422, "Use the catalog or relevance endpoints to create these jobs.")
+    if body.kind == "meta_smoke" and not operator_allowed(
+        request.app.state.runs, request.state.principal.owner_id, request.app.state.settings
+    ):
+        raise HTTPException(403, "Meta diagnostics require a configured operator account.")
     epoch = authorize_job(
         request, model_required=body.kind in {"fit_select", "source_trace", "meta_smoke"}
     )

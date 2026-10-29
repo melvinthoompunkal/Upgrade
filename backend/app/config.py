@@ -35,6 +35,24 @@ class Settings(BaseSettings):
     github_webhook_secret: SecretStr | None = Field(default=None, repr=False)
     github_private_fetch_enabled: bool = False
     token_encryption_keys: SecretStr | None = Field(default=None, repr=False)
+    deployment_mode: Literal["local"] = "local"
+    operator_github_ids: tuple[int, ...] = ()
+    job_lease_seconds: int = Field(default=30, ge=5, le=300)
+    job_max_seconds: int = Field(default=1200, ge=1, le=3600)
+    job_owner_limit: int = Field(default=4, ge=1, le=16)
+    job_global_limit: int = Field(default=16, ge=1, le=64)
+    job_artifact_bytes: int = Field(default=200 * 1024 * 1024, ge=1024)
+    storage_owner_bytes: int = Field(default=2 * 1024**3, ge=1024)
+    storage_global_bytes: int = Field(default=8 * 1024**3, ge=1024)
+    daily_github_requests: int = Field(default=1000, ge=1)
+    daily_model_attempts: int = Field(default=128, ge=1)
+    daily_model_input_tokens: int = Field(default=1_600_000, ge=1)
+    daily_model_output_tokens: int = Field(default=160_000, ge=1)
+    global_daily_github_requests: int = Field(default=4000, ge=1)
+    global_daily_model_attempts: int = Field(default=512, ge=1)
+    global_daily_model_input_tokens: int = Field(default=6_400_000, ge=1)
+    global_daily_model_output_tokens: int = Field(default=640_000, ge=1)
+    retention_days: int = Field(default=30, ge=1, le=365)
 
     @field_validator("github_app_id", "github_private_key_path", mode="before")
     @classmethod

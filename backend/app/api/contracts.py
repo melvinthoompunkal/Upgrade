@@ -91,6 +91,7 @@ class RunSummary(BaseModel):
     analyzed_feature_count: int | None = None
     eligible_feature_count: int | None = None
     error: Problem | None = None
+    cancel_requested: bool = False
 
 
 class RunPage(BaseModel):
@@ -184,6 +185,7 @@ class Capabilities(BaseModel):
     checked_at: str
     image_receipt_present: bool
     worker_available: bool
+    diagnostics_allowed: bool = True
     scope: str = (
         "Public Python project structure; optional native baseline. Crawler fit is an example."
     )

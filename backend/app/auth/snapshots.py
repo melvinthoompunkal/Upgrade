@@ -14,11 +14,13 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.auth.access import RepositoryAccess, RepositoryAccessDenied
 from app.auth.git_broker import git_credential_channel
-from app.auth.github import GitHubError, GitHubRateLimited
+from app.auth.github import GitHubRateLimited
 from app.auth.repositories import require_connection
 from app.contracts import validate_repo_path
 from app.errors import GraftError, RepositoryError
 from app.execution import ProcessLock
+from app.jobs.control import CURRENT
+from app.jobs.resources import Resources
 from app.selection_artifacts import prepare_directory
 from app.tools.repositories import RepositoryManager
 from app.tools.runner_artifacts import physical_root
@@ -71,6 +73,12 @@ class SnapshotService:
         # are deliberately excluded in this local stage.
         snapshot_id = uuid4().hex
         directory = self.root / snapshot_id
+        resources = Resources(self.access.runs)
+        reservation = resources.reserve(
+            owner, "private-repositories", snapshot_id, 200 * 1024 * 1024
+        )
+        if context := CURRENT.get():
+            context.storage_roots[directory] = 200 * 1024 * 1024
         directory.mkdir()
         success = False
         credential = None
@@ -132,6 +140,7 @@ class SnapshotService:
                     ),
                 )
             success = True
+            resources.complete(reservation)
             return view
         finally:
             if credential:
@@ -139,7 +148,7 @@ class SnapshotService:
                     self.access.github.revoke_installation_token(
                         credential.token.get_secret_value()
                     )
-                except GitHubError:
+                except GraftError:
                     # Expiry bounds provider lifetime; no credential is retained for reuse.
                     pass
             if not success:
@@ -154,6 +163,7 @@ class SnapshotService:
                         operation(path)
 
                     shutil.rmtree(directory, onexc=clear_readonly)
+                    resources.forget(reservation)
 
     def get(self, owner: str, snapshot_id: str) -> SnapshotView:
         with self.access.runs.connect() as db:

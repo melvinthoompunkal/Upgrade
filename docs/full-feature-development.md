@@ -1,6 +1,6 @@
 # Upgrade: project status, audits and development plan
 
-Updated October 28, 2026, America/New_York. Original foundation review at commit
+Updated October 29, 2026, America/New_York. Original foundation review at commit
 `b06d6d3` (`completed f0 and f1`).
 
 This is the single maintained record of completed work, audit findings, verification
@@ -15,6 +15,8 @@ Phases 1–3, Stage 4A, F0 remediation and F1 local identity boundaries are impl
 F3 adds public Python project structure and reviewed native offline test adapters.
 F4 adds owner-scoped source catalogs, bounded semantic discovery and immutable continuation.
 F5 adds saved target/goal relevance contexts and inference-free all/relevant browsing.
+F6 adds local leased job ownership, active cancellation, fair admission, shared resource
+accounting, private-code consent records, retention/deletion and offline operator recovery.
 All fourteen findings from the three original audits have recorded repairs. GitHub
 authorization, repository indexing and opt-in private snapshots are implemented locally;
 real-account validation remains pending. Live general-discovery and relevance validation,
@@ -49,11 +51,11 @@ The broader roadmap supersedes the original MVP's account/private-access exclusi
 | Frontend and local API | React workspace, SQLite queue/history/events, shared workflow services, evidence inspector, tests/logs, exports and explicit diagnostics | One local API worker; hosted execution and adaptation UI are pending |
 | F0 foundations | S4-A01–A06 repaired; strict capture decoding, reliable JSON finalization, physical path checks and common CLI/API execution lock | Hard-stop cleanup and concurrent hostile path replacement remain outside this boundary |
 | F1 identity | Numeric GitHub identity, hashed expiring sessions, single-use PKCE state, encrypted credentials, CSRF, transactional refresh/disconnect/admission, owner-scoped results and drafts | Local mocked-provider verification is complete; real GitHub account validation remains deferred |
-| F2 local connection | GitHub App sign-in/index, installation states/setup validation, opt-in private pinned snapshots, restricted installation tokens/ephemeral Git broker, signed webhook inbox and provider revocation; fresh access checks and publication fencing | Real-account sign-in/private-grant/rotation/revocation exit checks remain pending; private fetch defaults off; active-call interruption and hosted lifecycle remain F6 |
+| F2 local connection | GitHub App sign-in/index, installation states/setup validation, opt-in private pinned snapshots, restricted installation tokens/ephemeral Git broker, signed webhook inbox and provider revocation; fresh access checks and publication fencing | Real-account sign-in/private-grant/rotation/revocation exit checks remain pending; private fetch defaults off; F6 supplies local cancellation while hosted lifecycle remains unverified |
 | F3 public projects | Owner-scoped immutable project IDs, root selection, `python-evidence-v1` structural analysis and reviewed `python-pytest-v1` / `python-unittest-v1` native offline adapters; crawler is an explicit example | Public Python profiles only; target relevance uses F5; acceptance-driven adaptation remains F7; incompatible suites retain their failures |
 | F4 source catalogs | Owner-scoped SQLite revisions, bounded model hints and corroborated cards, aliases/hierarchy, coverage/spend ledgers, immutable cursor pages, cache and explicit continuation/on-demand traces | Public F3 Python pins only; controlled-provider verification; live semantic discovery and scale receipts remain pending |
 | F5 local relevance | Owner-scoped immutable target/goal assessments, explicit shortlists/continuation, saved all/relevant modes, global filters/sorts, signed seek cursors, lazy fit details, URL state and compact polling | Controlled-provider validation; live semantic exit checks remain pending. General-project baseline, frozen acceptance and approved adaptation gates remain unknown until F7 |
-| F6 local admission | Workspace execution exclusion, four unfinished jobs per owner and sixteen globally, queued cancellation and cache invalidation on disconnect | Leases, fairness, in-flight cancellation, retention, private-code consent and hosted isolation remain pending |
+| F6 local lifecycle | Fenced leases/heartbeats, fair owner scheduling, active cancellation/revocation, atomic admission/storage reservations, durable provider quotas, registered container recovery, consent/content checks, retention/deletion and backup/restore | Hosted deployment/isolation and real provider/process-termination certification remain exit gates; private model workflows remain disabled |
 | F7–F8 | Not implemented | Real planner, frozen acceptance, constrained patches, repair, verified diff/download and optional explicit PR publishing |
 | F9 verification | Recorded local backend/browser/build checks, live sample selection and public preflight | Full connected-analysis and verified-adaptation release receipts are still required |
 
@@ -220,7 +222,8 @@ Private fetch is opt-in and remains off by default. The live F2 exit gate still 
 development-account sign-in, a granted private SHA, ungranted/foreign rejection and real
 rotation/revocation checks. Snapshots remain browse/index only and cannot enter the existing
 model workflows. Active calls settle at their bounded timeout; immediate provider/container
-interruption, retention/deletion, private-code model consent and hosted isolation remain F6.
+interruption, retention/deletion and private-code consent were deferred to F6 at that
+receipt; F6 now supplies those local controls. Hosted isolation remains unverified.
 The post-fetch storage check is not an OS disk quota during transfer.
 
 ### Remaining risks and incomplete work
@@ -229,15 +232,16 @@ No original finding above remains recorded as open. These disclosed limits still
 development and release evidence:
 
 - Path checks do not stop a concurrent hostile local actor replacing checked paths;
-  that threat model needs handle-based operations. Hard-killed workers can leave Docker
-  resources; the process lock does not provide orphan cleanup or hosted leases.
+  that threat model needs handle-based operations. F6 registers API/CLI containers before
+  creation and reconciles them under the workspace lock. Hosted isolation, cross-host
+  leases and real hard-termination certification remain unverified.
 - Source tests are cited, not executed. Read-backed references and AST overlap establish
   provenance, not semantic completeness; an examined file may have unread lines.
 - Scope/dependency gates currently assess a proposal. Actual diff, dependency and
   unchanged-test red-to-green checks remain F7 work.
 - Real GitHub sign-in/private grants and provider rotation/revocation remain unverified;
-  local access checks are implemented. Private-code model consent, active-call interruption
-  and retention/deletion remain pending.
+  local access checks are implemented. F6 adds controlled local cancellation, consent
+  records/content exclusion and retention/deletion; private model workflows remain disabled.
 - Live model validation of general discovery, additional executable project profiles,
   target/goal assessment counts and 10,000-row scale checks remain pending. F4 saved
   catalog queries are implemented and perform no model inference.
@@ -507,7 +511,7 @@ implemented locally and verified with controlled responses.
 8. Separate **Sign out** from **Disconnect GitHub**. Sign out invalidates that browser
    session. Local disconnect removes stored authorization/cache, blocks admission and
    cancels queued work transactionally. Provider revocation is attempted with explicit
-   failure guidance; active-call cancellation and deletion options remain F6 work.
+   failure guidance; F6 adds local active-call cancellation and explicit owner deletion.
    It must not uninstall an organization's shared app for everybody.
 
 Implemented local policy: auth transactions expire after ten minutes; application
@@ -576,8 +580,9 @@ before admission. Analysis is capped at 200 Python files / 2 MiB, a 24 KiB manif
 10 seconds of indexing checked between files, 80 production and 80 test definitions,
 20-line definition windows and the existing 500,000-byte evidence allowance. Repository
 inventory limits remain 4,000 entries / 50 MiB text / 2 MiB per file; Git operations have
-120-second timeouts and retrieval has a 200 MiB post-fetch storage check. Hard streaming
-disk quotas and hosted cleanup remain F6 work.
+120-second timeouts and retrieval has a 200 MiB post-fetch storage check. F6 adds local
+disk reservations and polling during transfer; these are not OS disk quotas. Hosted
+validation remains pending.
 
 For compatible targets, explicit baseline execution uses the prepared Python 3.12 image.
 Runtime dependencies are empty or exactly `httpx==0.28.1`; declared test requirements
@@ -964,8 +969,9 @@ events, references and artifact list/text/download. The table also describes pla
 contracts. Installations/setup, snapshot create/descriptor, signed webhooks and F4 catalog
 create/detail/features/continuations now exist. On-demand source tracing uses a continuation
 with explicit `trace_feature_ids` and `max_files: 0`. F5 adds relevance submission,
-assessment/detail reads and catalog assessment queries. `/progress`, refs, explicit
-cancel, adaptation and PR endpoints remain planned.
+assessment/detail reads and catalog assessment queries. F6 adds explicit cancellation,
+owner usage, deletion receipts and pinned private-model disclosure/consent endpoints.
+`/progress`, refs, adaptation and PR endpoints remain planned.
 Generate frontend types from actual
 OpenAPI, and preserve CLI/domain contracts through versioned adapters.
 
@@ -990,7 +996,10 @@ OpenAPI, and preserve CLI/domain contracts through versioned adapters.
 | `POST /api/runs`, `GET /api/runs?...` | Owner-scoped jobs/history, global search, typed kinds and query-level cursors |
 | Implemented `GET /api/runs/{id}/status` | Compact state/revision/counts without full evidence arrays |
 | Existing detail/events/references/artifact routes | Enforce owner/current repository access; add bounded collection routes |
-| `POST /api/runs/{id}/cancel` | Cooperative cancellation with a controller-published terminal result |
+| Implemented `POST /api/runs/{id}/cancel` | Owner/CSRF-checked idempotent queued cancellation or active cancellation request; controller publishes the terminal result |
+| Implemented `GET /api/usage` | Owner-only queue/storage reservations, daily usage/allowances and explicit disabled private-analysis/hosting flags |
+| Implemented `DELETE /api/privacy/data`, `GET /api/privacy/deletions/{id}` | Delete this owner's saved workspace and inspect a deletion receipt; unfinished jobs block deletion |
+| Implemented `POST /api/privacy/model-disclosure`, `POST /api/privacy/model-consent` | Fresh-access-checked disclosure/decision bound to owner, exact snapshot SHA/root/inventory, endpoint and policy; does not enable private analysis |
 | `POST /api/webhooks/github` | Signed provider deliveries; separate from cookie/CSRF browser routes |
 | `POST /api/adaptations`, later `POST /api/adaptations/{id}/pull-request` | Capability-gated implementation and explicitly reviewed publishing |
 
@@ -1040,10 +1049,12 @@ scope. The example's remaining matching entries are available through its cursor
 
 ### Persistence and migrations
 
-Transactional schema v7, owner-scoped runs/idempotency, auth records, repository
-cache/sync, public project pins and catalog tables are implemented. F1 covers migration rollback/retry and rejection
-of future schemas. Extend explicit migrations for further grants and job lifecycle;
-back up and verify existing data before further schema changes.
+Transactional schema v8 adds job leases, owner scheduling, resource ownership, artifact
+journals, model consent and deletion receipts. Existing owner-scoped runs/idempotency,
+auth, project, catalog and relevance records are preserved. A separate schema-v1
+`usage.sqlite3` durably charges provider attempts outside authorization transactions,
+including failed refresh/disconnect operations. F1 rollback/future-schema protections
+remain covered. Back up both databases and verify existing data before migrations.
 
 Logical records to retain or add as the remaining packages land:
 
@@ -1077,24 +1088,72 @@ provenance and never backfill a user identity by guessing from a repository name
 
 ## 11. Jobs, privacy, budgets and operational readiness
 
-Use one typed execution context for CLI/API/controllers: owner, run ID, owned paths,
-pinned inputs, authorization grant, event sink, cancellation token and aggregate budget.
-Keep provider/evidence/runner implementations canonical. Add stage services and a small
-explicit finalization boundary rather than more flags in the large selection function.
+### F6 local implementation
 
-The local worker and every CLI already share workspace `data/execution.lock`, including
-custom API artifact storage. Complete hard-stop cleanup and durable ownership records
-for every container. Hosted jobs additionally need durable claims/leases,
-heartbeats, fencing against stale completion, per-owner fairness and operator reconciliation.
-After a crash, retain partial artifacts and mark interrupted work; never automatically
-replay paid inference or continue a half-applied patch. Explicit retry starts from recorded
-inputs and discloses new spend. Deterministic completed stages may be reused only after
-validating their full cache identity and artifact integrity.
+F6 extends the existing local execution boundary; it does not enable multi-user hosting.
+The worker, CLI, model transport, Git and runner share a typed execution context carrying
+owner, job/lease identity, artifact root, access epoch, cancellation, runtime and storage
+limits. API claims remain under the workspace `data/execution.lock`, even with custom
+API storage. One worker OS lock per store prevents duplicate local executors.
 
-Cancellation is a real controller action: stop new requests, settle/cancel active calls
-where supported, terminate owned execution, preserve intact evidence and publish canceled
-state. Closing the page does not cancel. Expired/revoked repository access also prevents
-future fetch/publish work and must not strand an indefinitely running job.
+| Boundary | Implemented behavior |
+|---|---|
+| Claims and fairness | Atomic claim plus unpredictable lease token, configurable 30-second expiry and independent heartbeat thread. Least recently served owner precedes its backlog; FIFO within an owner. Default unfinished limits are four per owner and sixteen globally. |
+| Stale work and restart | Progress/result publication and catalog/assessment checkpoints validate the live lease in their write transaction. Expired/abandoned claims become `interrupted`; they cannot be reclaimed or replay paid work. Explicit retry/continuation requires a new operation and budget. |
+| Cancellation and access loss | Owner/CSRF-checked cancellation immediately settles queued work; running work gets a durable request. A watchdog cancels async provider tasks, Git checks cancellation while draining bounded output, and Docker stops/removes its owned container. Disconnect/webhook generation changes stop active work and fence publication. Shutdown interrupts active work and waits for owned cleanup. |
+| Evidence | Artifact digests are journaled when adopted. Cancellation can publish a bounded partial report referencing only previously registered, still hash-valid artifacts. Changed artifacts are excluded; unknown in-flight model usage remains explicit. Stale executors cannot publish a successful or terminal replacement. |
+| Quotas | Queue admission and 200 MiB artifact-space reservations commit together, including catalog/relevance continuations. Pins reserve 200 MiB before retrieval. Default owner/global storage allowances are 2/8 GiB; completed job reservations shrink to actual bytes. Provider attempts are atomically charged per owner and globally, including retries and CLI calls. Actual returned tokens are recorded independently of estimates. |
+| Runtime and output | Default job runtime is 1,200 seconds. Canonical model budgets still bound attempts and returned usage. Git output is spooled with byte/time checks; owned code/artifact trees are checked during execution and before artifact writes. A clone can briefly exceed its storage allowance between polling checks; returned token usage can exceed a threshold on its last response. |
+| Container recovery | API and CLI record generated container identities before creation. Restart/offline reconciliation removes only registered exact names under execution ownership. Failed cleanup retains its recovery record and stops worker admission. No claim of real hostile-container isolation or hard-kill certification is made. |
+| Private transmission | Fresh-access-checked disclosure identifies exact source/optional target snapshots, SHA/root/inventory, Meta endpoint and policy `meta-private-excerpts-v1`. Consent is owner/context/policy-bound and revocable. Transmission checks reject likely embedded secrets before reserving an attempt. Private snapshots remain browse-only and cannot enter the public project/catalog/relevance workflows. Pattern checks are not proof that all secrets can be detected. |
+| Retention/deletion | Default private snapshot lifetime is 30 days. Public saved workspace/code data expires after 30 days without a saved operation; browsing does not extend that lifetime. Unfinished owner jobs defer cleanup. Explicit owner deletion removes pinned copies, run exports, catalog/assessment rows, artifact journals, caches and consents after path validation, and returns a receipt. Current daily spend counters survive deletion so deletion cannot reset quotas. |
+| Observability and recovery | Owner usage is available in System checks. Offline operator commands report queue/outcome, usage/latency/runtime, reserved storage and cleanup metadata; no code, credentials or model reasoning is exported as metrics. Backup includes both SQLite databases and managed code/artifact trees with file hashes. Restore requires a new directory, validates integrity, interrupts unfinished work, and reapplies newer deletion receipts from the current data root. |
+
+Defaults are configurable in [the environment example](../backend/.env.example).
+Owner daily allowances are 1,000 GitHub requests, 128 model attempts and 1,600,000/160,000
+returned input/output tokens; shared daily allowances are 4,000 requests, 512 attempts
+and 6,400,000/640,000 returned tokens. Days use UTC. A failed or canceled provider request
+may have unknown token usage; limits are admission/request boundaries, not billing guarantees.
+GitHub-mode paid Meta diagnostics require an explicit numeric `OPERATOR_GITHUB_IDS` grant;
+ordinary authorized analysis still uses its disclosed budget. Provider/deployment settings
+have no browser mutation API.
+
+Cleanup runs at idle worker startup/intervals or through the offline operator command.
+Backups remain operator-managed private copies: expire them within 30 days, keep encryption
+keys separately, and retain the current deletion receipts when restoring an older backup.
+The restore tool rejects backups older than 30 days. Restore without the current data root
+cannot recover deletion decisions made after that backup. Recovery does not reconstruct
+missing encryption keys, resume inference or certify a hosted deployment.
+
+Implementation: [execution context](../backend/app/jobs/control.py),
+[leases](../backend/app/jobs/leases.py), [quotas](../backend/app/jobs/quotas.py),
+[resource ownership](../backend/app/jobs/resources.py), [retention](../backend/app/jobs/retention.py),
+[privacy/API](../backend/app/jobs/routes.py), [operator tools](../backend/app/jobs/operations.py)
+and [worker](../backend/app/api/worker.py). Verification is controlled/offline; retained
+[backend results](../audit/full-feature-foundations/f6-tests.xml),
+[browser results](../audit/full-feature-foundations/f6-browser-tests.xml) and
+[source/check manifest](../audit/full-feature-foundations/f6-checks.json) describe the tested boundary.
+
+October 29 verification recorded 495 passing full backend checks, then 163 passing final
+affected-suite checks. The controlled/offline browser suite passed 76 checks across desktop
+and mobile, with two opt-in public-fetch skips; the six F6 browser cases passed again after
+visual review. Recorded-result read-only browser checks were excluded from this pass.
+Production build/TypeScript, Ruff and diff checks passed. The
+[offline operator receipt](../audit/full-feature-foundations/f6-operator-checks.json)
+records all five commands against a disposable fixture, preserved source bytes and a
+hash-matching restore without replay. The final
+[114 passing cleanup regressions](../audit/full-feature-foundations/f6-cleanup-tests.xml) additionally
+cover quota-blocked token cleanup, cancellation before container creation and unresolved
+container admission. These are controlled local checks, not live-provider or hosting receipts.
+Recheck source and receipt hashes without inference using
+`python audit/full-feature-foundations/verify_f6.py`.
+
+### Remaining hosted release gates
+
+`DEPLOYMENT_MODE` currently accepts only `local`. Cross-host worker/storage ownership,
+an independently reviewed untrusted-execution boundary, real-account/provider cancellation,
+real hard-process termination/container recovery and deployment load/rollback certification
+remain required before hosting. Local SQLite leases do not establish those guarantees.
 
 The present shared model allowance is 32 HTTP attempts, 400,000 returned input tokens,
 40,000 returned output tokens and 1,200 seconds checked at request boundaries. A historical
@@ -1109,13 +1168,10 @@ model attempts/tokens, runtime and artifact bytes. Admission/charging checks mus
 and shared by retries, continuations and worker replicas. Restrict paid smoke checks and
 deployment/provider settings to authorized operators.
 
-For private code, add a clear disclosure before the first model analysis: which source
-and target snapshots and bounded excerpts/test summaries will be sent to the existing
-Meta endpoint. Persist the consent/policy version or applicable organization setting.
-GitHub authorization alone is not consent to transmit repository contents to a model
-provider. Login and repository sync perform no model transmission. Avoid collecting or
-forwarding secrets even when they appear inside ordinary-looking source files; enforce
-content checks/redaction boundaries and keep rejected-content reasons sanitized.
+Before enabling private analysis, connect the F6 disclosure/consent guard to its supported
+private project adapter and browser analysis action. GitHub authorization alone is not
+model-transmission consent. Login/sync send no code to Meta. Organization policy controls,
+expanded secret detection and real private-analysis validation remain release work.
 
 Other release requirements:
 
@@ -1128,15 +1184,13 @@ Other release requirements:
 - For hosted untrusted execution, use an independently reviewed worker isolation boundary;
   the existing local Docker fixture is not evidence that hostile multi-user execution is
   safe. Keep the Docker control plane, host sockets and credentials outside test workers.
-- Define retention before launch. Proposed starting policy: 30 days for private run/code
-  artifacts, configurable by operator/owner; bounded secret-free operational metadata can
-  have a separate policy. Respect active-job locks, explicit deletion, source cache copies,
-  database rows, derived excerpts and documented backup expiry. Report deletion completion.
-- Add structured job/error metrics, queue age, model/GitHub usage, storage, cleanup failures,
-  provider latency and access-revocation handling. Do not export model private reasoning.
-- Verify backup/restore, key rotation, deployment migration, rollback, process termination,
-  orphan-container cleanup and artifact integrity. Keep secrets in a managed store for
-  hosting and document recovery when an encryption key becomes unavailable.
+- Carry the local F6 retention/deletion policy into hosted storage, database replicas,
+  backups and caches; add private-run expiry when private analysis is implemented.
+- Connect F6 metadata metrics to hosted operational monitoring and verify provider latency,
+  queue age, revocation and cleanup behavior under multi-user load. Keep model reasoning private.
+- Certify backup/restore, key rotation, deployment migration/rollback, real process termination
+  and orphan-container cleanup on the chosen deployment. Keep hosted secrets in a managed
+  store and preserve the documented reconnect path when an encryption key is unavailable.
 
 ## 12. Completing implementation and verification
 
@@ -1200,8 +1254,8 @@ Required work:
 
 ## 13. Development sequence and deliverables
 
-Use these packages as the implementation checklist. F0/F1 and the local F2-F5 foundations
-are implemented; continue with the outstanding live gates and F6/F7 work. Update
+Use these packages as the implementation checklist. F0/F1 and the local F2-F6 foundations
+are implemented; continue with the outstanding live/hosted gates and F7 work. Update
 this document with reviewed behavior and machine evidence as each package lands. Work
 that does not depend on another package can proceed independently, but release gates
 still require the listed prerequisites.
@@ -1214,7 +1268,7 @@ still require the listed prerequisites.
 | F3: supported real repositories | Implemented locally for public Python structural analysis and reviewed native suites | Owner-scoped pinned project/root contracts, capability levels, versioned pytest/unittest adapters; sample is optional | F0, F2 | Independent public source/target structural analysis and native-suite receipts; unsupported projects explained without inference; see section 6 for profile limits |
 | F4: persistent source catalog | Implemented locally for public Python; live model exit validation pending | Semantic hints, independently corroborated cards, hierarchy/aliases, bounded shared budgets, atomic revisions/cache, signed cursor pages, continuation and on-demand traces | F3 | Real disposable pinned Git fixtures with controlled Meta responses; supported/documentation-only/failed/no-test cases, immutable pages and two-account checks; retained F4 receipts |
 | F5: relevance and scalable browsing | Implemented locally; live semantic validation pending | Goal/target assessments, all/relevant modes, server query/filter/sort, lazy details, URL state and compact polling | F4 | Honest assessed/unassessed/eligible counts; zero model calls on view changes; scale/accessibility checks |
-| F6: job/hosting hardening | Local lock/admission only | Leased ownership where hosted, cancellation, quotas, current-access checks, retention, private-code consent, observability and cleanup | Starts with F1; required before multi-user release | Restart/cancel/revocation/tenant-load cases, operator recovery and private artifact lifecycle |
+| F6: job/hosting hardening | Implemented locally; hosted exit gate pending | Fenced leases/heartbeats, fair scheduling, active cancellation/revocation, shared quotas/storage reservations, private-code consent/content checks, retention/deletion, metrics and offline recovery/backup/restore | Starts with F1; required before multi-user release | Controlled restart/cancel/revocation/tenant/quota/deletion/restore cases and browser controls; real hard-stop/provider and hosted isolation/load/deployment receipts remain required |
 | F7: verified adaptation | Pending | Real planner, behavior contract, frozen red acceptance, constrained patches, actual limits, regression green and capped repairs | F0, F3, F5; F6 for hosting | Real independent source-to-target red-to-green receipt; failed/exhausted cases retain evidence |
 | F8: change review and optional PR | Pending | Diff/review UI, patch download, notice export, explicit idempotent publishing | F7; GitHub write permission only for PR | Downloaded patch digest matches verified result; stale/unauthorized/repeated publishing behaves correctly |
 | F9: release validation and docs | Local receipts only | Fresh complete workflows, security/performance checks, setup/operations and reconciled status pages | All packages needed by the chosen release | Dated receipt tied to commit/build, environment, actual inputs, limits and retained artifacts |
@@ -1294,12 +1348,14 @@ The **F2 private-access lifecycle is implemented locally**. Its remaining exit w
 real development-account sign-in, granted/ungranted private-fetch checks and provider
 rotation/revocation validation. Private retrieval remains off by default while local mode
 is preferred. F3 now supplies public-project structural analysis and native offline
-adapters; active-call interruption and hosted lifecycle remain F6. Do not treat
+adapters. F6 supplies local active-call interruption and lifecycle controls; hosted
+isolation and real provider/hard-stop exit checks remain pending. Do not treat
 controlled-provider receipts as live private-access or hosting evidence.
 
 F4 supplies persistent discovery and F5 supplies target/goal assessments and honest
 all/relevant browsing on pinned F3 public Python projects. Live discovery and relevance
-validation remain exit checks. The next packages are F6 lifecycle hardening and F7 adaptation. F6 is a release dependency
+validation remain exit checks. F6 lifecycle hardening is implemented locally; the next
+implementation package is F7 adaptation. F6's hosted exit gates remain a release dependency
 for multi-user hosting. F7/F8 complete verified adaptation and actual change review.
 Optional 4B remains a bounded comparison extension, not a substitute for these packages.
 

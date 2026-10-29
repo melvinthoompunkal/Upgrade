@@ -14,6 +14,7 @@ import {
 import { createRun, formatDate, type RunSummary } from '../../api/client'
 import { useWorkspace } from '../../app/workspace-context'
 import { ErrorState, Notice, SectionHeading, Skeleton, StatusMark } from '../../components/ui'
+import { DataLifecycle } from './DataLifecycle'
 
 const checks = [
   {
@@ -125,7 +126,7 @@ export function SystemChecks() {
                   ? 'Available / one workflow at a time'
                   : 'Unavailable / check the backend process'}
               </p>
-              <small>Up to four active or queued runs.</small>
+              <small>Queue limits are enforced before each submission.</small>
             </section>
           </div>
         </div>
@@ -176,7 +177,8 @@ export function SystemChecks() {
                 disabled={
                   starting !== null ||
                   !capabilities?.worker_available ||
-                  (check.kind === 'meta_smoke' && !capabilities.model_configured)
+                  (check.kind === 'meta_smoke' &&
+                    (!capabilities.model_configured || capabilities.diagnostics_allowed === false))
                 }
               >
                 {starting === check.kind ? 'Starting…' : check.action}
@@ -236,6 +238,7 @@ export function SystemChecks() {
           </p>
         </div>
       </div>
+      <DataLifecycle />
     </div>
   )
 }

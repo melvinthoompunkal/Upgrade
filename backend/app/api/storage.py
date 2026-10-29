@@ -2,6 +2,7 @@
 
 import hashlib
 import sqlite3
+import time
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
@@ -11,6 +12,12 @@ from fastapi import HTTPException
 
 from app.api.contracts import Event, RunRequest, RunSummary
 from app.api.migrations import LOCAL_OWNER, migrate
+from app.config import Settings
+from app.errors import GraftError
+from app.jobs.control import ExecutionStopped, fence_in
+from app.jobs.leases import JobLeases
+from app.jobs.resources import Resources
+from app.jobs.usage import UsageStore
 from app.selection_artifacts import prepare_directory
 
 
@@ -19,13 +26,15 @@ def now() -> str:
 
 
 class RunStore:
-    def __init__(self, path: Path):
+    def __init__(self, path: Path, settings: Settings | None = None):
         self.path = path
+        self.settings = settings or Settings(_env_file=None)
         prepare_directory(path.parent)
         if path.is_symlink() or path.is_junction():
             raise ValueError("The run database must be a regular local file.")
         with self.connect() as db:
             migrate(db)
+        self.usage = UsageStore(path.with_name("usage.sqlite3"))
 
     @contextmanager
     def connect(self):
@@ -99,7 +108,7 @@ class RunStore:
             WHERE json_extract(summary,'$.status')!='finished'""",
             (owner_id,),
         ).fetchone()
-        if active >= 16 or owned >= 4:
+        if active >= self.settings.job_global_limit or owned >= self.settings.job_owner_limit:
             raise HTTPException(429, "The local queue is full. Wait for a run to finish.")
         title = getattr(request, "goal", None) or {
             "meta_smoke": "Meta connectivity check",
@@ -117,6 +126,17 @@ class RunStore:
             created_at=now(),
             updated_at=now(),
         )
+        try:
+            Resources(self).reserve_in(
+                db,
+                owner_id,
+                "job-reservation",
+                f"job-{summary.id}",
+                self.settings.job_artifact_bytes,
+                run_id=summary.id,
+            )
+        except GraftError:
+            raise HTTPException(429, "Storage capacity is unavailable for another job.") from None
         db.execute(
             "INSERT INTO runs(id,key,fingerprint,request,summary,owner_id) VALUES (?,?,?,?,?,?)",
             (summary.id, key, fingerprint, body, summary.model_dump_json(), owner_id),
@@ -188,10 +208,18 @@ class RunStore:
         message: str,
         expected_access_epoch: int | None = None,
         publication: tuple[str, str] | None = None,
+        lease_token: str | None = None,
+        settle: bool = False,
         **changes,
     ) -> None:
         with self.connect() as db:
             db.execute("BEGIN IMMEDIATE")
+            if lease_token:
+                code = JobLeases.check_in(db, run_id, lease_token)
+                if code and not (settle and code != "lease_lost"):
+                    raise ExecutionStopped(code)
+            elif publication:
+                fence_in(db)
             if expected_access_epoch is not None:
                 allowed = db.execute(
                     "SELECT 1 FROM runs JOIN users ON runs.owner_id=users.id "
@@ -204,6 +232,8 @@ class RunStore:
                     raise ReconnectRequired("GitHub access changed before result publication.")
             row = db.execute("SELECT summary FROM runs WHERE id=?", (run_id,)).fetchone()
             summary = RunSummary.model_validate_json(row[0])
+            if summary.status == "finished":
+                return
             updated = summary.model_copy(
                 update={
                     **changes,
@@ -222,23 +252,30 @@ class RunStore:
                     "UPDATE runs SET summary=? WHERE id=?", (updated.model_dump_json(), run_id)
                 )
             self.event(db, run_id, stage, message)
+            if updated.status == "finished":
+                db.execute("DELETE FROM job_leases WHERE run_id=?", (run_id,))
+                db.execute(
+                    "DELETE FROM owned_resources WHERE run_id=? AND kind='job-reservation'",
+                    (run_id,),
+                )
 
-    def claim(self, *, mode: str = "local"):
+    def claim(self, *, mode: str = "local", worker: str = "local-worker"):
         with self.connect() as db:
             db.execute("BEGIN IMMEDIATE")
             owner_filter = (
-                "owner_id=?"
+                "runs.owner_id=?"
                 if mode == "local"
                 else (
-                    "owner_id!=? AND EXISTS (SELECT 1 FROM users "
+                    "runs.owner_id!=? AND EXISTS (SELECT 1 FROM users "
                     "WHERE users.id=runs.owner_id AND users.connected=1)"
                 )
             )
             rows = db.execute(
-                "SELECT * FROM runs WHERE request IS NOT NULL "
+                "SELECT runs.* FROM runs LEFT JOIN owner_schedule s ON s.owner_id=runs.owner_id "
+                "WHERE request IS NOT NULL "
                 "AND json_extract(summary,'$.status')='queued' AND "
                 + owner_filter
-                + " ORDER BY rowid LIMIT 1",
+                + " ORDER BY coalesce(s.last_claim,0),runs.rowid LIMIT 1",
                 (LOCAL_OWNER,),
             ).fetchall()
             for row in rows:
@@ -258,7 +295,23 @@ class RunStore:
                 self.event(
                     db, row["id"], "inputs", "Worker started; execution checks are authoritative."
                 )
-                return row
+                token = uuid4().hex
+                db.execute(
+                    "INSERT INTO job_leases VALUES (?,?,?,?,?,NULL)",
+                    (
+                        row["id"],
+                        token,
+                        worker,
+                        time.time() + self.settings.job_lease_seconds,
+                        time.time(),
+                    ),
+                )
+                db.execute(
+                    "INSERT INTO owner_schedule VALUES (?,?) ON CONFLICT(owner_id) "
+                    "DO UPDATE SET last_claim=excluded.last_claim",
+                    (row["owner_id"], time.time()),
+                )
+                return {**dict(row), "lease_token": token}
         return None
 
     def cancel_queued(self, owner_id: str) -> None:
@@ -268,6 +321,11 @@ class RunStore:
 
     def cancel_queued_in(self, db: sqlite3.Connection, owner_id: str) -> None:
         """Cancel under the caller's authorization transaction without releasing its lock."""
+        db.execute(
+            "UPDATE job_leases SET cancel_code='access_revoked' WHERE run_id IN "
+            "(SELECT id FROM runs WHERE owner_id=?)",
+            (owner_id,),
+        )
         rows = db.execute(
             "SELECT id,summary FROM runs WHERE owner_id=? "
             "AND json_extract(summary,'$.status')='queued'",
@@ -288,12 +346,17 @@ class RunStore:
                 "UPDATE runs SET summary=? WHERE id=?", (updated.model_dump_json(), row["id"])
             )
             self.event(db, row["id"], "complete", "Cancelled after GitHub disconnect.")
+            db.execute(
+                "DELETE FROM owned_resources WHERE run_id=? AND kind='job-reservation'",
+                (row["id"],),
+            )
 
     def attach(
         self, run_id: str, relative: str, digest: str, *, access_epoch: int | None = None
     ) -> None:
         with self.connect() as db:
             db.execute("BEGIN IMMEDIATE")
+            fence_in(db)
             if access_epoch is not None:
                 allowed = db.execute(
                     "SELECT 1 FROM runs JOIN users ON runs.owner_id=users.id "

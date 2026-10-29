@@ -3,6 +3,7 @@
 import asyncio
 import threading
 from pathlib import Path
+from time import monotonic
 from uuid import uuid4
 
 from pydantic import TypeAdapter
@@ -17,6 +18,10 @@ from app.config import Settings
 from app.errors import GraftError
 from app.execution import ProcessLock
 from app.fit_select import record_fit_selection
+from app.jobs.containers import reconcile_containers
+from app.jobs.control import ExecutionContext, ExecutionStopped, execution_context
+from app.jobs.leases import JobLeases
+from app.jobs.quotas import metric
 from app.models.meta_client import MetaClient
 from app.pinned_baseline import record_pinned_baseline
 from app.project_analysis import record_project_analysis
@@ -41,31 +46,23 @@ class LocalWorker:
         self.thread = threading.Thread(target=self.loop, name="upgrade-local-worker", daemon=True)
         self.lock = None
         self.connection_check = connection_check
+        self.worker_id = uuid4().hex
+        self.active = None
+        self.recovery_pending = True
+        self.last_cleanup = 0
 
     def start(self) -> None:
         self.lock = ProcessLock(self.store.path.parent / "worker.lock")
         if not self.lock.acquire():
             self.lock = None
             return
-        # Holding the OS lock establishes that no prior API worker is still executing.
-        for run in self.store.summaries(status="running"):
-            if run.status == "running":
-                self.store.transition(
-                    run.id,
-                    stage="complete",
-                    message="The prior worker stopped. No analysis was replayed.",
-                    status="finished",
-                    outcome="interrupted",
-                    error=Problem(
-                        code="interrupted",
-                        message="The worker stopped before completion. Start a new run to retry.",
-                    ),
-                )
         self.available = True
         self.thread.start()
 
     def stop(self) -> None:
         self.stop_requested.set()
+        if self.active:
+            self.active.stop("interrupted")
         if self.available:
             self.thread.join()  # Drain the owned workflow so its runner cleanup can finish.
         self.available = False
@@ -77,9 +74,14 @@ class LocalWorker:
     ) -> tuple[dict, Path]:
         if request.kind == "relevance_assessment":
             return await record_relevance(
-                request, RelevanceStore(self.store),
+                request,
+                RelevanceStore(self.store),
                 ProjectStore(self.store, self.root.parent / "projects"),
-                owner, self.root, self.settings, progress, access_epoch=access_epoch,
+                owner,
+                self.root,
+                self.settings,
+                progress,
+                access_epoch=access_epoch,
             )
         if request.kind == "catalog_discovery":
             return await record_catalog(
@@ -145,16 +147,103 @@ class LocalWorker:
                 self.stop_requested.wait(0.5)
                 continue
             try:
-                row = self.store.claim(mode=self.settings.auth_mode)
+                if self.recovery_pending:
+                    recovered = JobLeases(self.store).recover(abandoned_worker=True)
+                    from app.jobs.resources import Resources
+
+                    for run_id in recovered:
+                        Resources(self.store).settle_run(run_id, self.root)
+                    from app.jobs.retention import Retention
+
+                    retention = Retention(self.store, self.root.parent)
+                    retention.reconcile_pending()
+                    retention.account_existing()
+                    self.recovery_pending = False
+                JobLeases(self.store).recover()
+                reconcile_containers(self.store)
+                row = self.store.claim(mode=self.settings.auth_mode, worker=self.worker_id)
                 if row is None:
+                    if monotonic() - self.last_cleanup > 60:
+                        from app.jobs.retention import Retention
+
+                        Retention(self.store, self.root.parent).prune()
+                        self.last_cleanup = monotonic()
                     execution.close()
                     self.stop_requested.wait(0.5)
                     continue
                 self.process(row)
+            except Exception:
+                # A cleanup/recovery failure must stop admission, not strand a live-looking worker.
+                self.available = False
+                return
             finally:
                 execution.close()
 
     def process(self, row) -> None:
+        run_id = row["id"]
+        token = row["lease_token"]
+        control = ExecutionContext(
+            row["owner_id"],
+            self.store,
+            run_id,
+            token,
+            self.root,
+            max_seconds=self.settings.job_max_seconds,
+        )
+        self.active = control
+        done = threading.Event()
+
+        def renew():
+            while not done.wait(self.settings.job_lease_seconds / 3):
+                try:
+                    JobLeases(self.store).heartbeat(run_id, token, self.settings.job_lease_seconds)
+                except Exception:
+                    control.stop("lease_lost")
+                    return
+
+        heartbeat = threading.Thread(target=renew, name="upgrade-job-lease", daemon=True)
+        heartbeat.start()
+        with execution_context(control):
+            try:
+                self._process(row, control)
+            finally:
+                done.set()
+                heartbeat.join()
+                metric("runtime_ms", round((monotonic() - control.started) * 1000))
+                from app.jobs.resources import Resources
+
+                Resources(self.store).settle_run(run_id, self.root)
+                self.active = None
+
+    async def supervised(self, request, progress, row, control):
+        async def heartbeat():
+            while True:
+                await asyncio.sleep(min(0.2, self.settings.job_lease_seconds / 3))
+                try:
+                    control.check()
+                except GraftError as error:
+                    control.stop(error.code)
+                    task.cancel()
+                    return
+
+        kwargs = (
+            {"owner": row["owner_id"], "access_epoch": control.access_epoch}
+            if request.kind in {"project_analysis", "catalog_discovery", "relevance_assessment"}
+            else {}
+        )
+        task = asyncio.create_task(self.execute(request, progress, **kwargs))
+        watcher = asyncio.create_task(heartbeat())
+        try:
+            result = await task
+            control.check()
+            return result
+        except asyncio.CancelledError:
+            raise ExecutionStopped(control.stop_code) from None
+        finally:
+            watcher.cancel()
+            await asyncio.gather(watcher, return_exceptions=True)
+
+    def _process(self, row, control) -> None:
         run_id = row["id"]
         try:
             epoch = None
@@ -175,8 +264,16 @@ class LocalWorker:
                         "GitHub access changed after submission. Start a new run."
                     )
             request = TypeAdapter(RunRequest).validate_json(row["request"])
+            if request.kind == "meta_smoke":
+                from app.jobs.policy import operator_allowed
+
+                if not operator_allowed(self.store, row["owner_id"], self.settings):
+                    raise GraftError("Meta diagnostics require a configured operator account.")
+            control.access_epoch = epoch
+            control.check()
 
             def progress(stage, message, owned_run=run_id):
+                control.check()
                 if epoch is not None:
                     from app.auth.access import RepositoryAccess
 
@@ -184,14 +281,11 @@ class LocalWorker:
                         RepositoryAccess(self.store, None, None).check_in(
                             db, row["owner_id"], epoch
                         )
-                self.store.transition(owned_run, stage=stage, message=message)
-
-            if request.kind in {"project_analysis", "catalog_discovery", "relevance_assessment"}:
-                report, path = asyncio.run(
-                    self.execute(request, progress, owner=row["owner_id"], access_epoch=epoch)
+                self.store.transition(
+                    owned_run, stage=stage, message=message, lease_token=control.lease_token
                 )
-            else:
-                report, path = asyncio.run(self.execute(request, progress))
+
+            report, path = asyncio.run(self.supervised(request, progress, row, control))
             raw = read_regular_file(self.root, path.relative_to(self.root).as_posix())
             if epoch is not None and self.connection_check(row["owner_id"]) != epoch:
                 from app.auth.crypto import ReconnectRequired
@@ -209,20 +303,56 @@ class LocalWorker:
                 eligible_feature_count=result.eligible_feature_count,
                 expected_access_epoch=epoch,
                 publication=(path.relative_to(self.root).as_posix(), digest(raw)),
+                lease_token=control.lease_token,
             )
         except Exception as exc:
             # Never expose provider responses, exception strings, or local paths.
             code = exc.code if isinstance(exc, GraftError) else "workflow_failed"
-            self.store.transition(
-                run_id,
-                stage="complete",
-                message="Workflow stopped; available results are retained.",
-                status="finished",
-                outcome="failed",
-                error=Problem(
-                    code=code,
-                    message=public_text(str(exc))
-                    if isinstance(exc, GraftError)
-                    else "Execution failed. Check configuration and Docker before retrying.",
-                ),
-            )
+            try:
+                publication = None
+                if code in {"cancelled", "interrupted", "runtime_limit"}:
+                    from app.jobs.finalization import stopped_report
+
+                    try:
+                        publication = stopped_report(control, code)
+                    except (GraftError, OSError, ValueError):
+                        metric("cleanup_failures")
+                self.store.transition(
+                    run_id,
+                    stage="complete",
+                    message="Workflow stopped; available results are retained.",
+                    status="finished",
+                    outcome=code
+                    if code in {"cancelled", "interrupted", "runtime_limit"}
+                    else "failed",
+                    error=Problem(
+                        code=code,
+                        message=public_text(str(exc))
+                        if isinstance(exc, GraftError)
+                        else "Execution failed. Check configuration and Docker before retrying.",
+                    ),
+                    lease_token=control.lease_token,
+                    settle=True,
+                    publication=publication,
+                    expected_access_epoch=control.access_epoch if publication else None,
+                )
+            except ExecutionStopped:
+                # A stale executor cannot settle or overwrite a successor/recovered job.
+                pass
+            except GraftError:
+                # Revocation racing cancellation finalization must still settle the live claim.
+                try:
+                    self.store.transition(
+                        run_id,
+                        stage="complete",
+                        message="Access changed; publication was blocked.",
+                        status="finished",
+                        outcome="failed",
+                        error=Problem(
+                            code="access_revoked", message="Repository authorization changed."
+                        ),
+                        lease_token=control.lease_token,
+                        settle=True,
+                    )
+                except ExecutionStopped:
+                    pass

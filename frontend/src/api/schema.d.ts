@@ -549,6 +549,108 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/runs/{run_id}/cancel': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Cancel Run */
+    post: operations['cancel_run_api_runs__run_id__cancel_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/usage': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Usage */
+    get: operations['usage_api_usage_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/privacy/data': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    /** Delete Data */
+    delete: operations['delete_data_api_privacy_data_delete']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/privacy/deletions/{receipt_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Deletion Status */
+    get: operations['deletion_status_api_privacy_deletions__receipt_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/privacy/model-disclosure': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Model Disclosure */
+    post: operations['model_disclosure_api_privacy_model_disclosure_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/privacy/model-consent': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Model Consent */
+    post: operations['model_consent_api_privacy_model_consent_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/health': {
     parameters: {
       query?: never
@@ -844,6 +946,11 @@ export interface components {
       /** Worker Available */
       worker_available: boolean
       /**
+       * Diagnostics Allowed
+       * @default true
+       */
+      diagnostics_allowed: boolean
+      /**
        * Scope
        * @default Public Python project structure; optional native baseline. Crawler fit is an example.
        */
@@ -1002,6 +1109,35 @@ export interface components {
        */
       kind: 'pinned_baseline' | 'local_baseline' | 'meta_smoke'
     }
+    /** CleanupView */
+    CleanupView: {
+      /** Id */
+      id: string
+      /** State */
+      state: string
+      /** Deleted Count */
+      deleted_count: number
+    }
+    /** ConsentDecision */
+    ConsentDecision: {
+      /** Source Snapshot */
+      source_snapshot: string
+      /** Target Snapshot */
+      target_snapshot?: string | null
+      /** Identity */
+      identity: string
+      /** Policy */
+      policy: string
+      /** Accepted */
+      accepted: boolean
+    }
+    /** ConsentInputs */
+    ConsentInputs: {
+      /** Source Snapshot */
+      source_snapshot: string
+      /** Target Snapshot */
+      target_snapshot?: string | null
+    }
     /** Coverage */
     Coverage: {
       examined_paths: components['schemas']['FrozenList_Annotated_str__AfterValidator__']
@@ -1027,6 +1163,37 @@ export interface components {
        */
       kind: 'stdlib' | 'runtime' | 'test'
       refs: components['schemas']['FrozenList_Ref__MinLen_min_length_1_']
+    }
+    /** Disclosure */
+    Disclosure: {
+      /** Identity */
+      identity: string
+      /**
+       * Policy
+       * @default meta-private-excerpts-v1
+       */
+      policy: string
+      /**
+       * Provider Endpoint
+       * @default https://api.meta.ai/v1
+       */
+      provider_endpoint: string
+      /** Snapshots */
+      snapshots: {
+        [key: string]: string
+      }[]
+      /**
+       * Transmission
+       * @default Bounded code excerpts, evidence references and test summaries. Likely secrets are rejected.
+       */
+      transmission: string
+      /** Consented */
+      consented: boolean
+      /**
+       * Analysis Enabled
+       * @default false
+       */
+      analysis_enabled: boolean
     }
     /** DiscoveryOptions */
     DiscoveryOptions: {
@@ -1849,6 +2016,11 @@ export interface components {
       /** Eligible Feature Count */
       eligible_feature_count?: number | null
       error?: components['schemas']['Problem'] | null
+      /**
+       * Cancel Requested
+       * @default false
+       */
+      cancel_requested: boolean
       /** Relevance Assessment Id */
       relevance_assessment_id?: string | null
       /** Catalog Id */
@@ -1954,6 +2126,11 @@ export interface components {
       /** Eligible Feature Count */
       eligible_feature_count?: number | null
       error?: components['schemas']['Problem'] | null
+      /**
+       * Cancel Requested
+       * @default false
+       */
+      cancel_requested: boolean
     }
     /** SelectionRequest */
     SelectionRequest: {
@@ -2239,6 +2416,37 @@ export interface components {
        * @enum {string}
        */
       kind: 'source_trace'
+    }
+    /** UsageView */
+    UsageView: {
+      /** Unfinished Jobs */
+      unfinished_jobs: number
+      /** Owner Job Limit */
+      owner_job_limit: number
+      /** Reserved Bytes */
+      reserved_bytes: number
+      /** Storage Limit Bytes */
+      storage_limit_bytes: number
+      /** Retention Days */
+      retention_days: number
+      /** Daily Usage */
+      daily_usage: {
+        [key: string]: number
+      }
+      /** Daily Limits */
+      daily_limits: {
+        [key: string]: number
+      }
+      /**
+       * Private Model Analysis Enabled
+       * @default false
+       */
+      private_model_analysis_enabled: boolean
+      /**
+       * Hosted Execution Enabled
+       * @default false
+       */
+      hosted_execution_enabled: boolean
     }
     /** ValidationError */
     ValidationError: {
@@ -3265,6 +3473,174 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['FeatureAssessment']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  cancel_run_api_runs__run_id__cancel_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        run_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RunSummary']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  usage_api_usage_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['UsageView']
+        }
+      }
+    }
+  }
+  delete_data_api_privacy_data_delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CleanupView']
+        }
+      }
+    }
+  }
+  deletion_status_api_privacy_deletions__receipt_id__get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        receipt_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CleanupView']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  model_disclosure_api_privacy_model_disclosure_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ConsentInputs']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Disclosure']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  model_consent_api_privacy_model_consent_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ConsentDecision']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Disclosure']
         }
       }
       /** @description Validation Error */

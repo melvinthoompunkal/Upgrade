@@ -122,32 +122,42 @@ instead. Any relay/proxy must also redact callback queries and credential header
 - Signed webhook deliveries deduplicate by delivery ID plus body hash in a durable SQLite
   inbox. Invalidation and deduplication commit together; raw payloads are not retained.
   Installation/repository changes clear affected owners' indexes, increment access
-  generations and cancel queued work. Resync is required before old descriptors reopen.
+  generations, cancel queued work and signal active F6 jobs. Resync is required before old descriptors reopen.
   Authorization revocation disconnects the matching numeric user. Reordered deliveries
   never restore cached grants. Fresh provider checks handle missed webhooks on each
   private operation, job admission, worker start and result publication.
 - Fetches already in progress settle within the Git timeout and cannot publish through a
   changed generation. Failed fetches remove only their owned temporary code. Worker stage
   boundaries check known access changes, and publication is fenced transactionally.
-  Interrupting an active provider call/container, hosted leases and durable cancellation
-  remain F6 work. Private snapshots cannot currently be submitted to model workflows.
+  F6 adds durable cancellation, async provider interruption, owned runner cleanup and
+  local lease fences. Hosted isolation and real provider/hard-stop validation remain pending.
+  Private snapshots cannot currently be submitted to model workflows.
 - Rate limits return sanitized 429 responses with Retry-After; there is no immediate
   rate-limit retry loop. Read-only 502/503/504 requests allow one retry; mutations do not.
 
 ## Migrate, rotate and verify
 
-SQLite migrates transactionally to schema v4, preserving prior runs/events under their
+SQLite migrates transactionally to schema v8, preserving prior runs/events under their
 existing owners. Legacy local records remain `local-workspace` and are never claimed by
 a GitHub account. V4 adds access generations, delivery deduplication, snapshot descriptors
 and run authorization bindings. Queued GitHub jobs without a generation binding fail
 closed before execution; abandoned running jobs remain interrupted without paid replay.
 
-Back up `data/web/runs.sqlite3` using SQLite's backup API and retain its artifact/private
-snapshot directories. Keep encryption keys separately. For key rotation, prepend the new
+Back up both `data/web/runs.sqlite3` and `data/web/usage.sqlite3` using the F6 offline
+backup command, together with the managed code/artifact directories. Keep encryption keys
+separately. For key rotation, prepend the new
 Fernet key to `TOKEN_ENCRYPTION_KEYS`; successful reads reencrypt older records. Retain old
 keys until rotation completes or require reconnecting. App key rotation replaces the
-configured PEM file; new operations sign fresh short-lived JWTs. Hosted retention/deletion,
-backup/restore certification and private-code model consent remain F6 requirements.
+configured PEM file; new operations sign fresh short-lived JWTs. F6 supplies local
+retention/deletion, integrity-checked backup/restore and exact-snapshot consent records.
+Private model analysis stays disabled. Hosted lifecycle certification remains pending.
+See [local operations](frontend.md#local-operations-and-recovery).
+
+In GitHub mode, paid Meta diagnostics require an explicit numeric ID grant, for example
+`OPERATOR_GITHUB_IDS=[12345]` in the backend environment. This does not change repository
+permissions. Provider/deployment configuration has no browser mutation API. Default
+daily REST/model allowances, disk reservations and retention settings are listed in
+[`backend/.env.example`](../backend/.env.example).
 
 The [current F2 verification record](full-feature-development.md#f2-local-private-access-lifecycle)
 uses controlled HTTP responses, disposable local Git repositories and isolated browsers.

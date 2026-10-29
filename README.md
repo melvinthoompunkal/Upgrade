@@ -51,6 +51,11 @@ honest assessed/unassessed counts and saved All/Relevant modes with global filte
 sorts. General-project eligibility remains blocked by the F7 acceptance/verification gates;
 adaptation remains a later package. See [the F4 implementation record](docs/full-feature-development.md#f4-local-implementation).
 
+F6 adds local fenced job ownership, fair scheduling, active cancellation, shared quotas,
+private-code consent records, retention/deletion and offline recovery/backup tools.
+System checks includes account storage controls. Private model analysis and hosted
+execution remain disabled; see [the F6 record](docs/full-feature-development.md#f6-local-implementation).
+
 ## Setup
 
 Requires Python 3.12 and [uv](https://docs.astral.sh/uv/). From the repository root:

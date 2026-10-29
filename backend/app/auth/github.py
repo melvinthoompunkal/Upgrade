@@ -4,6 +4,7 @@ import base64
 import json
 import time
 from datetime import UTC, datetime
+from time import perf_counter
 from urllib.parse import quote
 
 import httpx
@@ -13,6 +14,8 @@ from pydantic import BaseModel, ConfigDict, Field, SecretStr, ValidationError
 
 from app.config import Settings
 from app.errors import GraftError
+from app.jobs.control import checkpoint
+from app.jobs.quotas import charge, metric
 
 
 class GitHubError(GraftError):
@@ -87,11 +90,13 @@ class GitHubClient:
             if basic
             else None
         )
+        started = perf_counter()
         try:
             with httpx.Client(
                 timeout=10, follow_redirects=False, transport=self.transport, trust_env=False
             ) as client:
                 for attempt in range(2 if method == "GET" else 1):
+                    charge("github_requests")
                     with client.stream(
                         method, url, headers=headers, data=data, json=json_body, auth=auth
                     ) as response:
@@ -131,6 +136,7 @@ class GitHubClient:
                             return {}
                         content = bytearray()
                         for chunk in response.iter_bytes():
+                            checkpoint()
                             content.extend(chunk)
                             if len(content) > 2 * 1024 * 1024:
                                 raise GitHubError("GitHub response exceeded the supported size.")
@@ -140,6 +146,8 @@ class GitHubClient:
                         return result
         except (httpx.HTTPError, ValueError):
             raise GitHubError("GitHub did not return a usable response. Try again later.") from None
+        finally:
+            metric("github_latency_ms", round((perf_counter() - started) * 1000))
 
     def app_jwt(self) -> str:
         try:

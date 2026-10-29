@@ -5,6 +5,7 @@ from time import monotonic
 
 from app.contracts import ModelCall
 from app.errors import BudgetError
+from app.jobs.control import checkpoint
 
 
 @dataclass
@@ -19,6 +20,7 @@ class ModelBudget:
     started: float = field(default_factory=monotonic)
 
     def check(self) -> None:
+        checkpoint()
         if (
             monotonic() - self.started >= self.max_seconds
             or self.input_tokens >= self.max_input_tokens

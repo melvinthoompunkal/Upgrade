@@ -25,6 +25,7 @@ from app.auth.store import AuthStore
 from app.auth.webhooks import router as webhook_router
 from app.catalog_routes import router as catalog_router
 from app.config import Settings
+from app.jobs.routes import router as jobs_router
 from app.projects import router as project_router
 from app.relevance_routes import router as relevance_router
 from app.selection_artifacts import prepare_directory
@@ -53,7 +54,8 @@ def create_app(
         app.state.private_repository_root = data_root / "private-repositories"
         app.state.project_root = data_root / "projects"
         prepare_directory(app.state.artifact_root)
-        app.state.runs = RunStore(data_root / "web/runs.sqlite3")
+        app.state.data_root = data_root
+        app.state.runs = RunStore(data_root / "web/runs.sqlite3", settings)
         if settings.auth_mode == "local":
             await asyncio.to_thread(import_history, app.state.runs, app.state.artifact_root)
         if settings.auth_mode == "github":
@@ -71,8 +73,10 @@ def create_app(
         )
         if start_worker:
             app.state.worker.start()
-        yield
-        await asyncio.to_thread(app.state.worker.stop)
+        try:
+            yield
+        finally:
+            await asyncio.to_thread(app.state.worker.stop)
 
     application = FastAPI(title="Upgrade", version=__version__, lifespan=lifespan)
     application.add_middleware(SessionMiddleware)
@@ -91,6 +95,7 @@ def create_app(
     application.include_router(project_router)
     application.include_router(catalog_router)
     application.include_router(relevance_router)
+    application.include_router(jobs_router)
 
     @application.get("/health", response_model=HealthResponse)
     async def health() -> HealthResponse:

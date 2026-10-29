@@ -136,10 +136,10 @@ async def _run_configured() -> SmokeReport:
 
 def main() -> int:
     try:
-        from app.execution import ProcessLock
+        from app.execution import cli_execution
         from app.tools.runner import PROJECT_ROOT
 
-        with ProcessLock(PROJECT_ROOT / "data/execution.lock"):
+        with cli_execution(PROJECT_ROOT):
             report = asyncio.run(_run_configured())
     except GraftError as exc:
         print(
