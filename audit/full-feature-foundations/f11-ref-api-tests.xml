@@ -1,1 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="2.856" timestamp="2026-10-30T10:38:11.356658-04:00" hostname="MelvinT_Legion"><testcase classname="tests.test_projects" name="test_named_ref_resolves_once_before_pin_and_never_during_reopen" time="1.610" /></testsuite></testsuites>

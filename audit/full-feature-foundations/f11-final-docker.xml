@@ -1,1 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="13.410" timestamp="2026-10-30T10:51:46.534964-04:00" hostname="MelvinT_Legion"><testcase classname="tests.test_adaptation" name="test_independent_docker_red_to_green" time="12.228" /></testsuite></testsuites>

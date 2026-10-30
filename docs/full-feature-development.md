@@ -60,6 +60,7 @@ not change the recorded F0–F9 implementation or evidence.
 - [Adaptation requirements](#12-completing-implementation-and-verification)
 - [Package status and next work](#13-development-sequence-and-deliverables)
 - [Release acceptance](#14-acceptance-and-release-verification)
+- [Post-F13 priorities and cleanup](#post-f13-code-review-and-prioritized-work)
 
 ## 1. Current implementation
 
@@ -241,10 +242,10 @@ provider-disconnect failure, webhook tamper/replay/rollback and credentials abse
 helper files, Git arguments/environment and retained snapshots. A browser regression exposed
 offscreen mobile account actions; the navigation now scrolls.
 
-Machine evidence: [backend JUnit](../audit/full-feature-foundations/f2-connection-tests.xml),
-[focused lifecycle/identity JUnit](../audit/full-feature-foundations/f2-lifecycle-tests.xml),
-[desktop/mobile JUnit](../audit/full-feature-foundations/f2-browser-tests.xml) and
-[source/check manifest](../audit/full-feature-foundations/f2-connection-checks.json).
+Machine evidence: backend JUnit (`f2-connection-tests.xml`),
+focused lifecycle/identity JUnit (`f2-lifecycle-tests.xml`),
+desktop/mobile JUnit (`f2-browser-tests.xml`) and
+source/check manifest (`f2-connection-checks.json`).
 These are local implementation checks, not a real GitHub private-fetch receipt.
 
 Private fetch is opt-in and remains off by default. The live F2 exit gate still requires
@@ -286,21 +287,27 @@ the saved backend/browser JUnit digests and totals also matched. No application 
 browser, Docker, network fetch or paid inference was rerun for that documentation-only change.
 The subsequent F2/F3 implementations have fresh local checks listed below.
 
-| Milestone / date | Recorded result | Retained evidence |
+The October 30 post-F13 cleanup removed obsolete stage reports and one-off audit probes.
+Pre-F13 filenames below identify historical evidence rather than current working-tree files.
+Previously tracked receipts remain available in Git at `8cdcf0f`; older ignored probes were
+local-only. See [the evidence index](../audit/README.md#historical-evidence).
+The complete F13 handoff/evidence remains in `audit/full-feature-foundations/`.
+
+| Milestone / date | Recorded result | Historical evidence |
 |---|---|---|
-| Phase 1 audit, Oct 27 | 46 backend tests; live Spark smoke passed with three calls, 1,938 tokens | Local [checks](../audit/checks.json), [live smoke](../audit/live-smoke.json) |
-| Phase 2 implementation/review, Oct 27 | 59 backend tests; 6 isolation and 8 ordinary cases; 4 expected retry assertions / 3 controls; five runner failure probes | Local [review checks](../audit/phase2-audit/checks.json), [baseline](../audit/phase2-audit/baseline.json), [fault reproduction](../audit/phase2-audit/capture-fault.json), [edge probes](../audit/phase2-audit/edge-probes.json), [runner probes](../audit/phase2-audit/runner-probes.json) |
-| Phase 3, Oct 27 | 92 backend tests; 6 isolation / 13 ordinary cases; expected retry red; six stream faults; live smoke and source trace | Local [checks](../audit/phase3-checks.json); trace `source-trace-8991ae909e544bf484c2f83e60c348b0` |
-| W1, Oct 27 | 116 backend tests; real pinned/local Docker baselines; 31 hashes rechecked | Local [checks](../audit/stage4-w1-checks.json) |
-| W2, Oct 27 | 214 backend tests; strict schemas and immutable binding contracts; no live calls | Local [checks](../audit/stage4-w2-checks.json), [JUnit](../audit/stage4-w2-tests.xml), [schemas](../audit/stage4-w2-schemas.json) |
-| Stage 4A implementation/review, Oct 27 | 259 backend tests; one selected feature at 93/100; 29 artifacts and 50 citations checked; six audit reproductions | Local [implementation checks](../audit/stage4-checks.json), [JUnit](../audit/stage4-tests.xml), [review checks](../audit/stage4-review/checks.json), [reproductions](../audit/stage4-review/reproductions.json), [artifact recheck](../audit/stage4-review/receipt-recheck.json) |
+| Phase 1 audit, Oct 27 | 46 backend tests; live Spark smoke passed with three calls, 1,938 tokens | Local checks (`audit/checks.json`), live smoke (`audit/live-smoke.json`) |
+| Phase 2 implementation/review, Oct 27 | 59 backend tests; 6 isolation and 8 ordinary cases; 4 expected retry assertions / 3 controls; five runner failure probes | Local review checks (`audit/phase2-audit/checks.json`), baseline (`audit/phase2-audit/baseline.json`), fault reproduction (`audit/phase2-audit/capture-fault.json`), edge probes (`audit/phase2-audit/edge-probes.json`), runner probes (`audit/phase2-audit/runner-probes.json`) |
+| Phase 3, Oct 27 | 92 backend tests; 6 isolation / 13 ordinary cases; expected retry red; six stream faults; live smoke and source trace | Local checks (`audit/phase3-checks.json`); trace `source-trace-8991ae909e544bf484c2f83e60c348b0` |
+| W1, Oct 27 | 116 backend tests; real pinned/local Docker baselines; 31 hashes rechecked | Local checks (`audit/stage4-w1-checks.json`) |
+| W2, Oct 27 | 214 backend tests; strict schemas and immutable binding contracts; no live calls | Local checks (`audit/stage4-w2-checks.json`), JUnit (`audit/stage4-w2-tests.xml`), schemas (`audit/stage4-w2-schemas.json`) |
+| Stage 4A implementation/review, Oct 27 | 259 backend tests; one selected feature at 93/100; 29 artifacts and 50 citations checked; six audit reproductions | Local implementation checks (`audit/stage4-checks.json`), JUnit (`audit/stage4-tests.xml`), review checks (`audit/stage4-review/checks.json`), reproductions (`audit/stage4-review/reproductions.json`), artifact recheck (`audit/stage4-review/receipt-recheck.json`) |
 | Frontend delivery, Oct 28 | 259 existing + 19 API tests; 26 desktop/mobile browser checks; TypeScript/build and HTTP serving passed; fresh API Docker baseline | API run `e80af20ddfcc4e6393b0c3f0b38dc700`; no fresh paid model inference for this delivery |
-| First foundation pass, Oct 28 | 342 backend tests; later focused profiler 20 and selection 16; browser 34 plus 2 recorded-result checks; build/lint; fresh Docker baseline and public preflight | Tracked [checks](../audit/full-feature-foundations/checks.json), [backend JUnit](../audit/full-feature-foundations/backend-tests.xml), [browser JUnit](../audit/full-feature-foundations/browser-tests.xml), [recorded-result browser JUnit](../audit/full-feature-foundations/browser-live-tests.xml), [profiler](../audit/full-feature-foundations/profile-v2-tests.xml), [selection protocol](../audit/full-feature-foundations/workflow-v2-tests.xml) |
-| F0 follow-up, Oct 28 | 358 backend tests, zero failures/errors/skips; lint/format passed | Tracked [checks](../audit/full-feature-foundations/f0-follow-up-checks.json), [JUnit](../audit/full-feature-foundations/f0-follow-up-tests.xml) |
-| F1 follow-up, Oct 28 | 384 backend tests and 36 desktop/mobile browser tests, zero failures/errors/skips; TypeScript/build/lint/format passed | Tracked [checks](../audit/full-feature-foundations/f1-identity-checks.json), [backend JUnit](../audit/full-feature-foundations/f1-identity-tests.xml), [browser JUnit](../audit/full-feature-foundations/f1-browser-tests.xml) |
-| F2 local lifecycle, Oct 28 | 423 full backend checks; final 122 auth/lifecycle/API checks after the documented-endpoint and atomic-publication refinements; 42 desktop/mobile browser checks; zero failures/errors/skips; build/lint/format passed | Tracked [checks](../audit/full-feature-foundations/f2-connection-checks.json), [backend JUnit](../audit/full-feature-foundations/f2-connection-tests.xml), [final focused JUnit](../audit/full-feature-foundations/f2-lifecycle-tests.xml), [browser JUnit](../audit/full-feature-foundations/f2-browser-tests.xml) |
-| F3 public Python projects, Oct 28 | 437 backend checks, 50 mocked desktop/mobile checks and 2 real public browser-to-worker runs passed; build/TypeScript/lint/format/lock checks passed; final Docker image passed 6 isolation checks, native pytest/conftest and unittest/doctest checks, and retained error/skip failures | Tracked [checks and source hashes](../audit/full-feature-foundations/f3-checks.json), [backend JUnit](../audit/full-feature-foundations/f3-backend.xml), [browser summary](../audit/full-feature-foundations/f3-browser-summary.json), [real browser JUnit](../audit/full-feature-foundations/f3-live-browser.xml), [native adapter checks](../audit/full-feature-foundations/f3-native-checks.json) |
-| F11 local profiles, Oct 30 | 632 full backend checks; final 40 profile/rejection checks, 19 adaptation checks and immutable-ref API check; 36 desktop/mobile checks; six real Docker profile examples and fresh end-to-end adaptation; build/lint/format passed | [Checks and source hashes](../audit/full-feature-foundations/f11-checks.json), [profile Docker evidence](../audit/full-feature-foundations/f11-profiles.json), [backend JUnit](../audit/full-feature-foundations/f11-backend-tests.xml), [browser JUnit](../audit/full-feature-foundations/f11-browser-tests.xml) |
+| First foundation pass, Oct 28 | 342 backend tests; later focused profiler 20 and selection 16; browser 34 plus 2 recorded-result checks; build/lint; fresh Docker baseline and public preflight | Tracked checks (`checks.json`), backend JUnit (`backend-tests.xml`), browser JUnit (`browser-tests.xml`), recorded-result browser JUnit (`browser-live-tests.xml`), profiler (`profile-v2-tests.xml`), selection protocol (`workflow-v2-tests.xml`) |
+| F0 follow-up, Oct 28 | 358 backend tests, zero failures/errors/skips; lint/format passed | Tracked checks (`f0-follow-up-checks.json`), JUnit (`f0-follow-up-tests.xml`) |
+| F1 follow-up, Oct 28 | 384 backend tests and 36 desktop/mobile browser tests, zero failures/errors/skips; TypeScript/build/lint/format passed | Tracked checks (`f1-identity-checks.json`), backend JUnit (`f1-identity-tests.xml`), browser JUnit (`f1-browser-tests.xml`) |
+| F2 local lifecycle, Oct 28 | 423 full backend checks; final 122 auth/lifecycle/API checks after the documented-endpoint and atomic-publication refinements; 42 desktop/mobile browser checks; zero failures/errors/skips; build/lint/format passed | Tracked checks (`f2-connection-checks.json`), backend JUnit (`f2-connection-tests.xml`), final focused JUnit (`f2-lifecycle-tests.xml`), browser JUnit (`f2-browser-tests.xml`) |
+| F3 public Python projects, Oct 28 | 437 backend checks, 50 mocked desktop/mobile checks and 2 real public browser-to-worker runs passed; build/TypeScript/lint/format/lock checks passed; final Docker image passed 6 isolation checks, native pytest/conftest and unittest/doctest checks, and retained error/skip failures | Tracked checks and source hashes (`f3-checks.json`), backend JUnit (`f3-backend.xml`), browser summary (`f3-browser-summary.json`), real browser JUnit (`f3-live-browser.xml`), native adapter checks (`f3-native-checks.json`) |
+| F11 local profiles, Oct 30 | 632 full backend checks; final 40 profile/rejection checks, 19 adaptation checks and immutable-ref API check; 36 desktop/mobile checks; six real Docker profile examples and fresh end-to-end adaptation; build/lint/format passed | Checks and source hashes (`f11-checks.json`), profile Docker evidence (`f11-profiles.json`), backend JUnit (`f11-backend-tests.xml`), browser JUnit (`f11-browser-tests.xml`) |
 
 Counts belong to their implementation states; they are neither additive across suites
 nor competing current totals. F0/F1 checks used controlled GitHub/Meta/Docker boundaries;
@@ -340,7 +347,7 @@ not authorize future private-code transmission.
 | Source | urllib3 | `5feb993421a48a508bc70c78e745337cc6415265` | 144 text files, 1,478,408 bytes, 82 Python files; browse/index only |
 | Target | HTTPX | `b5addb64f0161ff6bfe94c124ef76f6a1fba5254` | 90 text files, 974,681 bytes, 60 Python files; browse/index only |
 
-Tracked [public-projects.json](../audit/full-feature-foundations/public-projects.json)
+Historical `public-projects.json`
 records refs, notices, inventory/manifest hashes and `python-static-v1` assessment.
 [check_public_examples.py](../scripts/check_public_examples.py) can create a new bounded
 preflight; it fetches public snapshots without model inference or repository execution.
@@ -352,8 +359,8 @@ F3's fresh real browser runs analyzed **ItsDangerous** source
 zero model requests. Both desktop and mobile completed through the real API queue/worker,
 opened a stored citation and retained exact source/target identities. Those structural
 runs did not request native baseline execution. Receipts:
-[desktop](../audit/full-feature-foundations/f3-live-desktop.json) and
-[mobile](../audit/full-feature-foundations/f3-live-mobile.json).
+desktop (`f3-live-desktop.json`) and
+mobile (`f3-live-mobile.json`).
 
 Separately, original native suites were executed on public more-itertools snapshots.
 Current head `4aeb4338ae1407d8da9723e86da99efeb446f719` ran 929 cases but hit the
@@ -382,13 +389,13 @@ Phase 3 completion; Stage 4 plan, research, W1, W2, completion and review;
 foundation, F0 and F1 receipts; and frontend verification. Findings, meaningful
 scope decisions, verification outcomes and remaining work are reconciled here.
 
-Exact original Markdown, including the prior version of this plan, is backed up in
-local `audit/historical-documents-2026-10-28.zip`, with a filename/SHA-256 manifest.
-That archive, early audit machine receipts and runtime `data/artifacts/` remain ignored
-local history and may be absent in a fresh clone. Foundation JSON/XML receipts and this
-document are tracked. Generated reports inside reproduction fixtures remain untouched.
-Future changes update this document and add machine evidence when needed; do not create
-another parallel status or closure Markdown file.
+The earlier consolidation used a local historical-document ZIP with a filename/SHA-256
+manifest. The post-F13 cleanup removed that archive, old stage outputs and copied
+reproduction fixtures after their findings were consolidated here. Previously tracked
+foundation evidence is available in Git; the complete F13 evidence remains in the tree.
+See [evidence retention and recovery](../audit/README.md). Future changes update this
+document and retain new validation output under ignored `data/`; do not create another
+parallel status or closure Markdown file.
 
 ### Historical Stage 4 research retained
 
@@ -754,9 +761,9 @@ Implementation: [contracts](../backend/app/catalog_contracts.py),
 [workflow](../backend/app/catalog_workflow.py), [API](../backend/app/catalog_routes.py)
 and [browser](../frontend/src/features/catalog/Catalog.tsx).
 Local checks use real disposable Git snapshots and controlled Meta responses, not paid
-live discovery or release-scale scans. See [F4 checks](../audit/full-feature-foundations/f4-checks.json),
-[backend JUnit](../audit/full-feature-foundations/f4-backend-junit.xml) and
-[desktop/mobile JUnit](../audit/full-feature-foundations/f4-browser-junit.xml).
+live discovery or release-scale scans. See F4 checks (`f4-checks.json`),
+backend JUnit (`f4-backend-junit.xml`) and
+desktop/mobile JUnit (`f4-browser-junit.xml`).
 The design pipeline below remains the boundary for future profiles and broader validation.
 
 ### Discovery and validation pipeline
@@ -910,15 +917,15 @@ Implementation: [contracts](../backend/app/relevance_contracts.py),
 and [browser](../frontend/src/features/catalog/AssessmentPanel.tsx).
 Controlled-provider regressions and local seeded scale/browser checks validate this boundary;
 no real-account or live Meta relevance receipt is claimed. October 28 verification retained
-[the source/hash manifest](../audit/full-feature-foundations/f5-checks.json),
-[469 full backend checks](../audit/full-feature-foundations/f5-tests.xml), followed by
-[55 passing final affected-suite checks](../audit/full-feature-foundations/f5-focused-tests.xml).
+the source/hash manifest (`f5-checks.json`),
+469 full backend checks (`f5-tests.xml`), followed by
+55 passing final affected-suite checks (`f5-focused-tests.xml`).
 There were 70 passing controlled/offline browser checks and two passing recorded-result
 read-only checks, including eight F5 checks across desktop/mobile plus tablet keyboard
 coverage. Two explicit F3 live-public-fetch checks remained opt-in skips. The recorded-result
 checks were rerun successfully after starting their required local backend, with model
 credentials and the worker disabled. Build, TypeScript, Ruff and diff checks passed.
-[Scale measurements](../audit/full-feature-foundations/f5-scale.json) used 30 queries at
+Scale measurements (`f5-scale.json`) used 30 queries at
 each size; the 10,000-row case measured 34.437 ms p95 and a 10,792-byte default summary page.
 The 10,000-row fixture deliberately
 exceeds discovery's 5,000-entry cap and does not represent a paid discovery run. Query timings
@@ -1168,19 +1175,19 @@ Implementation: [execution context](../backend/app/jobs/control.py),
 [resource ownership](../backend/app/jobs/resources.py), [retention](../backend/app/jobs/retention.py),
 [privacy/API](../backend/app/jobs/routes.py), [operator tools](../backend/app/jobs/operations.py)
 and [worker](../backend/app/api/worker.py). Verification is controlled/offline; retained
-[backend results](../audit/full-feature-foundations/f6-tests.xml),
-[browser results](../audit/full-feature-foundations/f6-browser-tests.xml) and
-[source/check manifest](../audit/full-feature-foundations/f6-checks.json) describe the tested boundary.
+backend results (`f6-tests.xml`),
+browser results (`f6-browser-tests.xml`) and
+source/check manifest (`f6-checks.json`) describe the tested boundary.
 
 October 29 verification recorded 495 passing full backend checks, then 163 passing final
 affected-suite checks. The controlled/offline browser suite passed 76 checks across desktop
 and mobile, with two opt-in public-fetch skips; the six F6 browser cases passed again after
 visual review. Recorded-result read-only browser checks were excluded from this pass.
 Production build/TypeScript, Ruff and diff checks passed. The
-[offline operator receipt](../audit/full-feature-foundations/f6-operator-checks.json)
+offline operator receipt (`f6-operator-checks.json`)
 records all five commands against a disposable fixture, preserved source bytes and a
 hash-matching restore without replay. The final
-[114 passing cleanup regressions](../audit/full-feature-foundations/f6-cleanup-tests.xml) additionally
+114 passing cleanup regressions (`f6-cleanup-tests.xml`) additionally
 cover quota-blocked token cleanup, cancellation before container creation and unresolved
 container admission. These are controlled local checks, not live-provider or hosting receipts.
 
@@ -1192,13 +1199,14 @@ recheck revocable private-code consent before charging or transmitting. CLI star
 reconciles registered containers and blocks execution if cleanup fails. Nine new backend
 regressions cover those cases and preservation of active/queued reservations; seven
 reproduced failures before the repairs. Fresh receipts are retained separately from the
-original implementation evidence in [the completion manifest](../audit/full-feature-foundations/f6-completion-checks.json),
-[backend results](../audit/full-feature-foundations/f6-completion-tests.xml) and
-[desktop/mobile browser results](../audit/full-feature-foundations/f6-completion-browser-tests.xml).
+original implementation evidence in the completion manifest (`f6-completion-checks.json`),
+backend results (`f6-completion-tests.xml`) and
+desktop/mobile browser results (`f6-completion-browser-tests.xml`).
 The completion suite passed all 510 backend checks and all six F6 desktop/mobile browser
 checks; production build/TypeScript, Ruff formatting/lint and diff checks passed.
-Recheck the current source and receipt hashes without inference using
-`python audit/full-feature-foundations/verify_f6.py --manifest f6-completion-checks.json`.
+The original completion used the historical `verify_f6.py` helper. For current local
+verification use `scripts/validate_release.py`; the old tracked receipts and helper
+remain available in Git.
 
 ### Remaining hosted release gates
 
@@ -1376,13 +1384,13 @@ October 29 local verification: the full backend run before final review passed 5
 case skipped there and passed separately). Desktop/mobile browser checks passed 38,
 with four final export/verdict checks additionally validating the patch response digest.
 The TypeScript/Vite build, Ruff lint, formatting of all 143 checked Python files and
-`git diff --check` passed. [Machine receipt](../audit/full-feature-foundations/f7-checks.json)
+`git diff --check` passed. Machine receipt (`f7-checks.json`)
 records the tested source hashes, environment, exact scope and remaining exit gates.
-The [retained Docker report](../audit/full-feature-foundations/f7-docker-report.json)
+The retained Docker report (`f7-docker-report.json`)
 records separate disposable source/target Git repositories, six passing isolation cases,
 one ordinary baseline green, one frozen assertion red changing to green, and the unchanged
 native regression green. The actual patch changes one production file / 25 lines including
-notices, with zero repairs. Its [evidence archive](../audit/full-feature-foundations/f7-docker-run.zip)
+notices, with zero repairs. Its evidence archive (`f7-docker-run.zip`)
 retains exact inputs, generated tests, patch, mappings, bindings and captures; independent
 hash/case checks match the final controller bytes. Target code/tests are archived to avoid
 accidental host-side test collection. GitHub fetching and Meta responses are controlled in
@@ -1424,7 +1432,7 @@ Implementation: [review contracts](../backend/app/change_review_contracts.py),
 [routes](../backend/app/change_routes.py) and
 [Changes view](../frontend/src/features/runs/Changes.tsx).
 Verification receipts and tested source hashes are retained in
-[the F8 manifest](../audit/full-feature-foundations/f8-checks.json). The retained F7
+the F8 manifest (`f8-checks.json`). The retained F7
 Docker archive is reopened through the real API/browser; this is a fresh review of
 recorded execution, not a new Docker or live semantic/provider run.
 
@@ -1485,11 +1493,11 @@ owner-scoped API and checks patch/evidence hashes without a second execution or 
 It never upgrades this into a live semantic or real-account receipt. Optional PR publishing
 and multi-user hosting remain disabled.
 
-Retained results: [F9 manifest](../audit/full-feature-foundations/f9-checks.json),
-[backend JUnit](../audit/full-feature-foundations/f9-backend-junit.xml),
-[browser JUnit](../audit/full-feature-foundations/f9-browser-junit.xml),
-[Docker JUnit](../audit/full-feature-foundations/f9-docker-junit.xml) and
-[scale measurements](../audit/full-feature-foundations/f9-scale.json).
+Retained results: F9 manifest (`f9-checks.json`),
+backend JUnit (`f9-backend-junit.xml`),
+browser JUnit (`f9-browser-junit.xml`),
+Docker JUnit (`f9-docker-junit.xml`) and
+scale measurements (`f9-scale.json`).
 The manifest identifies the actual tested bytes, commands, counts, artifact locations and
 dependency-scan outcomes. Runtime evidence remains under its unique validation directory.
 Fresh GitHub App login/private grants/provider lifecycle, live catalog/relevance/adaptation,
@@ -1660,12 +1668,12 @@ Production build, repository Ruff/format and changed frontend Prettier checks pa
 Six final independent Docker examples passed the frozen red-to-green/regression checks
 above, including two runtime rejection probes. The previously skipped existing end-to-end
 adaptation case was then explicitly enabled and passed with real Docker and a controlled
-provider, retaining a fresh exact patch/frozen receipt. See [checks and hashes](../audit/full-feature-foundations/f11-checks.json),
-[six-profile evidence](../audit/full-feature-foundations/f11-profiles.json),
-[final profile JUnit](../audit/full-feature-foundations/f11-profile-unit-tests.xml),
-[final adaptation JUnit](../audit/full-feature-foundations/f11-final-adaptation.xml),
-[end-to-end Docker JUnit](../audit/full-feature-foundations/f11-final-docker.xml) and
-[browser JUnit](../audit/full-feature-foundations/f11-browser-tests.xml).
+provider, retaining a fresh exact patch/frozen receipt. See checks and hashes (`f11-checks.json`),
+six-profile evidence (`f11-profiles.json`),
+final profile JUnit (`f11-profile-unit-tests.xml`),
+final adaptation JUnit (`f11-final-adaptation.xml`),
+end-to-end Docker JUnit (`f11-final-docker.xml`) and
+browser JUnit (`f11-browser-tests.xml`).
 These checks do not close the live release gates.
 
 ### F12: hosted product
@@ -1738,11 +1746,11 @@ affected frontend formatting and diff checks passed. These are Windows/control-p
 receipts with controlled GitHub and build inputs, not Linux cgroup, live-provider,
 public TLS, untrusted-execution or production load certification.
 
-Retained [F12 manifest](../audit/full-feature-foundations/f12-checks.json),
-[full backend JUnit](../audit/full-feature-foundations/f12-backend-junit.xml),
-[final focused JUnit](../audit/full-feature-foundations/f12-focused-junit.xml),
-[browser JUnit](../audit/full-feature-foundations/f12-browser-junit.xml) and
-[repeated browser JUnit](../audit/full-feature-foundations/f12-browser-repeat-junit.xml)
+Retained F12 manifest (`f12-checks.json`),
+full backend JUnit (`f12-backend-junit.xml`),
+final focused JUnit (`f12-focused-junit.xml`),
+browser JUnit (`f12-browser-junit.xml`) and
+repeated browser JUnit (`f12-browser-repeat-junit.xml`)
 bind the tested sources/build and distinguish the broad pass from the final fixture update.
 
 ### F13: optional PR publishing
@@ -1910,7 +1918,8 @@ optional PR publishing extension and does not block local patch review/download 
 Optional 4B remains a bounded comparison extension, not a substitute for these packages.
 
 Keep current status, resolved findings, remaining exit criteria and verification history
-in this document. Add JSON/XML/hash evidence alongside the existing receipts as needed.
+in this document. Store generated JSON/XML/hash evidence under ignored `data/`; retain
+only an explicitly selected handoff/evidence set in `audit/` when needed.
 Update [frontend.md](frontend.md) for actual workflow/startup changes and
 [github-setup.md](github-setup.md) for implemented settings/migration/rotation. Preserve
 machine receipt dates and tested identities; a documentation edit is not new live evidence.
@@ -1921,3 +1930,82 @@ detail. Command references remain [Phase 3](phase3.md), [W1](stage4-w1.md),
 [W2](stage4-w2.md), [Stage 4](stage4.md) and [runner boundary](../sandbox/README.md).
 Future status references should link to this document's sections instead of opening
 another audit/status Markdown file.
+
+### Post-F13 code review and prioritized work
+
+Reviewed October 30, 2026 against the current code and the F13 handoff. The local
+implementation is present. A missing live receipt is a release-validation task; a runtime
+or workflow rejected by the code is a capability that still needs implementation.
+This review did not reproduce a new application defect in the inspected paths or current
+backend regression suite. Controlled tests alone cannot establish that the pending external
+workflows work.
+
+A sanitized settings check confirms the current local blocker: `AUTH_MODE=local`,
+`DEPLOYMENT_MODE=local`, no GitHub client ID/secret or App ID/private-key path, and
+private fetch/publishing disabled. A model key is present, which does not establish
+live connectivity or semantic correctness. No credential values were printed or changed.
+
+| Priority / scope | Next concrete work | Code and acceptance anchor |
+|---|---|---|
+| First: local public-Python release | Configure a development GitHub App and selected test repositories, then exercise real login, grants/denials, refresh, disconnect/revocation and repository changes. | `backend/app/auth/`, `docs/github-setup.md`; real-account lifecycle receipts. A separately connected GitHub account does not configure the app's own credentials. |
+| First: live feature workflow | Run public multi-feature discovery, both relevance modes and one supported live-model adaptation through browser review/download. Fix any defects exposed by the run. | `catalog_workflow.py`, `relevance_workflow.py`, `adaptation_inputs.py`, `adaptation_workflow.py`; pinned inputs, usage/counts, ordinary green, meaningful frozen assertion red, unchanged acceptance/regression green, scope/notices and target preservation. |
+| First: lifecycle exit checks | Exercise real provider cancellation and hard-stop/container recovery, including usage accounting and absence of automatic paid replay. | `backend/app/jobs/` and `backend/app/hosting/`; actual provider/process evidence. Local controlled coverage already exists. |
+| Optional publishing release | Use a writable public development repository to validate real user/App rights, stale bases, concurrent/duplicate attempts, interrupted responses and exact remote bytes/notices. | `backend/app/publishing/`; unique branch/draft PR evidence and unchanged default branch. `GITHUB_PUBLISHING_ENABLED` remains opt-in; download/review can ship without publishing. |
+| Private analysis feature | Complete live snapshot consent/access/revocation and applicable organization-policy checks, then implement a reviewed admission path that enforces those checks for analysis jobs. | `backend/app/project_privacy.py` currently rejects every private/snapshot analysis. Consent storage or enabling private fetch does not enable analysis; there is no private-analysis switch today. |
+| Hosted analysis release | Validate the actual Linux host, TLS/proxy/origin, tenant isolation, quotas/load, cancellation, recovery, retention/restore, key rotation, migration/rollback and monitoring. | `backend/app/hosting/release.py`, `scripts/validate_hosted.py`, `docs/hosting.md`; current build-bound deployment evidence and independent operator review. Local deployment templates are already implemented. |
+| Hosted adaptation feature | Design and implement an execution service with reviewed isolation, resources, filesystem/network controls and cleanup before admitting target tests or adaptation on the host. | Hosted admission currently allows only project analysis, discovery and relevance, and rejects native baselines/adaptation. This needs implementation beyond deployment configuration. |
+| Broader repository support | Add Node/TypeScript or other runtime profiles only with matching static inventory/evidence, dependency policy, frozen acceptance, isolated native regression, patch policy and support reporting. | `project_adapters.py`, `runtime_profiles.py`, `adaptation_acceptance.py`, `support_matrix.py`; independent fixtures and actual isolated red-to-green evidence. OpenClaw's root remains outside the Python profile. |
+| Later extensions | Add async fixtures/Trio, streaming/ASGI/live-network acceptance, broader entry-point shapes, non-JSON values or additional licenses only when those profiles are a product requirement. Optional Stage 4B comparison is separate. | Explicit current limits in `backend/app/support_matrix.py`; each extension needs its own acceptance criteria. The unchanged crawler retry fixture is an intentional red control. |
+
+For the next milestone, complete the first three rows for the existing public-Python
+scope, then optional publishing. Private analysis, hosted execution and additional
+languages should be separate implementation packages with explicit acceptance criteria.
+
+Select the live source/target pair against the actual profile before starting inference:
+static Python project metadata, a supported native suite, JSON-compatible callable
+acceptance, reviewed dependencies and an exact supported source-use profile. Public
+Python analysis does not imply that every Python repository can run tests or accept an
+adaptation. Broader dependency/build support is another runtime-profile implementation
+task, not something that a GitHub permission change will unlock.
+
+### Cleanup and verification of this review
+
+Removed 136 obsolete audit files (3,194,349 bytes), including historical stage JUnit and
+JSON outputs, superseded archives, one-off verifier scripts and copied reproduction
+projects/logs/cache. The thirteen F13 audit/evidence files remain, including all eleven
+artifacts hashed by its manifest. Historical tracked receipts can be recovered from Git.
+The evidence index explains the distinction from removed ignored local probes.
+
+Kept the backend/browser regression suites, active validation tools and all sandbox/example
+tests used by runtime verification. The explicit public-project browser check now saves
+its JSON receipt in Playwright's per-test output directory instead of recreating an F3
+audit file. Ignore rules retain only the curated F13 evidence and audit index, preventing
+new stage scratch output from being added accidentally.
+
+The original F13 receipt remains a dated historical record. This cleanup changes files
+covered by its source manifest, so it must not be presented as a current full-source pass.
+All application source bytes still match the original F13 source manifest; the differences
+are `.gitignore`, this plan and the browser test's receipt output location.
+
+Fresh checks for this review on October 30, 2026:
+
+- Backend regression suite: **708 passed, one Docker case deliberately deselected**,
+  zero failures/errors/skips, in 19 minutes 53 seconds. JUnit is retained locally at
+  `data/review-f13-verified.xml`. One existing Starlette/httpx TestClient deprecation
+  warning remains; it did not fail the suite.
+- Production frontend: TypeScript and Vite build passed.
+- Ruff lint and format: passed; all 184 Python files already formatted. The modified
+  browser test passed Prettier and both desktop/mobile definitions collected successfully.
+- Evidence integrity: all eleven retained F13 artifact hashes matched; all 141 ZIP
+  entries passed the archive integrity check.
+- Documentation: all fourteen checked Markdown files had no broken local file links;
+  `git diff --check` passed.
+
+Pytest temporary-directory access and Vite's esbuild helper required normal Windows
+permissions after sandboxed attempts failed with access/spawn errors. No application
+code was changed to bypass those environment restrictions. Disposable review test
+folders were removed after verification; the fresh JUnit and F13 evidence remain.
+
+This review did not rerun Docker, execute the browser/live-public-fetch scenarios, make
+live GitHub/Meta calls, rescan dependency databases or exercise a deployment. It does not
+close any pending live release gate.

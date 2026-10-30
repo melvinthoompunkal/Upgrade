@@ -2,6 +2,17 @@
 
 Date: October 30, 2026, America/New_York.
 
+Review and cleanup note, October 30, 2026: the current implementation boundaries were
+checked against configuration, project admission, runtime support, hosted admission and
+publishing code. The actionable follow-up is now recorded in
+[section 15 of the maintained plan](../../docs/full-feature-development.md#15-next-implementation-and-documentation-policy).
+Obsolete pre-F13 reports and one-off probes were removed; current regression/runner tests
+and this report's complete F13 evidence set remain. See [the evidence index](../README.md).
+The verification results below describe the original F13 checkout. Documentation,
+ignore-rule and browser-test output changes from this cleanup invalidate a full current-source
+comparison with that original manifest; its retained artifact hashes remain independently
+checkable. This review does not certify the pending live workflows.
+
 **Result: F13 is implemented and verified locally. The full product is not yet release-complete.**
 The remaining work includes real GitHub and Meta workflows, private-access validation,
 deployment certification, and implementation of any additional execution profiles offered.

@@ -52,7 +52,7 @@ test('real public source and target analysis needs no model and retains citation
   await page.screenshot({ path: `../data/frontend-qa/f3-${testInfo.project.name}-live-result.png` })
   expect(errors).toEqual([])
   await writeFile(
-    `../audit/full-feature-foundations/f3-live-${testInfo.project.name}.json`,
+    testInfo.outputPath('public-project-analysis.json'),
     JSON.stringify(
       {
         run_id: runId,

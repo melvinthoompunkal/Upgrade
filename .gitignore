@@ -58,12 +58,23 @@ Desktop.ini
 *.swo
 *~
 
-# Keep source, documentation, dependency manifests/lockfiles, and .env.example included.
+# Local implementation guides.
 skills/
-audit/
 
-# Keep local audit history/archive ignored; retain sanitized foundation machine receipts.
-!audit/
-audit/**
-!audit/full-feature-foundations/
-!audit/full-feature-foundations/**
+# Audit scratch output stays local; retain the F13 handoff and its complete evidence set.
+/audit/**
+!/audit/README.md
+!/audit/full-feature-foundations/
+!/audit/full-feature-foundations/f13-implementation-audit.md
+!/audit/full-feature-foundations/f13-checks.json
+!/audit/full-feature-foundations/f13-release.json
+!/audit/full-feature-foundations/f13-readiness.json
+!/audit/full-feature-foundations/f13-openclaw-preflight.json
+!/audit/full-feature-foundations/f13-python-audit.json
+!/audit/full-feature-foundations/f13-npm-audit.json
+!/audit/full-feature-foundations/f13-evidence.zip
+!/audit/full-feature-foundations/f13-backend-junit.xml
+!/audit/full-feature-foundations/f13-docker-junit.xml
+!/audit/full-feature-foundations/f13-browser-junit.xml
+!/audit/full-feature-foundations/f13-browser-repeat-junit.xml
+!/audit/full-feature-foundations/f13-focused-junit.xml
