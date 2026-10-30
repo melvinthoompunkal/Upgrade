@@ -27,6 +27,7 @@ from app.models.meta_client import MetaClient
 from app.relevance_store import assessment_identity
 from app.report_publication import publish_json_report
 from app.selection_artifacts import ArtifactStore, feature_refs, prepare_directory, read_log
+from app.source_use import SOURCE_USE_PROFILES
 from app.tools.evidence import EvidenceSession
 from app.tools.runner import IMAGE_INPUTS, PROJECT_ROOT, prepared_image
 from app.tools.runner_artifacts import file_hashes, read_regular_file
@@ -36,6 +37,10 @@ CONTROLLERS = (
         f"backend/app/{name}.py"
         for name in (
             "adaptation_contracts",
+            "invocation_contracts",
+            "invocation_runtime",
+            "runtime_profiles",
+            "source_use",
             "adaptation_acceptance",
             "adaptation_policy",
             "adaptation_models",
@@ -76,7 +81,7 @@ async def record_adaptation(
         "analyzed_feature_count": 1,
         "eligible_feature_count": 0,
         "limits": {**LIMITS, **request.options.model_dump()},
-        "scope": "python-function-acceptance-v1; standard MIT source reuse; local offline runner",
+        "scope": "Reviewed Python acceptance and source-use profiles; local offline runner",
     }
     sessions, runner, owned_client = {}, None, client is None
     try:
@@ -124,8 +129,8 @@ async def record_adaptation(
             "target": view.identity["target"],
             "goal": view.goal,
             "execution_profile": target_pin.support.adapter_version,
-            "acceptance_profile": "python-function-acceptance-v1",
-            "source_use_policy": "standard-mit-v1",
+            "acceptance_profile": "python-reviewed-acceptance-v2",
+            "source_use_policy": SOURCE_USE_PROFILES[feature.card.license_spdx],
         }
         artifacts.json("adaptation-identity.json", identity)
         artifacts.binding = identity
@@ -155,6 +160,7 @@ async def record_adaptation(
         progress("acceptance", "Preparing and freezing independent feature acceptance.")
         spec = await prepare_acceptance(client, contract_packet)
         validate_acceptance(spec, plan, target)
+        report["scope"] = f"{spec.schema_version}; {identity['source_use_policy']}; offline runner"
         artifacts.json("acceptance-spec.json", spec.model_dump(mode="json"))
         artifacts.publish("acceptance/test_feature.py", render_acceptance(spec))
         image_receipt = image_receipt or PROJECT_ROOT / "data/runner-image.json"
@@ -163,6 +169,8 @@ async def record_adaptation(
         frozen = {
             "schema_version": "adaptation-freeze-v1",
             "identity": identity,
+            "acceptance_profile": spec.schema_version,
+            "plan_profile": plan.schema_version,
             "contract_sha256": artifacts.hashes["behavior-contract.json"],
             "spec_sha256": artifacts.hashes["acceptance-spec.json"],
             "notice_sha256": artifacts.hashes["notices/source-NOTICE.txt"],
@@ -209,7 +217,7 @@ async def record_adaptation(
                         "target_binding": view.identity["target"],
                         "passing_baseline": True,
                         "frozen_assertion_red": True,
-                        "source_use": "standard-mit-v1",
+                        "source_use": identity["source_use_policy"],
                         "approved_scope": list(plan.production_paths),
                         "new_runtime_dependencies": [],
                     },

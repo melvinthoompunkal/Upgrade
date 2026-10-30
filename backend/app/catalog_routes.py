@@ -13,6 +13,7 @@ from app.catalog_contracts import (
 )
 from app.catalog_discovery import discovery_paths
 from app.catalog_store import CatalogStore
+from app.project_privacy import require_project_analysis
 from app.projects import project_store
 from app.relevance_contracts import BrowseMode, FeatureSort, FitStatus, RelevanceStatus
 
@@ -30,6 +31,7 @@ def submit(request, response, body, key, catalog_id=None):
         else body.source_project
     )
     selected = projects.get(owner, project_id)
+    require_project_analysis(selected)
     if selected.requested.role != "source":
         raise HTTPException(422, "Select a project pinned for the source role.")
     if selected.support.capability == "browse_index":

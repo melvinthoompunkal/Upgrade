@@ -5,6 +5,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from app.project_adapters import ADAPTER_VERSION, execution_reasons, manifest_data, python_facts
+from app.runtime_profiles import PROFILE
 from app.tools.repositories import PinnedRepository
 
 
@@ -35,6 +36,7 @@ class ProjectSupport(BaseModel):
     analysis_reasons: list[str] = Field(default_factory=list)
     execution_reasons: list[str] = Field(default_factory=list)
     acceptance_capabilities: list[str] = Field(default_factory=list)
+    runtime_profile: str = PROFILE["id"]
     notice_policy: Literal["analysis-only-v1"] = "analysis-only-v1"
     notice_paths: list[str] = Field(default_factory=list)
     adaptation_reason: str = "Feature-specific acceptance and allowed-use review are required."
@@ -81,6 +83,14 @@ def inspect_project(repo: PinnedRepository) -> ProjectSupport:
             if any(s.name == "load_tests" for index in indexes.values() for s in index.symbols)
             else ADAPTER_VERSION
         )
+        if result.adapter_version == ADAPTER_VERSION and any(
+            symbol.kind == "async_function" and symbol.name.split(".")[-1].startswith("test_")
+            for path, index in indexes.items()
+            if path.startswith("tests/")
+            for symbol in index.symbols
+        ):
+            result.adapter_version = "python-pytest-asyncio-v1"
+        result.acceptance_capabilities = list(PROFILE["acceptance_adapters"])
     result.reasons = [*result.analysis_reasons, *result.execution_reasons]
     if not result.notice_paths:
         result.adaptation_reason = (

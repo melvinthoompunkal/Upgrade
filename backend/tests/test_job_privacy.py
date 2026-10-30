@@ -25,6 +25,61 @@ from app.jobs.retention import Retention
 from app.models.meta_client import MetaClient
 
 
+def test_snapshot_project_preflight_preserves_access_and_blocks_jobs_after_consent(private_git):
+    client, state, session, sha, _ = private_git
+    snapshot = post_snapshot(client, session, commit_sha=sha, project_root="package").json()
+    result = mutate(client, f"/api/projects/from-snapshot/{snapshot['id']}", session)
+    assert result.status_code == 201, result.text
+    project = result.json()
+    assert project["private"] and project["repository_snapshot"] == snapshot["id"]
+    assert project["inventory_sha256"] == snapshot["inventory_sha256"]
+    assert project["support"]["python_files"] == 1
+    disclosure = mutate(
+        client, "/api/privacy/model-disclosure", session, json={"source_snapshot": snapshot["id"]}
+    ).json()
+    consent = mutate(
+        client,
+        "/api/privacy/model-consent",
+        session,
+        json={
+            "source_snapshot": snapshot["id"],
+            "identity": disclosure["identity"],
+            "policy": disclosure["policy"],
+            "accepted": True,
+        },
+    )
+    assert consent.status_code == 200 and not consent.json()["analysis_enabled"]
+    for endpoint, body in [
+        ("/api/runs", {"kind": "project_analysis", "source_project": project["id"]}),
+        ("/api/catalogs", {"source_project": project["id"]}),
+    ]:
+        response = mutate(client, endpoint, session, json=body)
+        assert response.status_code == 409 and "disabled pending live" in response.text
+    from types import SimpleNamespace
+
+    from app.projects import project_store
+
+    store = project_store(SimpleNamespace(app=client.app))
+    with pytest.raises(HTTPException) as blocked:
+        store.open(session["user"]["id"], project["id"])
+    assert blocked.value.status_code == 409
+    assert not (client.app.state.project_root / project["id"]).exists()
+    state["denied"] = True
+    assert client.get(f"/api/projects/{project['id']}").status_code == 404
+
+
+def test_snapshot_retention_removes_project_aliases_and_consents(private_git):
+    client, _, session, sha, _ = private_git
+    snapshot = post_snapshot(client, session, commit_sha=sha).json()
+    project = mutate(client, f"/api/projects/from-snapshot/{snapshot['id']}", session).json()
+    with client.app.state.runs.connect() as db:
+        db.execute("UPDATE repository_snapshots SET created=0 WHERE id=?", (snapshot["id"],))
+    Retention(client.app.state.runs, client.app.state.data_root).prune()
+    with client.app.state.runs.connect() as db:
+        assert db.execute("SELECT 1 FROM projects WHERE id=?", (project["id"],)).fetchone() is None
+    assert not (client.app.state.private_repository_root / snapshot["id"]).exists()
+
+
 def test_secret_inside_ordinary_code_never_reaches_provider(tmp_path):
     requests = []
     config = Settings(_env_file=None, model_api_key="controlled-fixture")

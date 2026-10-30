@@ -45,7 +45,8 @@ export function StartAdaptation({
       </button>
       <p className="field-help">
         Prepare frozen tests, check the original baseline, and verify a bounded patch. Supports
-        synchronous Python functions and standard MIT source notices.
+        reviewed sync/async Python functions, methods and HTTPX calls with standard MIT or
+        BSD-2-Clause notices.
       </p>
       {error && <p role="alert">{error}</p>}
     </div>

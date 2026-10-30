@@ -183,6 +183,23 @@ class SnapshotService:
             }
         )
 
+    def open(self, owner: str, snapshot_id: str):
+        view = self.get(owner, snapshot_id)
+        manager = RepositoryManager(self.root / view.id / "repositories", existing=True)
+        repo = manager.reopen(
+            role=view.role,
+            url=f"https://github.com/{view.full_name}.git",
+            sha=view.commit_sha,
+            prefix=view.project_root,
+        )
+        if hashlib.sha256(repo.inventory.model_dump_json().encode()).hexdigest() != (
+            view.inventory_sha256
+        ):
+            raise RepositoryError("Snapshot inventory differs from its immutable receipt.")
+        repo.verify()
+        self.get(owner, snapshot_id)
+        return view, repo
+
 
 def service(request: Request) -> SnapshotService:
     state = request.app.state

@@ -232,6 +232,7 @@ test('failed discovery remains visible even with zero features', async ({ page }
 test('source discovery is an explicit action on a supported pin', async ({ page }) => {
   await mockCatalog(page)
   const project: ProjectSelection = {
+    private: false,
     id: 'b'.repeat(32),
     requested: {
       url: 'https://github.com/team/sequence-tools',
@@ -241,6 +242,7 @@ test('source discovery is an explicit action on a supported pin', async ({ page 
     },
     snapshot: fixtureRun.source!,
     support: {
+      runtime_profile: 'python312-http-v2',
       profile_version: 'python-evidence-v1',
       repo_id: 'source',
       commit_sha: 'c'.repeat(40),

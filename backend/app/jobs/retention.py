@@ -247,6 +247,11 @@ class Retention:
                     remove_owned(path)
                     db.execute("DELETE FROM repository_snapshots WHERE id=?", (row[0],))
                     db.execute(
+                        "DELETE FROM projects WHERE owner_id=? AND "
+                        "json_extract(descriptor,'$.repository_snapshot')=?",
+                        (owner, row[0]),
+                    )
+                    db.execute(
                         "DELETE FROM owned_resources "
                         "WHERE kind='private-repositories' AND location=?",
                         (row[0],),

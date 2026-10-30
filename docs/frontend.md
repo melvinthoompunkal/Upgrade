@@ -45,6 +45,9 @@ do not bind it to a public interface. No hosted Site was created.
 ## Workflows and results
 
 - **New run:** inspect a public Python source URL/full SHA/root; optionally add a target.
+  Revision type also accepts a branch or tag. **Resolve branch/tag** freezes the returned
+  full SHA before inspection; editing the repository/ref invalidates the selection, and
+  late responses cannot populate a different repository. Jobs never resolve mutable refs.
   Each inspection shows capability and native-test blockers before submission. Editing
   any pin input clears that selection. **Analyze projects** uses stored project IDs,
   performs structural analysis without model calls, and optionally runs the target's
@@ -67,7 +70,10 @@ do not bind it to a public interface. No hosted Site was created.
   feature detail starts a separate F7 job: it prepares/finalizes behavior and frozen tests,
   checks the original baseline and meaningful assertion red, then verifies a constrained
   production patch with at most three repairs. The current profile supports existing
-  synchronous Python functions with JSON arguments/results and standard MIT source reuse.
+  sync/async Python functions, existing-class instance methods, new APIs in existing
+  modules/classes and injected HTTPX clients with bounded offline scripted exchanges.
+  Arguments, constructors and results use JSON. Complete standard MIT or exact
+  BSD-2-Clause source notices are required. See the F11 matrix for unsupported shapes.
 - **Runs:** persisted history, global server search, workflow filters, bounded pagination, stable URLs,
   and refresh recovery. Existing known CLI report directories are imported at
   backend startup in local mode and labeled recorded CLI runs. GitHub accounts see only
@@ -85,6 +91,8 @@ do not bind it to a public interface. No hosted Site was created.
 - **System checks:** explicitly run the real Meta probe, committed target
   baseline, or working-file baseline. Configuration presence is distinguished
   from an actual connectivity check. No model calls happen on page load.
+  **Review supported profiles** loads the execution, acceptance, source-use and private
+  release boundaries without running tests or inference.
 - **Adaptation runs:** show actual verified/already-present/unverified outcomes, protected-test
   status, production scope and repair count. Tests distinguish the original captures and
   each implementation/repair round. Exports include exact downloadable patches, before/after
@@ -103,7 +111,13 @@ do not bind it to a public interface. No hosted Site was created.
   before the new account's responses arrive. Form drafts remain scoped to their owner.
   **Check installations** explains suspension/missing permissions. With the explicit
   private-fetch setting enabled, **Pin a repository snapshot** fetches a full SHA/root
-  for browse/index use, without Meta transmission. Disconnect attempts provider revocation
+  or explicitly resolved authorized branch/tag, without Meta transmission.
+  **Inspect snapshot support** adds an access-checked preflight descriptor without copying
+  code. **Review private-code disclosure** pairs exact source/target snapshot IDs and
+  shows the provider and transmission scope; consent can be saved or withdrawn.
+  Private structural analysis, discovery, relevance and adaptation remain disabled even
+  after consent until live access/revocation and organization-policy checks pass.
+  Disconnect attempts provider revocation
   and reports when manual completion in GitHub settings is needed. Mobile navigation scrolls
   so account controls remain reachable.
 
@@ -234,7 +248,7 @@ the [consolidated audit record](full-feature-development.md#stage-4-and-f0-closu
 records the original findings, reproductions and verification.
 Arbitrary local targets remain unavailable. Public Python projects use the documented
 structural/native-suite profiles and saved F4/F5 catalog/relevance workflows. F7 adds
-explicit verified adaptation for the reviewed synchronous-function/MIT profile, and
+explicit verified adaptation for the reviewed F11 public Python profiles, and
 F8 adds saved diff/evidence review. Broader adapters, live semantic/provider release
 receipts, optional PR publishing and hosted deployment remain open.
 
@@ -294,3 +308,23 @@ data root only after validation; the live directory is never overwritten by rest
 These commands and controlled tests establish the local boundary. Real hard-stop/provider
 cleanup, hosted isolation, production backup/key recovery and deployment rollback still
 need deployment-specific validation. See [the F6 record](full-feature-development.md#f6-local-implementation).
+
+For focused F11 browser checks, build first and serve the compiled application in one terminal:
+
+```powershell
+cd frontend
+npm run build
+npm run preview -- --port 5175
+```
+
+In a second terminal under `frontend/`:
+
+```powershell
+$env:PLAYWRIGHT_BASE_URL = 'http://127.0.0.1:5175'
+npm run smoketest -- tests/f11.spec.ts tests/projects.spec.ts tests/account.spec.ts tests/adaptation.spec.ts
+```
+
+Use compiled assets for mocked smoke tests: the `/api/**` mocks also match Vite's
+unbundled `/src/api/client.ts` path. The default test origin remains port 5173 when
+`PLAYWRIGHT_BASE_URL` is unset. These checks use controlled API responses and do not
+establish live provider/private-access evidence.

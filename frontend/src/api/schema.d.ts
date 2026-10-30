@@ -413,6 +413,57 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/projects/resolve-ref': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Resolve Project Ref */
+    post: operations['resolve_project_ref_api_projects_resolve_ref_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/projects/support-matrix': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Support Matrix */
+    get: operations['support_matrix_api_projects_support_matrix_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/projects/from-snapshot/{snapshot_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** Inspect Snapshot */
+    post: operations['inspect_snapshot_api_projects_from_snapshot__snapshot_id__post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/projects': {
     parameters: {
       query?: never
@@ -1940,6 +1991,13 @@ export interface components {
       root_choices: string[]
       /** Created At */
       created_at: string
+      /** Repository Snapshot */
+      repository_snapshot?: string | null
+      /**
+       * Private
+       * @default false
+       */
+      private: boolean
     }
     /** ProjectSupport */
     ProjectSupport: {
@@ -1995,6 +2053,11 @@ export interface components {
       /** Acceptance Capabilities */
       acceptance_capabilities?: string[]
       /**
+       * Runtime Profile
+       * @default python312-http-v2
+       */
+      runtime_profile: string
+      /**
        * Notice Policy
        * @default analysis-only-v1
        * @constant
@@ -2022,6 +2085,20 @@ export interface components {
       end_line: number
       /** Symbol */
       symbol: string | null
+    }
+    /** RefRequest */
+    RefRequest: {
+      /** Url */
+      url?: string | null
+      /** Repository Id */
+      repository_id?: number | null
+      /**
+       * Kind
+       * @enum {string}
+       */
+      kind: 'branch' | 'tag'
+      /** Name */
+      name: string
     }
     /** Reference */
     Reference: {
@@ -2148,6 +2225,20 @@ export interface components {
       discovered_count: number
       /** Updated At */
       updated_at: number | null
+    }
+    /** ResolvedRef */
+    ResolvedRef: {
+      /**
+       * Kind
+       * @enum {string}
+       */
+      kind: 'branch' | 'tag'
+      /** Name */
+      name: string
+      /** Commit Sha */
+      commit_sha: string
+      /** Repository Id */
+      repository_id: number | null
     }
     /** RetryBehavior */
     RetryBehavior: {
@@ -2458,6 +2549,97 @@ export interface components {
       limits_reached: string[]
       /** Created At */
       created_at: number
+    }
+    /** SupportMatrix */
+    SupportMatrix: {
+      /**
+       * Schema Version
+       * @default repository-support-v2
+       */
+      schema_version: string
+      /**
+       * Runtime Profile
+       * @default python312-http-v2
+       */
+      runtime_profile: string
+      /**
+       * Runtime Packages
+       * @default {
+       *       "httpx": "0.28.1",
+       *       "anyio": "4.15.1"
+       *     }
+       */
+      runtime_packages: {
+        [key: string]: string
+      }
+      /**
+       * Native Adapters
+       * @default [
+       *       "python-pytest-v1",
+       *       "python-pytest-asyncio-v1",
+       *       "python-unittest-v1"
+       *     ]
+       */
+      native_adapters: string[]
+      /**
+       * Acceptance Adapters
+       * @default [
+       *       "python-function-acceptance-v1",
+       *       "python-integration-acceptance-v2"
+       *     ]
+       */
+      acceptance_adapters: string[]
+      /**
+       * Source Use Profiles
+       * @default {
+       *       "MIT": "standard-mit-v1",
+       *       "BSD-2-Clause": "standard-bsd-2-clause-v1"
+       *     }
+       */
+      source_use_profiles: {
+        [key: string]: string
+      }
+      /**
+       * Ref Selection
+       * @default [
+       *       "full_sha",
+       *       "branch",
+       *       "lightweight_tag",
+       *       "annotated_tag"
+       *     ]
+       */
+      ref_selection: string[]
+      /**
+       * Private Preflight Enabled
+       * @default false
+       */
+      private_preflight_enabled: boolean
+      /**
+       * Private Analysis Enabled
+       * @default false
+       */
+      private_analysis_enabled: boolean
+      /**
+       * Private Release Gates
+       * @default [
+       *       "live consent/access/revocation validation",
+       *       "applicable organization policy validation"
+       *     ]
+       */
+      private_release_gates: string[]
+      /**
+       * Unsupported
+       * @default [
+       *       "arbitrary dependencies or repository build/install scripts",
+       *       "async fixtures, Trio and event-loop-sharing native tests",
+       *       "streaming HTTP, real network and ASGI server acceptance",
+       *       "new entry-point classes/modules, decorated methods/classes and inherited new APIs",
+       *       "properties and dunder APIs",
+       *       "non-JSON call arguments/results and unreviewed license variants",
+       *       "private analysis, hosted execution and PR publishing"
+       *     ]
+       */
+      unsupported: string[]
     }
     /** SymbolEvidence */
     SymbolEvidence: {
@@ -3415,6 +3597,90 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['DiffPage']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  resolve_project_ref_api_projects_resolve_ref_post: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RefRequest']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ResolvedRef']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  support_matrix_api_projects_support_matrix_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['SupportMatrix']
+        }
+      }
+    }
+  }
+  inspect_snapshot_api_projects_from_snapshot__snapshot_id__post: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        snapshot_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ProjectSelection']
         }
       }
       /** @description Validation Error */

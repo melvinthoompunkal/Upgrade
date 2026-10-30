@@ -32,6 +32,8 @@ IMAGE_INPUTS = (
     "pytest.ini",
     "test_isolation.py",
     "unittest_runner.py",
+    "runner_asyncio.py",
+    "runtime-profile.json",
     ".dockerignore",
 )
 SUITES = {
@@ -97,6 +99,7 @@ def suite_command(suite: str, image_id: str) -> tuple[str, ...]:
         "-c",
         "/snapshot/pyproject.toml" if native else "/opt/runner/pytest.ini",
         *(() if native else ("--noconftest",)),
+        *(("-p", "runner_asyncio") if native else ()),
         "-p",
         "no:cacheprovider",
         "-p",
@@ -156,7 +159,9 @@ def container_command(
         "--env",
         "PYTEST_DISABLE_PLUGIN_AUTOLOAD=1",
         "--env",
-        "PYTHONPATH=/snapshot/src:/snapshot" if project_suite else "PYTHONPATH=/snapshot/src",
+        "PYTHONPATH=/snapshot/src:/snapshot:/opt/runner"
+        if project_suite
+        else "PYTHONPATH=/snapshot/src",
         *mounts,
         *suite_command(suite, image_id),
     )

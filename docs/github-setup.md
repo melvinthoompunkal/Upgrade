@@ -4,7 +4,8 @@ The local connection supports sign-in, expiring sessions, owner-scoped sample ru
 repository sync/search, installation state, signed lifecycle webhooks and provider grant
 revocation. F2 also implements explicitly enabled private snapshot retrieval. Real GitHub
 account validation remains pending; leave private retrieval disabled until that check.
-General analysis of connected projects and hosted operation remain later packages.
+F11 adds authorized branch/tag resolution and private snapshot adapter preflight plus
+browser disclosure/consent actions. Private analysis and hosted operation remain disabled.
 
 ## Register a development GitHub App
 
@@ -70,6 +71,17 @@ The backend requires GitHub mode and all three settings above for this switch. M
 registering the App does not enable private retrieval or general project analysis.
 There are no frontend secrets or token input fields. Never paste credentials into chat,
 remotes, screenshots or reports.
+
+In the repository picker, choose a full SHA or explicitly resolve a branch/tag before
+fetching. Authorized resolution rechecks the numeric repository grant before and after
+the lookup and stores only the immutable SHA for later use. Annotated tags are peeled
+with a bounded series of fixed GitHub API calls; arbitrary provider URLs are ignored.
+After fetching, **Inspect snapshot support** shows the reviewed project/native-test
+profiles without executing or transmitting code. **Review private-code disclosure**
+uses the F6 owner/SHA/root/inventory/provider-bound consent records. Saving consent does
+not enable private analysis; all private job entry points remain disabled pending live
+consent/access/revocation and applicable organization-policy validation. There is no
+private-analysis environment switch. Snapshot expiry/deletion removes its project aliases.
 
 Start with authorization-query access logging disabled:
 

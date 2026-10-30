@@ -4,6 +4,7 @@ from fastapi import APIRouter, Header, HTTPException, Request, Response
 
 from app.api.admission import authorize_job
 from app.catalog_store import CatalogStore
+from app.project_privacy import require_project_analysis
 from app.projects import project_store
 from app.relevance_contracts import AssessmentCreate, AssessmentView, FeatureAssessment
 from app.relevance_store import RelevanceStore
@@ -21,7 +22,10 @@ def create_assessment(
     epoch = authorize_job(request)
     owner, runs = request.state.principal.owner_id, request.app.state.runs
     catalog = CatalogStore(runs).get(owner, body.catalog_id, body.catalog_revision)
+    require_project_analysis(project_store(request).get(owner, catalog.source_project))
     target = project_store(request).get(owner, body.target_project) if body.target_project else None
+    if target:
+        require_project_analysis(target)
     if target and target.requested.role != "target":
         raise HTTPException(422, "Select a project pinned for the target role.")
     if target and target.support.capability == "browse_index":

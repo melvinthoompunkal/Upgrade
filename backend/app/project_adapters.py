@@ -1,5 +1,6 @@
 """Reviewed Python data/AST inspection and offline pytest admission. Never import projects."""
 
+import ast
 import sys
 import tomllib
 from configparser import ConfigParser
@@ -10,6 +11,7 @@ from time import monotonic
 from packaging.requirements import InvalidRequirement, Requirement
 from packaging.specifiers import InvalidSpecifier, SpecifierSet
 
+from app.runtime_profiles import RUNTIME_PACKAGES, RUNTIME_REQUIREMENTS, TEST_PACKAGES
 from app.tools.evidence import python_index
 from app.tools.repositories import PinnedRepository
 
@@ -17,8 +19,8 @@ ADAPTER_VERSION = "python-pytest-v1"
 MAX_PYTHON_FILES = 200
 MAX_PYTHON_BYTES = 2 * 1024 * 1024
 MAX_MANIFEST_BYTES = 24_000
-PREPARED_DEPENDENCIES = {"httpx==0.28.1"}
-PREPARED_TEST_PACKAGES = {"pytest": "9.0.2", "pytest-timeout": "2.4.0", "httpx": "0.28.1"}
+PREPARED_DEPENDENCIES = RUNTIME_REQUIREMENTS
+PREPARED_TEST_PACKAGES = TEST_PACKAGES
 
 
 def test_dependency_reasons(manifest: dict) -> list[str]:
@@ -96,7 +98,9 @@ def execution_reasons(repo: PinnedRepository, manifest: dict, indexes: dict) -> 
     if project.get("dynamic", []) and set(project["dynamic"]) - {"version", "description"}:
         reasons.append("Dynamic runtime metadata needs a separate preparation profile.")
     if not set(project.get("dependencies", [])) <= PREPARED_DEPENDENCIES:
-        reasons.append("Runtime dependencies must be empty or exactly httpx==0.28.1.")
+        reasons.append(
+            "Runtime dependencies require exact pins in the reviewed python312-http-v2 profile."
+        )
     tool = manifest.get("tool", {})
     pytest_config = tool.get("pytest", {}) if isinstance(tool, dict) else None
     options = pytest_config.get("ini_options", {}) if isinstance(pytest_config, dict) else None
@@ -159,9 +163,32 @@ def execution_reasons(repo: PinnedRepository, manifest: dict, indexes: dict) -> 
     modules |= {PurePosixPath(path).stem for path in indexes}
     modules |= {part for path in indexes for part in PurePosixPath(path).parts[:-1]}
     allowed = sys.stdlib_module_names | modules | {"pytest"}
-    if "httpx==0.28.1" in project.get("dependencies", []):
-        allowed |= {"httpx"}
+    allowed |= {
+        name
+        for name, version in RUNTIME_PACKAGES.items()
+        if f"{name}=={version}" in project.get("dependencies", [])
+    }
     for path, index in indexes.items():
+        if not index.parse_error and (path.startswith("tests/") or path.endswith("conftest.py")):
+            tree = ast.parse(repo.read(path))
+            if any(
+                isinstance(node, ast.AsyncFunctionDef)
+                and node.decorator_list
+                and any("fixture" in ast.unparse(d) for d in node.decorator_list)
+                for node in ast.walk(tree)
+            ):
+                reasons.append("Async fixtures require a separately reviewed native adapter.")
+            if any(
+                isinstance(node, ast.Attribute)
+                and ast.unparse(node).endswith("mark.anyio")
+                or isinstance(node, ast.Call)
+                and ast.unparse(node.func).endswith("mark.asyncio")
+                and (node.args or node.keywords)
+                for node in ast.walk(tree)
+            ):
+                reasons.append(
+                    "AnyIO backend or shared-loop test markers require a separate adapter."
+                )
         if any(name.split(".")[0] not in allowed for name in index.imports):
             reasons.append(f"Unprepared imports in {path}; no packages will be installed.")
         if any(s.name.startswith("pytest_") or s.name == "pytest_plugins" for s in index.symbols):

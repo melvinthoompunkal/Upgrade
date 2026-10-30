@@ -3,11 +3,13 @@
 import json
 import subprocess
 
+from app.runtime_profiles import validate_preparation
 from app.tools.runner import IMAGE_INPUTS, PROJECT_ROOT, SANDBOX
 from app.tools.runner_artifacts import RunnerError, file_hashes
 
 
 def main() -> int:
+    validate_preparation()
     output = PROJECT_ROOT / "data"
     output.mkdir(exist_ok=True)
     iidfile = output / "runner-image-id.txt"

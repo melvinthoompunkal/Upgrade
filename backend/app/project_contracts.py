@@ -34,6 +34,8 @@ class ProjectSelection(BaseModel):
     inventory_sha256: str
     root_choices: list[str]
     created_at: str
+    repository_snapshot: str | None = None
+    private: bool = False
 
 
 class ProjectAnalysisRequest(BaseModel):

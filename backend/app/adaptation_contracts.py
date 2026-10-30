@@ -1,12 +1,12 @@
 """F7 contracts: controller-owned identities and independent, declarative acceptance."""
 
-import json
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.catalog_contracts import Id
 from app.contracts import Contract, FrozenList, Ref, RepoPath
+from app.invocation_contracts import Invocation, json_value
 
 Digest = Annotated[str, Field(pattern=r"^[a-f0-9]{64}$")]
 CaseId = Annotated[str, Field(pattern=r"^[a-z][a-z0-9_]{0,47}$")]
@@ -37,7 +37,7 @@ class BehaviorRule(Contract):
 
 
 class AdaptationPlan(Contract):
-    schema_version: Literal["python-function-plan-v1"]
+    schema_version: Literal["python-function-plan-v1", "python-integration-plan-v2"]
     included: FrozenList[BehaviorRule] = Field(min_length=1, max_length=12)
     excluded: FrozenList[str] = Field(min_length=1, max_length=12)
     integration_refs: FrozenList[Ref] = Field(min_length=1, max_length=5)
@@ -59,34 +59,14 @@ class FunctionCase(Contract):
 
     @model_validator(mode="after")
     def json_values(self):
-        def reject_constant(value):
-            raise ValueError("Non-finite JSON constants are unsupported.")
-
-        def parse(value):
-            try:
-                decoded = json.loads(value, parse_constant=reject_constant)
-            except RecursionError:
-                raise ValueError("JSON function arguments exceed the nesting limit.") from None
-            pending = [(decoded, 0)]
-            while pending:
-                item, depth = pending.pop()
-                if depth > 32:
-                    raise ValueError("JSON function arguments exceed the nesting limit.")
-                if isinstance(item, (list, dict)):
-                    pending.extend(
-                        (child, depth + 1)
-                        for child in (item.values() if isinstance(item, dict) else item)
-                    )
-            return decoded
-
-        if not isinstance(parse(self.args_json), list) or not isinstance(
-            parse(self.kwargs_json), dict
+        if not isinstance(json_value(self.args_json), list) or not isinstance(
+            json_value(self.kwargs_json), dict
         ):
             raise ValueError("Function arguments must be JSON array/object values.")
         if (self.expected_json is None) == (self.expected_exception is None):
             raise ValueError("Specify exactly one return value or expected exception.")
         if self.expected_json is not None:
-            parse(self.expected_json)
+            json_value(self.expected_json)
             if self.exception_message is not None:
                 raise ValueError("Return cases cannot specify an exception message.")
         elif self.exception_message is None:
@@ -94,9 +74,20 @@ class FunctionCase(Contract):
         return self
 
 
+class InvocationCase(FunctionCase):
+    invocation: Invocation
+
+
 class AcceptanceSpec(Contract):
-    schema_version: Literal["python-function-acceptance-v1"]
-    cases: FrozenList[FunctionCase] = Field(min_length=1, max_length=24)
+    schema_version: Literal["python-function-acceptance-v1", "python-integration-acceptance-v2"]
+    cases: FrozenList[FunctionCase | InvocationCase] = Field(min_length=1, max_length=24)
+
+    @model_validator(mode="after")
+    def profile_matches_cases(self):
+        integration = self.schema_version == "python-integration-acceptance-v2"
+        if any(isinstance(case, InvocationCase) != integration for case in self.cases):
+            raise ValueError("Every acceptance case must match the selected adapter version.")
+        return self
 
 
 class ProductionFile(Contract):

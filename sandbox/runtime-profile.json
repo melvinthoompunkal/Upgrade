@@ -1,0 +1,10 @@
+{
+  "id": "python312-http-v2",
+  "python": "3.12",
+  "runtime_packages": {"httpx": "0.28.1", "anyio": "4.15.1"},
+  "test_packages": {"pytest": "9.0.2", "pytest-timeout": "2.4.0"},
+  "native_adapters": ["python-pytest-v1", "python-pytest-asyncio-v1", "python-unittest-v1"],
+  "acceptance_adapters": ["python-function-acceptance-v1", "python-integration-acceptance-v2"],
+  "network": "none",
+  "installation": "reviewed-image-build-only"
+}

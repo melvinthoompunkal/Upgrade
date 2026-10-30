@@ -15,6 +15,7 @@ import { createRun, formatDate, type RunSummary } from '../../api/client'
 import { useWorkspace } from '../../app/workspace-context'
 import { ErrorState, Notice, SectionHeading, Skeleton, StatusMark } from '../../components/ui'
 import { DataLifecycle } from './DataLifecycle'
+import { SupportMatrix } from './SupportMatrix'
 
 const checks = [
   {
@@ -239,6 +240,7 @@ export function SystemChecks() {
         </div>
       </div>
       <DataLifecycle />
+      <SupportMatrix />
     </div>
   )
 }

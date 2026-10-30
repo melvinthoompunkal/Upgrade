@@ -77,6 +77,55 @@ def pin(projects, sha, role="source", prefix="library", owner="local-workspace")
     )
 
 
+def test_named_ref_resolves_once_before_pin_and_never_during_reopen(
+    independent, tmp_path, monkeypatch
+):
+    from types import SimpleNamespace
+
+    from app import project_refs
+
+    _, _, _, sha, _ = independent
+    calls = []
+
+    def resolve(method, path, **kwargs):
+        calls.append(path)
+        return {"ref": "refs/heads/release/v2", "object": {"type": "commit", "sha": sha}}
+
+    monkeypatch.setattr(
+        project_refs, "GitHubClient", lambda settings: SimpleNamespace(request=resolve)
+    )
+    app = create_app(Settings(_env_file=None), data_root=tmp_path / "ref-api", start_worker=False)
+    with TestClient(app, base_url="http://127.0.0.1:5173") as client:
+        response = client.post(
+            "/api/projects/resolve-ref",
+            headers={"Origin": "http://127.0.0.1:5173"},
+            json={
+                "url": "https://github.com/team/sequence-tools",
+                "kind": "branch",
+                "name": "release/v2",
+            },
+        )
+        assert response.status_code == 200 and response.json()["commit_sha"] == sha
+        pinned = client.post(
+            "/api/projects",
+            headers={"Origin": "http://127.0.0.1:5173"},
+            json={
+                "url": "https://github.com/team/sequence-tools",
+                "commit_sha": response.json()["commit_sha"],
+                "role": "source",
+                "project_root": "library",
+            },
+        )
+        assert pinned.status_code == 201, pinned.text
+        store = ProjectStore(app.state.runs, app.state.project_root)
+        for _ in range(2):
+            assert store.open("local-workspace", pinned.json()["id"])[0].snapshot.commit_sha == sha
+        assert calls == ["/repos/team/sequence-tools/git/ref/heads/release%2Fv2"]
+        matrix = client.get("/api/projects/support-matrix").json()
+        assert matrix["runtime_profile"] == "python312-http-v2"
+        assert not matrix["private_analysis_enabled"]
+
+
 def test_independent_source_only_has_read_backed_structure_and_no_crawler(independent, tmp_path):
     projects, root, git, sha, fetches = independent
     source = pin(projects, sha)
@@ -214,7 +263,9 @@ def test_native_pytest_keeps_conftest_and_native_unittest_uses_controller_runner
     )
     command = runner.container_command(suite="project_baseline", **common)
     assert "--noconftest" not in command and "/snapshot/pyproject.toml" in command
-    assert "PYTHONPATH=/snapshot/src:/snapshot" in command and "--network=none" in command
+    assert (
+        "PYTHONPATH=/snapshot/src:/snapshot:/opt/runner" in command and "--network=none" in command
+    )
     command = runner.container_command(suite="project_unittest", **common)
     assert command[-1] == "/opt/runner/unittest_runner.py"
     assert "--entrypoint" in command and "--noconftest" not in command

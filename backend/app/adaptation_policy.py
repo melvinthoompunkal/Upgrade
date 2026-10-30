@@ -9,6 +9,7 @@ from pathlib import PurePosixPath
 from app.contracts import validate_repo_path
 from app.errors import EvidenceError
 from app.selection_artifacts import feature_refs
+from app.source_use import SOURCE_USE_PROFILES, validate_notice
 from app.tools.evidence import EvidenceSession
 from app.tools.repositories import permitted_path
 
@@ -61,9 +62,9 @@ def production_path(path: str) -> bool:
 
 
 def source_notices(source, card) -> str:
-    """Initial reuse profile accepts the complete standard MIT grant only."""
-    if card.license_spdx != "MIT" or not card.license_refs:
-        raise EvidenceError("F7 currently requires a reviewed standard MIT source notice.")
+    """Require complete notices matching an explicit reviewed source-use profile."""
+    if card.license_spdx not in SOURCE_USE_PROFILES or not card.license_refs:
+        raise EvidenceError("Adaptation requires a reviewed standard MIT or BSD-2-Clause notice.")
     session = EvidenceSession(source)
     for ref in feature_refs(card):
         read_ref(session, ref)
@@ -72,13 +73,7 @@ def source_notices(source, card) -> str:
         text = source.read(ref.path)
         if len(text.encode()) > 16_000:
             raise EvidenceError("Source notices exceed the reviewed reuse profile.")
-        if "Permission is hereby granted" not in text:
-            raise EvidenceError("Source has additional unreviewed notice obligations.")
-        heading, body = text.split("Permission is hereby granted", 1)
-        if "copyright" not in heading.lower() or " ".join(
-            ("Permission is hereby granted" + body).split()
-        ) != " ".join(MIT_BODY.split()):
-            raise EvidenceError("Source license differs from the reviewed standard MIT grant.")
+        validate_notice(text, card.license_spdx, MIT_BODY)
         notices.append(
             f"Source: {source.snapshot.origin}@{source.snapshot.commit_sha}\n"
             f"Notice: {ref.path}\n{text.rstrip()}\n"

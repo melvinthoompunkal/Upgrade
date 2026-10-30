@@ -230,7 +230,7 @@ test('private snapshot fetch is explicit and shows pinned browse-only support', 
     await route.fulfill({
       status: 201,
       json: {
-        id: 'pinned-fixture',
+        id: 'd'.repeat(32),
         repository_id: 41,
         full_name: 'river/project',
         installation_id: 7,
@@ -249,13 +249,80 @@ test('private snapshot fetch is explicit and shows pinned browse-only support', 
   })
   await page.goto('/repositories')
   await page.getByText('Pin a repository snapshot', { exact: true }).click()
-  await page.getByLabel('Full commit SHA').fill('a'.repeat(40))
+  await page.getByLabel('Repository commit SHA').fill('a'.repeat(40))
   await page.getByLabel('Project root (optional)').fill('packages/library')
   await page.getByLabel('Repository role').selectOption('target')
   expect(submissions).toEqual([])
   await page.getByRole('button', { name: 'Fetch pinned snapshot' }).click()
   await expect(page.getByText(/Pinned 12 text files/)).toBeVisible()
   expect(submissions).toHaveLength(1)
+  let inspected = 0
+  await page.route('**/api/projects/from-snapshot/*', (route) => {
+    inspected++
+    return route.fulfill({
+      json: {
+        support: {
+          name: 'private-library',
+          python_files: 8,
+          reasons: [],
+          execution_supported: true,
+          adapter_version: 'python-pytest-asyncio-v1',
+        },
+      },
+    })
+  })
+  await page.route('**/api/privacy/model-disclosure', (route) =>
+    route.fulfill({
+      json: {
+        identity: 'e'.repeat(64),
+        policy: 'meta-private-excerpts-v1',
+        provider_endpoint: 'https://api.meta.ai/v1',
+        transmission: 'Bounded excerpts; likely secrets are rejected.',
+        analysis_enabled: false,
+        consented: false,
+        snapshots: [
+          {
+            id: 'd'.repeat(32),
+            role: 'target',
+            repository: 'river/project',
+            sha: 'a'.repeat(40),
+            root: 'packages/library',
+          },
+        ],
+      },
+    }),
+  )
+  await page.route('**/api/privacy/model-consent', (route) => {
+    expect(route.request().postDataJSON()).toMatchObject({
+      source_snapshot: 'c'.repeat(32),
+      target_snapshot: 'd'.repeat(32),
+      accepted: true,
+      identity: 'e'.repeat(64),
+      policy: 'meta-private-excerpts-v1',
+    })
+    return route.fulfill({
+      json: {
+        identity: 'e'.repeat(64),
+        policy: 'meta-private-excerpts-v1',
+        provider_endpoint: 'https://api.meta.ai/v1',
+        transmission: 'Bounded excerpts; likely secrets are rejected.',
+        analysis_enabled: false,
+        consented: true,
+        snapshots: [],
+      },
+    })
+  })
+  expect(inspected).toBe(0)
+  await page.getByRole('button', { name: 'Inspect snapshot support' }).click()
+  await expect(page.getByText(/Offline adapter: python-pytest-asyncio-v1/)).toBeVisible()
+  expect(inspected).toBe(1)
+  await page.getByText('Review private-code disclosure', { exact: true }).click()
+  await page.getByLabel('Source snapshot ID', { exact: true }).fill('c'.repeat(32))
+  await page.getByRole('button', { name: 'Review disclosure', exact: true }).click()
+  await expect(page.getByText(/Provider: https:\/\/api.meta.ai\/v1/)).toBeVisible()
+  await page.getByLabel('I consent to this disclosure for these exact snapshots.').check()
+  await page.getByRole('button', { name: 'Save consent decision' }).click()
+  await expect(page.getByText('Consent saved. Analysis disabled.')).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   await page.screenshot({
     path: `../data/frontend-qa/${testInfo.project.name}-f2-snapshot.png`,

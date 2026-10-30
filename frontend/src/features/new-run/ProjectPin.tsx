@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { GitBranch, GithubLogo } from '@phosphor-icons/react'
 import { api, shortSha, type ProjectSelection } from '../../api/client'
 import { Notice } from '../../components/ui'
+import { RevisionInput } from './RevisionInput'
 
 export function ProjectPin({
   role,
@@ -81,19 +82,12 @@ export function ProjectPin({
         </div>
       </div>
       <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="field-group">
-          <label htmlFor={`${role}-sha`}>
-            {role === 'source' ? 'Source' : 'Target'} commit SHA
-          </label>
-          <input
-            id={`${role}-sha`}
-            value={sha}
-            spellCheck={false}
-            placeholder="Full immutable commit SHA"
-            className="font-mono text-xs"
-            onChange={(event) => edit(() => setSha(event.target.value))}
-          />
-        </div>
+        <RevisionInput
+          label={role === 'source' ? 'Source' : 'Target'}
+          value={sha}
+          repository={{ url: url.trim() }}
+          onChange={(value) => edit(() => setSha(value))}
+        />
         <div className="field-group">
           <label htmlFor={`${role}-root`}>
             {role === 'source' ? 'Source' : 'Target'} project root

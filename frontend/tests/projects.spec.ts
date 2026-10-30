@@ -4,6 +4,7 @@ import type { ProjectSelection } from '../src/api/client'
 
 function project(role: 'source' | 'target', supported = true): ProjectSelection {
   return {
+    private: false,
     id: (role === 'source' ? 'a' : 'b').repeat(32),
     requested: {
       url: 'https://github.com/team/sequence-tools',
@@ -13,6 +14,7 @@ function project(role: 'source' | 'target', supported = true): ProjectSelection 
     },
     snapshot: { ...fixtureRun.source!, repo_id: role, commit_sha: 'c'.repeat(40) },
     support: {
+      runtime_profile: 'python312-http-v2',
       profile_version: 'python-evidence-v1',
       repo_id: role,
       commit_sha: 'c'.repeat(40),

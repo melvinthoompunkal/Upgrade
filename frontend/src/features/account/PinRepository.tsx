@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { api, type RepositoryPage, type Snapshot } from '../../api/client'
 import { ErrorState, Notice } from '../../components/ui'
+import { RevisionInput } from '../new-run/RevisionInput'
+import { SnapshotPreflight } from './SnapshotPreflight'
 
 export function PinRepository({ repo }: { repo: RepositoryPage['items'][number] }) {
   const [sha, setSha] = useState('')
@@ -44,19 +46,16 @@ export function PinRepository({ repo }: { repo: RepositoryPage['items'][number] 
       <form className="mt-4 grid gap-4 max-w-xl" onSubmit={(event) => void pin(event)}>
         <p className="text-muted text-sm">
           Fetch the chosen commit into local storage for indexing. This does not send code to Meta.
-          General analysis and execution support come in a later milestone.
+          Inspect its supported adapters after fetching. Private analysis remains disabled pending
+          validation.
         </p>
-        <label className="grid gap-2 text-sm">
-          Full commit SHA
-          <input
-            required
-            pattern="[0-9a-f]{40}([0-9a-f]{24})?"
-            maxLength={64}
-            value={sha}
-            onChange={(event) => setSha(event.target.value)}
-            disabled={busy}
-          />
-        </label>
+        <RevisionInput
+          label="Repository"
+          value={sha}
+          onChange={setSha}
+          repository={{ repository_id: repo.id }}
+          disabled={busy}
+        />
         <label className="grid gap-2 text-sm">
           Project root (optional)
           <input
@@ -78,7 +77,10 @@ export function PinRepository({ repo }: { repo: RepositoryPage['items'][number] 
             <option value="target">Target</option>
           </select>
         </label>
-        <button className="button-secondary justify-self-start" disabled={busy}>
+        <button
+          className="button-secondary justify-self-start"
+          disabled={busy || !/^[a-f0-9]{40}(?:[a-f0-9]{24})?$/.test(sha)}
+        >
           {busy ? 'Fetching snapshot…' : 'Fetch pinned snapshot'}
         </button>
         {error && <ErrorState message={error} />}
@@ -89,7 +91,7 @@ export function PinRepository({ repo }: { repo: RepositoryPage['items'][number] 
               <span className="break-all">{snapshot.commit_sha}</span>.
               {snapshot.limits_reached.length > 0 &&
                 ` Partial inventory: ${snapshot.limits_reached.join(', ')}.`}{' '}
-              Browse and index support only.
+              <SnapshotPreflight snapshot={snapshot} />
             </Notice>
           </div>
         )}

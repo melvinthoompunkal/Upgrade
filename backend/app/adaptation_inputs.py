@@ -3,7 +3,9 @@
 from fastapi import HTTPException
 
 from app.catalog_store import CatalogStore, source_identity
+from app.project_privacy import require_project_analysis
 from app.relevance_store import RelevanceStore, assessment_identity
+from app.source_use import SOURCE_USE_PROFILES
 
 
 def adaptation_inputs(request, projects, owner, model):
@@ -33,12 +35,14 @@ def adaptation_inputs(request, projects, owner, model):
         )
     source = projects.get(owner, catalog.source_project)
     target = projects.get(owner, view.target_project)
+    require_project_analysis(source)
+    require_project_analysis(target)
     if source.requested.role != "source" or target.requested.role != "target":
         raise HTTPException(409, "Source and target roles do not match the saved assessment.")
     if not target.support.execution_supported:
         raise HTTPException(409, "The target needs a reviewed native offline test adapter.")
-    if feature.card.license_spdx != "MIT":
-        raise HTTPException(409, "F7 currently supports the reviewed standard MIT reuse profile.")
+    if feature.card.license_spdx not in SOURCE_USE_PROFILES:
+        raise HTTPException(409, "Select a reviewed standard MIT or BSD-2-Clause reuse profile.")
     if source_identity(source, catalog.scope, model) != catalog.identity or (
         assessment_identity(catalog, target, view.goal, model) != view.identity
     ):

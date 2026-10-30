@@ -10,8 +10,9 @@ The first three coding milestones in section 11 are implemented: the Meta backen
 the HTTPX crawler and offline Docker baseline, and pinned repositories with a live Meta source
 trace. Stage 4A adds target profiling and deterministic selection of one bounded retry
 candidate. A local React frontend and a persistent browser API now expose the existing
-analysis workflows. F7 now adds verified adaptation for the supported synchronous Python
-function/MIT profile; the original crawler selection still produces an analysis proposal.
+analysis workflows. F7 adds verified adaptation; F11 expands the reviewed public Python
+profiles to sync/async functions, instance methods and scripted offline HTTPX behavior.
+The original crawler selection still produces an analysis proposal.
 
 The [browser workspace guide](docs/frontend.md) covers startup, workflow coverage,
 verification, and remaining backend milestones. The original
@@ -64,6 +65,13 @@ repairs. The initial profile covers existing synchronous Python functions with J
 inputs/results and standard MIT source reuse. Exact patches, notices and verification
 captures are exported.
 See [the F7 implementation record](docs/full-feature-development.md#f7-local-implementation).
+
+F11 adds reviewed native asyncio tests and exact AnyIO/HTTPX runtime pins, method/new-API
+acceptance and complete standard BSD-2-Clause source reuse alongside MIT. Public and
+authorized branch/tag selection resolves once to a full SHA. Private snapshots support
+access-checked preflight and disclosure/consent actions; private analysis remains disabled
+pending live validation. System checks exposes the support matrix. See
+[F11 profiles and verification](docs/full-feature-development.md#f11-broader-repository-adaptation).
 
 F8 adds **Review changes** with lazy, bounded production diffs, before/after hashes,
 protected-test integrity, evidence/notices and exact hash-checked patch downloads.
