@@ -86,8 +86,12 @@ do not bind it to a public interface. No hosted Site was created.
 - **Adaptation runs:** show actual verified/already-present/unverified outcomes, protected-test
   status, production scope and repair count. Tests distinguish the original captures and
   each implementation/repair round. Exports include exact downloadable patches, before/after
-  hashes, frozen contracts/tests, complete notices and hash-bound captures. Changes links
-  to these exports; dedicated lazy diff review and PR publishing remain F8. Other analysis
+  hashes, frozen contracts/tests, complete notices and hash-bound captures. **Review changes**
+  opens a file list and loads a bounded unified diff when selected, with old/new line
+  numbers, before/after hashes, frozen-test status and direct evidence/notice downloads.
+  File and page selections survive reload and Back; long lines are explicitly shortened
+  with exact patch download available. Changed or missing required receipts stop review
+  with a retry/export action. Optional PR publishing is explicitly disabled. Other analysis
   runs continue to identify their analysis-only output.
 - **GitHub preview:** explicit sign-in, account-scoped sessions and repository indexing.
   Sync/continue loads the current user/App intersection; search and visibility filters
@@ -121,6 +125,15 @@ F7 uses the same `/api/runs` queue with
 and the existing `Idempotency-Key` header. Optional `options` can lower the aggregate
 attempt/token/time budget or `max_repairs` (0–3). Saved F5 fit gates stay unchanged;
 the separate adaptation receipt owns its baseline/gap evidence and final verdict.
+
+F8 adds read-only `GET /api/runs/{id}/changes` for at most five file summaries and
+`GET /api/runs/{id}/changes/files/{file_id}?offset=N&limit=200` for a selected diff page.
+Each page returns at most 200 records under a 32,000-byte serialized line budget;
+individual lines over 8,000 UTF-8 bytes are visibly shortened. The browser mounts one
+page in a height-bounded, keyboard-focusable scroll region. The API rechecks saved
+patch/mapping/frozen hashes and preserves owner isolation. These routes do not infer,
+read live repositories or write GitHub. `publishing_enabled` is always false in
+capabilities and review; there is no publishing endpoint.
 
 The API calls the canonical workflow services. `TraceInputs` and `SelectionInputs`
 are shared with CLI adapters; it never constructs browser-supplied shell strings.
@@ -196,9 +209,11 @@ This delivers the local frontend and its browser bridge, not completion of every
 package in the original integration plan. Stage 4 audit findings U0 are repaired;
 the [consolidated audit record](full-feature-development.md#stage-4-and-f0-closure)
 records the original findings, reproductions and verification.
-The planner/Implementer/Verifier and arbitrary local targets remain unavailable. Public
-Python projects use the documented structural/native-suite profiles and saved F4/F5
-catalog/relevance workflows; these do not produce verified adaptations.
+Arbitrary local targets remain unavailable. Public Python projects use the documented
+structural/native-suite profiles and saved F4/F5 catalog/relevance workflows. F7 adds
+explicit verified adaptation for the reviewed synchronous-function/MIT profile, and
+F8 adds saved diff/evidence review. Broader adapters, live semantic/provider release
+receipts, optional PR publishing and hosted deployment remain open.
 
 The worker is a thread owned by the local API process, rather than a distributed
 worker service. CLI entry points now share the API execution lock. Hard process

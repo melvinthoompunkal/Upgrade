@@ -19,10 +19,12 @@ F6 adds local leased job ownership, active cancellation, fair admission, shared 
 accounting, private-code consent records, retention/deletion and offline operator recovery.
 F7 adds local verified adaptation for existing synchronous Python functions with JSON
 arguments/results and standard MIT source reuse, using frozen controller-generated tests.
+F8 adds owner-scoped lazy production diff review, frozen-test status, evidence/notices
+and exact hash-bound patch downloads; optional PR publishing is explicitly disabled.
 All fourteen findings from the three original audits have recorded repairs. GitHub
 authorization, repository indexing and opt-in private snapshots are implemented locally;
-real-account validation remains pending. Live general-discovery and relevance validation,
-production patching and final red-to-green verification remain pending.
+real-account validation remains pending. Live general-discovery/relevance/adaptation
+validation and the full release workflows remain pending.
 
 The planned product connects GitHub accounts, pins authorized source/target projects,
 offers a code-backed feature catalog with all/relevant browsing, and produces one
@@ -50,7 +52,7 @@ The broader roadmap supersedes the original MVP's account/private-access exclusi
 | Stage 4 W1 | Exact Git blob export and SHA/prefix/input/image/capture binding; separate ordinary baseline and retry diagnostic | Local working-file baseline and pinned baseline remain distinct workflows |
 | Stage 4 W2 | Immutable proposal/profile/assessment/gate/result and baseline-binding contracts | Shape validation does not prove semantic correctness |
 | Stage 4 W3–W6 / 4A | Real Target Profiler and Fit Matcher; Python-owned gates/scores/order; `selected`, `no_safe_fit` and sanitized failures | One analyzed candidate; optional 4B comparison is pending; selection applies no patch |
-| Frontend and local API | React workspace, SQLite queue/history/events, shared workflow services, evidence inspector, tests/logs, exports and explicit diagnostics | One local API worker; hosted execution and adaptation UI are pending |
+| Frontend and local API | React workspace, SQLite queue/history/events, shared workflow services, evidence inspector, tests/logs, adaptation/change review, exports and explicit diagnostics | One local API worker; hosted execution remains pending |
 | F0 foundations | S4-A01–A06 repaired; strict capture decoding, reliable JSON finalization, physical path checks and common CLI/API execution lock | Hard-stop cleanup and concurrent hostile path replacement remain outside this boundary |
 | F1 identity | Numeric GitHub identity, hashed expiring sessions, single-use PKCE state, encrypted credentials, CSRF, transactional refresh/disconnect/admission, owner-scoped results and drafts | Local mocked-provider verification is complete; real GitHub account validation remains deferred |
 | F2 local connection | GitHub App sign-in/index, installation states/setup validation, opt-in private pinned snapshots, restricted installation tokens/ephemeral Git broker, signed webhook inbox and provider revocation; fresh access checks and publication fencing | Real-account sign-in/private-grant/rotation/revocation exit checks remain pending; private fetch defaults off; F6 supplies local cancellation while hosted lifecycle remains unverified |
@@ -59,7 +61,7 @@ The broader roadmap supersedes the original MVP's account/private-access exclusi
 | F5 local relevance | Owner-scoped immutable target/goal assessments, explicit shortlists/continuation, saved all/relevant modes, global filters/sorts, signed seek cursors, lazy fit details, URL state and compact polling | Controlled-provider validation; live semantic exit checks remain pending. Baseline, frozen acceptance and approved adaptation gates belong to separate F7 jobs |
 | F6 local lifecycle | Fenced leases/heartbeats, fair owner scheduling, active cancellation/revocation, atomic admission/storage reservations, durable provider quotas, registered container recovery, consent/content checks, retention/deletion and backup/restore | Hosted deployment/isolation and real provider/process-termination certification remain exit gates; private model workflows remain disabled |
 | F7 local adaptation | Pinned repository planner, versioned behavior contract, independently prepared frozen function acceptance, ordinary green/assertion red, cumulative constrained production patches, native regression and at most three repairs | Existing synchronous JSON-compatible Python functions and standard MIT source notices only; controlled-provider/real Docker verification; live semantic and broader adapter validation remain pending |
-| F8 change review | Patch/evidence exports available through F7 | Dedicated lazy diff review and optional explicit PR publishing remain pending |
+| F8 change review | Owner-scoped file summaries and bounded lazy unified diffs, protected-test integrity, before/after hashes, evidence/notices and exact patch downloads | Optional PR publishing remains disabled pending permission and live integration checks |
 | F9 verification | Recorded local backend/browser/build checks, live sample selection and public preflight | Full connected-analysis and verified-adaptation release receipts are still required |
 
 Implementation anchors:
@@ -1001,6 +1003,7 @@ OpenAPI, and preserve CLI/domain contracts through versioned adapters.
 | Implemented `GET /api/relevance-assessments/{id}` and `/{id}/features/{feature_id}` | Saved context/counts/shortlist/usage and lazy feature judgment, controller fit gates and complete rejection reasons |
 | `POST /api/runs`, `GET /api/runs?...` | Owner-scoped jobs/history, global search, typed kinds and query-level cursors |
 | Implemented `GET /api/runs/{id}/status` | Compact state/revision/counts without full evidence arrays |
+| Implemented `GET /api/runs/{id}/changes` and `/changes/files/{file_id}` | Hash-bound saved patch summaries and bounded lazy diff pages; no repository reads or inference; publishing disabled |
 | Existing detail/events/references/artifact routes | Enforce owner/current repository access; add bounded collection routes |
 | Implemented `POST /api/runs/{id}/cancel` | Owner/CSRF-checked idempotent queued cancellation or active cancellation request; controller publishes the terminal result |
 | Implemented `GET /api/usage` | Owner-only queue/storage reservations, daily usage/allowances and explicit disabled private-analysis/hosting flags |
@@ -1321,7 +1324,7 @@ notices, red/green/regression captures, model attempts/usage, repair count and a
 evidence. Worker leases, cancellation, access fencing, quotas and owner-only artifact APIs
 are reused. The browser exposes **Verify adaptation** from saved feature assessment detail,
 shows the verdict/protected-test status and phase-specific captures, and links to exact
-patch exports. Dedicated lazy diff review and PR publishing remain F8.
+patch exports. F8 supplies dedicated lazy diff review; optional PR publishing remains disabled.
 
 Implementation: [contracts](../backend/app/adaptation_contracts.py),
 [planner/model stages](../backend/app/adaptation_models.py),
@@ -1350,10 +1353,62 @@ hash/case checks match the final controller bytes. Target code/tests are archive
 accidental host-side test collection. GitHub fetching and Meta responses are controlled in
 this receipt; it is real isolated target execution, not live semantic/provider certification.
 
+### F8 local change review
+
+Adaptation **Changes** now reads the controller's saved final patch and matching file
+mapping through the existing owner-only, physical-path-checked artifact boundary.
+`GET /api/runs/{id}/changes` returns at most five changed-file summaries, exact patch
+digest, before/after hashes, protected-test/preservation status and links to frozen
+contracts, tests, full notices and verification evidence. It does not embed diff bodies.
+`GET /api/runs/{id}/changes/files/{file_id}?offset=N&limit=200` returns one selected file
+page, with old/new source line numbers and additions, deletions, context, hunks and
+unterminated-line markers. Opaque file IDs resolve only inside that run's mapping.
+
+Diff pages cap at 200 records and a 32,000-byte serialized line budget; individual
+long lines shorten at 8,000 UTF-8 bytes with an explicit disclosure and exact download
+link. Only one page is mounted. The diff scroll region is height-bounded and keyboard
+focusable; file/page URL state survives reload and Back. Selecting, paging, inspecting
+evidence and downloading make no model calls, repository reads, target executions or
+GitHub writes. Summary generation verifies the saved patch locally; lazy loading bounds
+the browser transfer/rendering, rather than claiming server-side partial patch reads.
+
+Review cross-checks patch/result/manifest digests, mapping membership and file/scope
+counts, unified hunk structure and frozen preimages. A preserved-test claim additionally
+rechecks the frozen acceptance, spec, behavior and source-notice hashes. Missing, changed
+or inconsistent required receipts return a sanitized 409; foreign runs/files remain 404.
+Verified, unverified, already-present/no-patch and unfinished outcomes remain distinct.
+The original F7 runner receipt owns execution verification; review never upgrades a verdict.
+
+**Optional PR publishing is disabled** in both capabilities and review responses. No
+branch/commit/PR endpoint or GitHub write token is introduced. The optional extension
+still requires fresh user/App write rights, base-SHA revalidation, unique branches,
+durable idempotency, moved-base rejection and live-provider exit checks. Repeated calls
+to an unavailable publishing endpoint cannot write. Patch review/download is the
+implemented F8 release scope, as permitted by the release boundary below.
+
+Implementation: [review contracts](../backend/app/change_review_contracts.py),
+[saved-patch reader](../backend/app/api/change_review.py),
+[routes](../backend/app/change_routes.py) and
+[Changes view](../frontend/src/features/runs/Changes.tsx).
+Verification receipts and tested source hashes are retained in
+[the F8 manifest](../audit/full-feature-foundations/f8-checks.json). The retained F7
+Docker archive is reopened through the real API/browser; this is a fresh review of
+recorded execution, not a new Docker or live semantic/provider run.
+
+October 29 verification: the full backend suite passed 563 tests with one explicit
+Docker rerun skipped; the final focused F8 suite passed all 16 checks. The controlled
+desktop/mobile browser suite passed 92 checks, followed by 16 passing final adaptation/
+review checks including two real-API reviews of the retained Docker receipt. Exact
+patch download digests matched on both viewports. TypeScript/Vite production build,
+Ruff lint/formatting and `git diff --check` passed. No fresh provider or Docker execution
+is claimed for this read-only review delivery. The manifest binds the final source bytes
+and distinguishes the broad regression pass from the final focused checks.
+
 ## 13. Development sequence and deliverables
 
 Use these packages as the implementation checklist. F0/F1 and the local F2-F6 foundations
-are implemented; continue with the outstanding live/hosted gates, broader F7 adapters and F8. Update
+are implemented; F8 local patch review is implemented with PR publishing disabled. Continue
+with outstanding live/hosted gates, broader F7 adapters and applicable F9 receipts. Update
 this document with reviewed behavior and machine evidence as each package lands. Work
 that does not depend on another package can proceed independently, but release gates
 still require the listed prerequisites.
@@ -1368,7 +1423,7 @@ still require the listed prerequisites.
 | F5: relevance and scalable browsing | Implemented locally; live semantic validation pending | Goal/target assessments, all/relevant modes, server query/filter/sort, lazy details, URL state and compact polling | F4 | Honest assessed/unassessed/eligible counts; zero model calls on view changes; scale/accessibility checks |
 | F6: job/hosting hardening | Implemented locally; hosted exit gate pending | Fenced leases/heartbeats, fair scheduling, active cancellation/revocation, shared quotas/storage reservations, private-code consent/content checks, retention/deletion, metrics and offline recovery/backup/restore | Starts with F1; required before multi-user release | Controlled restart/cancel/revocation/tenant/quota/deletion/restore cases and browser controls; real hard-stop/provider and hosted isolation/load/deployment receipts remain required |
 | F7: verified adaptation | Implemented locally for the reviewed synchronous Python function / standard MIT profile; live semantic and broader adapters pending | Real planner, behavior contract, frozen red acceptance, constrained exact patches, actual limits, regression green and capped repairs | F0, F3, F5; F6 for hosting | Controlled-provider Git/negative-path checks and real offline Docker red-to-green receipt; failed/exhausted cases retain evidence |
-| F8: change review and optional PR | Pending | Diff/review UI, patch download, notice export, explicit idempotent publishing | F7; GitHub write permission only for PR | Downloaded patch digest matches verified result; stale/unauthorized/repeated publishing behaves correctly |
+| F8: change review and optional PR | Local patch review implemented; optional PR publishing disabled | Lazy bounded diff/review UI, exact patch download, frozen-test integrity and notice exports; optional publishing remains a separate extension | F7; GitHub write permission only for future PR | Hash-matching downloads, bounded paging, changed-receipt rejection and owner isolation; publishing rights/base/idempotency/live checks still required before enabling PR |
 | F9: release validation and docs | Local receipts only | Fresh complete workflows, security/performance checks, setup/operations and reconciled status pages | All packages needed by the chosen release | Dated receipt tied to commit/build, environment, actual inputs, limits and retained artifacts |
 
 Connected analysis requires F0–F6 and the applicable F9 checks. Verified adaptation
@@ -1453,7 +1508,9 @@ controlled-provider receipts as live private-access or hosting evidence.
 F4 supplies persistent discovery and F5 supplies target/goal assessments and honest
 all/relevant browsing on pinned F3 public Python projects. Live discovery and relevance
 validation remain exit checks. F6 lifecycle hardening is implemented locally; the next
-implementation package is F8 change review. F7 supplies local verified adaptation within
+implementation work is applicable F9 release validation and the remaining live/hosted gates.
+F8 supplies local change review and exact downloads, with optional PR publishing disabled.
+F7 supplies local verified adaptation within
 its reviewed function/MIT profile; live semantic and broader adapter checks remain open.
 F6's hosted exit gates remain a release dependency for multi-user hosting.
 Optional 4B remains a bounded comparison extension, not a substitute for these packages.

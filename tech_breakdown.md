@@ -160,7 +160,7 @@ hardening remain [F6 work](docs/full-feature-development.md#13-development-seque
 | Production patch within five files / one new file / 400 changed lines / zero new runtime dependencies | Pending; current gates assess a proposed scope only |
 | Same frozen acceptance and regression green; at most three repair rounds | Pending; no Implementer or Verifier/Fixer workflow yet |
 | Meta call metadata and budgets | Delivered for smoke, tracing, profiling and matching; real repository planner pending |
-| Browser input/progress/evidence/ranking/tests/diff | Input, progress, evidence, ranking, tests and exports delivered; verified diff remains F7/F8 |
+| Browser input/progress/evidence/ranking/tests/diff | Input, progress, evidence, ranking, tests and exports delivered; F8 adds lazy production diff review for F7 adaptations, with optional PR publishing disabled |
 | Reports, notices, logs and provenance exports | Delivered on disk and through owner-scoped downloads; verified patch exports remain pending |
 | GitHub connection | F2 local lifecycle adds installation state, opt-in private pinned snapshots, credential broker, signed webhooks, provider revocation and current-access checks; real-account gate remains pending |
 

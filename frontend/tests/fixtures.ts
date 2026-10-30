@@ -142,6 +142,7 @@ export const fixtureRun: Run = {
   warnings: [],
 }
 export const capabilities: Capabilities = {
+  publishing_enabled: false,
   schema_version: '1',
   scope: 'One bounded retry feature; analysis only.',
   kinds: ['fit_select', 'source_trace', 'meta_smoke', 'pinned_baseline', 'local_baseline'],

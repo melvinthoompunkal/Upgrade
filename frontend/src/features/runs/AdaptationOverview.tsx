@@ -17,7 +17,7 @@ export function AdaptationOverview({ run }: { run: Run }) {
       <p>
         {run.status !== 'finished'
           ? 'Planning, frozen acceptance, original baseline and production verification appear as they complete.'
-          : 'Inspect the frozen behavior contract, test captures, production patch and source notices in the exports.'}
+          : 'Review the production diff, frozen tests, captures and source notices in Changes.'}
       </p>
       {result && (
         <dl className="space-y-2">
@@ -45,7 +45,10 @@ export function AdaptationOverview({ run }: { run: Run }) {
           </div>
         </dl>
       )}
-      <div className="flex gap-4">
+      <div className="flex flex-wrap gap-4">
+        <Link className="text-action" to={`/runs/${run.id}/changes`}>
+          Review changes
+        </Link>
         <Link className="text-action" to={`/runs/${run.id}/tests`}>
           Test evidence
         </Link>

@@ -24,6 +24,7 @@ from app.auth.snapshots import router as snapshot_router
 from app.auth.store import AuthStore
 from app.auth.webhooks import router as webhook_router
 from app.catalog_routes import router as catalog_router
+from app.change_routes import router as change_router
 from app.config import Settings
 from app.jobs.routes import router as jobs_router
 from app.projects import router as project_router
@@ -92,6 +93,7 @@ def create_app(
     application.include_router(snapshot_router)
     application.include_router(installation_router)
     application.include_router(router)
+    application.include_router(change_router)
     application.include_router(project_router)
     application.include_router(catalog_router)
     application.include_router(relevance_router)

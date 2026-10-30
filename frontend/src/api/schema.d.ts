@@ -379,6 +379,40 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/runs/{run_id}/changes': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Change Review */
+    get: operations['change_review_api_runs__run_id__changes_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/runs/{run_id}/changes/files/{file_id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Change File */
+    get: operations['change_file_api_runs__run_id__changes_files__file_id__get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/projects': {
     parameters: {
       query?: never
@@ -1027,6 +1061,12 @@ export interface components {
        * @default false
        */
       patch_supported: boolean
+      /**
+       * Publishing Enabled
+       * @default false
+       * @constant
+       */
+      publishing_enabled: false
       /** Model Configured */
       model_configured: boolean
       /** Model Id */
@@ -1193,6 +1233,56 @@ export interface components {
        */
       qualification: string
     }
+    /** ChangeReview */
+    ChangeReview: {
+      /**
+       * Verdict
+       * @enum {string}
+       */
+      verdict: 'verified' | 'unverified' | 'already_present'
+      /** Outcome */
+      outcome: string | null
+      /** Protected Tests Unchanged */
+      protected_tests_unchanged: boolean
+      /** Original Target Unchanged */
+      original_target_unchanged: boolean
+      /** Repair Count */
+      repair_count: number
+      patch: components['schemas']['Artifact'] | null
+      mapping: components['schemas']['Artifact'] | null
+      /** Files */
+      files: components['schemas']['ChangedFile'][]
+      /** Evidence */
+      evidence: components['schemas']['Artifact'][]
+      /**
+       * Publishing Enabled
+       * @default false
+       * @constant
+       */
+      publishing_enabled: false
+    }
+    /** ChangedFile */
+    ChangedFile: {
+      /** Id */
+      id: string
+      /** Path */
+      path: string
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: 'added' | 'modified'
+      /** Before Sha256 */
+      before_sha256: string | null
+      /** After Sha256 */
+      after_sha256: string
+      /** Additions */
+      additions: number
+      /** Deletions */
+      deletions: number
+      /** Diff Lines */
+      diff_lines: number
+    }
     /** CheckRequest */
     CheckRequest: {
       /**
@@ -1255,6 +1345,39 @@ export interface components {
        */
       kind: 'stdlib' | 'runtime' | 'test'
       refs: components['schemas']['FrozenList_Ref__MinLen_min_length_1_']
+    }
+    /** DiffLine */
+    DiffLine: {
+      /**
+       * Kind
+       * @enum {string}
+       */
+      kind: 'header' | 'hunk' | 'context' | 'addition' | 'deletion' | 'marker'
+      /** Text */
+      text: string
+      /** Old Line */
+      old_line?: number | null
+      /** New Line */
+      new_line?: number | null
+      /**
+       * Truncated
+       * @default false
+       */
+      truncated: boolean
+    }
+    /** DiffPage */
+    DiffPage: {
+      file: components['schemas']['ChangedFile']
+      /** Patch Sha256 */
+      patch_sha256: string
+      /** Offset */
+      offset: number
+      /** Next Offset */
+      next_offset: number | null
+      /** Total Lines */
+      total_lines: number
+      /** Lines */
+      lines: components['schemas']['DiffLine'][]
     }
     /** Disclosure */
     Disclosure: {
@@ -3226,6 +3349,72 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['ReferenceDetail']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  change_review_api_runs__run_id__changes_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        run_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ChangeReview']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  change_file_api_runs__run_id__changes_files__file_id__get: {
+    parameters: {
+      query?: {
+        offset?: number
+        limit?: number
+      }
+      header?: never
+      path: {
+        run_id: string
+        file_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DiffPage']
         }
       }
       /** @description Validation Error */

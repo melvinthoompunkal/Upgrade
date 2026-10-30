@@ -1,0 +1,46 @@
+<testsuites id="" name="" tests="16" failures="0" skipped="0" errors="0" time="38.80115">
+<testsuite name="adaptation.spec.ts" timestamp="2026-10-30T01:09:32.131Z" hostname="desktop" tests="2" failures="0" skipped="0" time="3.87" errors="0">
+<testcase name="verified adaptation shows protected tests, phased captures and patch exports" classname="adaptation.spec.ts" time="1.495">
+</testcase>
+<testcase name="exhausted adaptation is explicitly unverified on reopen" classname="adaptation.spec.ts" time="2.375">
+</testcase>
+</testsuite>
+<testsuite name="change-review-recorded.spec.ts" timestamp="2026-10-30T01:09:32.131Z" hostname="desktop" tests="1" failures="0" skipped="0" time="1.607" errors="0">
+<testcase name="retained F7 execution receipt opens through real change review without inference" classname="change-review-recorded.spec.ts" time="1.607">
+</testcase>
+</testsuite>
+<testsuite name="change-review.spec.ts" timestamp="2026-10-30T01:09:32.131Z" hostname="desktop" tests="5" failures="0" skipped="0" time="12.398" errors="0">
+<testcase name="change review loads files lazily, bounds pages, preserves URL history and exact downloads" classname="change-review.spec.ts" time="3.489">
+</testcase>
+<testcase name="keyboard file selection, evidence inspection and invalid deep links recover" classname="change-review.spec.ts" time="2.721">
+</testcase>
+<testcase name="failed integrity check can be retried without showing a verified patch" classname="change-review.spec.ts" time="1.873">
+</testcase>
+<testcase name="unverified patches and already-present outcomes keep their actual verdict" classname="change-review.spec.ts" time="2.418">
+</testcase>
+<testcase name="stale file responses cannot replace the newly selected file" classname="change-review.spec.ts" time="1.897">
+</testcase>
+</testsuite>
+<testsuite name="adaptation.spec.ts" timestamp="2026-10-30T01:09:32.131Z" hostname="mobile" tests="2" failures="0" skipped="0" time="4.138" errors="0">
+<testcase name="verified adaptation shows protected tests, phased captures and patch exports" classname="adaptation.spec.ts" time="1.678">
+</testcase>
+<testcase name="exhausted adaptation is explicitly unverified on reopen" classname="adaptation.spec.ts" time="2.46">
+</testcase>
+</testsuite>
+<testsuite name="change-review-recorded.spec.ts" timestamp="2026-10-30T01:09:32.131Z" hostname="mobile" tests="1" failures="0" skipped="0" time="1.765" errors="0">
+<testcase name="retained F7 execution receipt opens through real change review without inference" classname="change-review-recorded.spec.ts" time="1.765">
+</testcase>
+</testsuite>
+<testsuite name="change-review.spec.ts" timestamp="2026-10-30T01:09:32.131Z" hostname="mobile" tests="5" failures="0" skipped="0" time="12.612" errors="0">
+<testcase name="change review loads files lazily, bounds pages, preserves URL history and exact downloads" classname="change-review.spec.ts" time="3.461">
+</testcase>
+<testcase name="keyboard file selection, evidence inspection and invalid deep links recover" classname="change-review.spec.ts" time="2.633">
+</testcase>
+<testcase name="failed integrity check can be retried without showing a verified patch" classname="change-review.spec.ts" time="1.805">
+</testcase>
+<testcase name="unverified patches and already-present outcomes keep their actual verdict" classname="change-review.spec.ts" time="2.839">
+</testcase>
+<testcase name="stale file responses cannot replace the newly selected file" classname="change-review.spec.ts" time="1.874">
+</testcase>
+</testsuite>
+</testsuites>

@@ -28,7 +28,7 @@ Local mode remains the default. See [GitHub setup](docs/github-setup.md) and
 [the consolidated audit record](docs/full-feature-development.md#2-consolidated-audit-findings) for exact limits.
 F2 adds opt-in private pinned snapshots, installation states, signed lifecycle webhooks
 and provider revocation/current-access checks. Private retrieval defaults off; real-account
-validation remains pending. Live general-discovery validation and verified adaptations remain pending.
+validation remains pending. Live general-discovery and adaptation validation remain pending.
 
 F3 adds public Python project inspection and structural analysis with optional native
 offline tests. The browser starts with your own pinned source and optional target;
@@ -48,8 +48,8 @@ F4 adds **Discover features** on a supported source pin: persistent source-only 
 bounded Meta discovery/corroboration, immutable paginated revisions, saved evidence and
 explicit continuation. Saved browsing performs no model calls. F5 adds explicit target/goal assessments,
 honest assessed/unassessed counts and saved All/Relevant modes with global filters and
-sorts. General-project eligibility remains blocked by the F7 acceptance/verification gates;
-adaptation remains a later package. See [the F4 implementation record](docs/full-feature-development.md#f4-local-implementation).
+sorts. General-project eligibility requires the separate F7 acceptance/verification gates.
+See [the F4 implementation record](docs/full-feature-development.md#f4-local-implementation).
 
 F6 adds local fenced job ownership, fair scheduling, active cancellation, shared quotas,
 private-code consent records, retention/deletion and offline recovery/backup tools.
@@ -61,8 +61,13 @@ pinned code, freezes independently prepared acceptance tests, requires an ordina
 baseline and assertion red, and tests exact bounded production patches with at most three
 repairs. The initial profile covers existing synchronous Python functions with JSON
 inputs/results and standard MIT source reuse. Exact patches, notices and verification
-captures are exported; dedicated diff review and optional PR publishing remain F8.
+captures are exported.
 See [the F7 implementation record](docs/full-feature-development.md#f7-local-implementation).
+
+F8 adds **Review changes** with lazy, bounded production diffs, before/after hashes,
+protected-test integrity, evidence/notices and exact hash-checked patch downloads.
+Optional PR publishing is explicitly disabled; review performs no inference or GitHub writes.
+See [the F8 implementation record](docs/full-feature-development.md#f8-local-change-review).
 
 ## Setup
 

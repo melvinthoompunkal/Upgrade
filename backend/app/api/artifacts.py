@@ -214,33 +214,33 @@ class RunArtifacts:
                 return name
         raise HTTPException(404, "Artifact not found.")
 
+    def descriptor(self, name: str) -> Artifact:
+        if name not in self.hashes:
+            raise HTTPException(404, "Artifact is not registered in this run.")
+        try:
+            raw = self.published(name)
+            size, sha, available = len(raw), digest(raw), True
+        except (HTTPException, ValueError, UnicodeError):
+            size, sha, available = 0, self.hashes[name], False
+        return Artifact(
+            id=self.artifact_id(name),
+            label=name,
+            kind="test capture"
+            if name.startswith("test-captures/")
+            else "source notice"
+            if name.startswith("notices/")
+            else "trace bundle"
+            if "bundle" in name
+            else "report"
+            if name.startswith("report.")
+            else "evidence",
+            size=size,
+            sha256=sha,
+            available=available,
+        )
+
     def descriptors(self) -> list[Artifact]:
-        result = []
-        for name in sorted(self.hashes):
-            try:
-                raw = self.published(name)
-                size, sha, available = len(raw), digest(raw), True
-            except (HTTPException, ValueError, UnicodeError):
-                size, sha, available = 0, self.hashes[name], False
-            result.append(
-                Artifact(
-                    id=self.artifact_id(name),
-                    label=name,
-                    kind="test capture"
-                    if name.startswith("test-captures/")
-                    else "source notice"
-                    if name.startswith("notices/")
-                    else "trace bundle"
-                    if "bundle" in name
-                    else "report"
-                    if name.startswith("report.")
-                    else "evidence",
-                    size=size,
-                    sha256=sha,
-                    available=available,
-                )
-            )
-        return result
+        return [self.descriptor(name) for name in sorted(self.hashes)]
 
     def references(self) -> dict[str, ReferenceDetail]:
         result = {}

@@ -109,24 +109,7 @@ export function Exports({ run }: { run: Run }) {
   )
 }
 
-export function Changes({ run }: { run: Run }) {
-  if (run.kind === 'verified_adaptation')
-    return (
-      <section className="surface p-5 space-y-4">
-        <h2>
-          {run.adaptation?.verdict === 'verified'
-            ? 'Verified production patch'
-            : 'Unverified adaptation'}
-        </h2>
-        <p>
-          The exports contain the actual patch, before/after hashes, frozen tests and source
-          notices.
-        </p>
-        <Link className="text-action" to={`/runs/${run.id}/exports`}>
-          Inspect patch exports
-        </Link>
-      </section>
-    )
+export function AnalysisChanges({ run }: { run: Run }) {
   return (
     <div className="changes-empty surface">
       <span className="changes-icon">

@@ -18,7 +18,8 @@ import { Overview } from './Overview'
 import { Features } from '../evidence/Features'
 import { Evidence } from '../evidence/Evidence'
 import { Tests } from '../tests/Tests'
-import { Exports, Changes } from './outputs'
+import { Exports } from './outputs'
+import { Changes } from './Changes'
 
 const views = ['overview', 'features', 'evidence', 'tests', 'changes', 'exports'] as const
 
@@ -177,7 +178,7 @@ export function RunWorkspace() {
         ) : view === 'tests' ? (
           <Tests run={run} />
         ) : view === 'changes' ? (
-          <Changes run={run} />
+          <Changes key={`${run.id}:${run.revision}`} run={run} />
         ) : view === 'exports' ? (
           <Exports run={run} />
         ) : (
