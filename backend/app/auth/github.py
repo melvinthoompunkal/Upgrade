@@ -73,6 +73,7 @@ class GitHubClient:
         json_body=None,
         basic: bool = False,
         expected: tuple[int, ...] = (200,),
+        list_response: bool = False,
     ):
         # Callers supply only fixed endpoint prefixes and validated numeric IDs.
         url = (
@@ -120,7 +121,10 @@ class GitHubClient:
                             except (ValueError, OverflowError):
                                 delay = 60
                             raise GitHubRateLimited(delay)
-                        if response.status_code in {401, 403, 404}:
+                        if (
+                            response.status_code in {401, 403, 404}
+                            and response.status_code not in expected
+                        ):
                             raise GitHubDenied(
                                 "GitHub access is unavailable. Check grants or reconnect."
                             )
@@ -132,7 +136,7 @@ class GitHubClient:
                             continue
                         if response.status_code not in expected:
                             raise GitHubError("GitHub is unavailable. Try again later.")
-                        if response.status_code == 204:
+                        if response.status_code in {204, 404}:
                             return {}
                         content = bytearray()
                         for chunk in response.iter_bytes():
@@ -141,7 +145,13 @@ class GitHubClient:
                             if len(content) > 2 * 1024 * 1024:
                                 raise GitHubError("GitHub response exceeded the supported size.")
                         result = json.loads(content)
-                        if not isinstance(result, dict):
+                        if not (
+                            isinstance(result, list)
+                            and len(result) <= 100
+                            and all(isinstance(item, dict) for item in result)
+                            if list_response
+                            else isinstance(result, dict)
+                        ):
                             raise GitHubError("GitHub returned an invalid response shape.")
                         return result
         except (httpx.HTTPError, ValueError):

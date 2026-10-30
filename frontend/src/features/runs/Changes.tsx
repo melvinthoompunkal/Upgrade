@@ -12,6 +12,7 @@ import {
 import { Empty, ErrorState, Notice, Skeleton } from '../../components/ui'
 import { InspectArtifact } from '../evidence/Inspector'
 import { AnalysisChanges } from './outputs'
+import { PublishPatch } from './PublishPatch'
 import './changes.css'
 
 export function Changes({ run }: { run: Run }) {
@@ -223,10 +224,13 @@ function AdaptationChanges({ run }: { run: Run }) {
             </div>
           ))}
         </div>
-        <Notice>
-          Pull request publishing is disabled. Download the patch and notices for review.
-        </Notice>
+        {!review.publishing_enabled && (
+          <Notice>
+            Pull request publishing is disabled. Download the patch and notices for review.
+          </Notice>
+        )}
       </section>
+      {review.publishing_enabled && <PublishPatch key={run.id} runId={run.id} />}
     </div>
   )
 }

@@ -104,7 +104,8 @@ do not bind it to a public interface. No hosted Site was created.
   numbers, before/after hashes, frozen-test status and direct evidence/notice downloads.
   File and page selections survive reload and Back; long lines are explicitly shortened
   with exact patch download available. Changed or missing required receipts stop review
-  with a retry/export action. Optional PR publishing is explicitly disabled. Other analysis
+  with a retry/export action. F13 adds opt-in draft PR publishing after explicit patch/notice
+  review, with current write-rights/base checks and durable retry status. It defaults off. Other analysis
   runs continue to identify their analysis-only output.
 - **GitHub preview:** explicit sign-in, account-scoped sessions and repository indexing.
   Sync/continue loads the current user/App intersection; search and visibility filters
@@ -151,8 +152,12 @@ Each page returns at most 200 records under a 32,000-byte serialized line budget
 individual lines over 8,000 UTF-8 bytes are visibly shortened. The browser mounts one
 page in a height-bounded, keyboard-focusable scroll region. The API rechecks saved
 patch/mapping/frozen hashes and preserves owner isolation. These routes do not infer,
-read live repositories or write GitHub. `publishing_enabled` is always false in
-capabilities and review; there is no publishing endpoint.
+read live repositories or write GitHub. `publishing_enabled` defaults false. With the F13
+development opt-in, verified runs show an isolated publishing form. `GET /api/runs/{id}/pull-request`
+reads only saved state. Its explicit `POST` binds to the reviewed patch/notices, fresh
+GitHub user/App rights and exact base SHA. Acknowledgment and a button click are required;
+opening/reloading the page makes no writes. Draft PR links and retry/stale states survive
+reopening. See [publishing setup](github-setup.md#optional-draft-pull-request-publishing-f13).
 
 The API calls the canonical workflow services. `TraceInputs` and `SelectionInputs`
 are shared with CLI adapters; it never constructs browser-supplied shell strings.
@@ -253,7 +258,8 @@ Arbitrary local targets remain unavailable. Public Python projects use the docum
 structural/native-suite profiles and saved F4/F5 catalog/relevance workflows. F7 adds
 explicit verified adaptation for the reviewed F11 public Python profiles, and
 F8 adds saved diff/evidence review. Broader adapters, live semantic/provider release
-receipts, optional PR publishing and hosted deployment remain open.
+receipts and hosted deployment remain open. F13 publishing is implemented locally, defaults
+off, and still requires live GitHub exit evidence.
 
 The worker is a thread owned by the local API process, rather than a distributed
 worker service. CLI entry points now share the API execution lock. Hard process

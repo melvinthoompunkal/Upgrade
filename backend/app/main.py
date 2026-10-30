@@ -33,6 +33,7 @@ from app.hosting.status import RemoteWorker
 from app.hosting.transport import HostedTransportMiddleware
 from app.jobs.routes import router as jobs_router
 from app.projects import router as project_router
+from app.publishing.routes import router as publishing_router
 from app.relevance_routes import router as relevance_router
 from app.selection_artifacts import prepare_directory
 from app.tools.runner import PROJECT_ROOT
@@ -112,6 +113,7 @@ def create_app(
     application.include_router(installation_router)
     application.include_router(router)
     application.include_router(change_router)
+    application.include_router(publishing_router)
     application.include_router(project_router)
     application.include_router(catalog_router)
     application.include_router(relevance_router)

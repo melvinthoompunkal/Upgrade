@@ -31,7 +31,7 @@ class ChangeReview(BaseModel):
     mapping: Artifact | None = None
     files: list[ChangedFile] = Field(default_factory=list)
     evidence: list[Artifact] = Field(default_factory=list)
-    publishing_enabled: Literal[False] = False
+    publishing_enabled: bool = False
 
 
 class DiffLine(BaseModel):

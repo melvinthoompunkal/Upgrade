@@ -80,7 +80,9 @@ pending live validation. System checks exposes the support matrix. See
 
 F8 adds **Review changes** with lazy, bounded production diffs, before/after hashes,
 protected-test integrity, evidence/notices and exact hash-checked patch downloads.
-Optional PR publishing is explicitly disabled; review performs no inference or GitHub writes.
+Review performs no inference or GitHub writes. F13 adds separate opt-in draft PR publishing
+with exact patch/notices, current rights/base checks and durable retry recovery; it defaults
+off pending live GitHub validation. See [publishing setup](docs/github-setup.md#optional-draft-pull-request-publishing-f13).
 See [the F8 implementation record](docs/full-feature-development.md#f8-local-change-review).
 
 F9 adds a repeatable local validation command, source/build/artifact hashes, fresh offline

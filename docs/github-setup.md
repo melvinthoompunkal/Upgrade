@@ -6,6 +6,8 @@ revocation. F2 also implements explicitly enabled private snapshot retrieval. Re
 account validation remains pending; leave private retrieval disabled until that check.
 F11 adds authorized branch/tag resolution and private snapshot adapter preflight plus
 browser disclosure/consent actions. Private analysis and hosted operation remain disabled.
+F13 adds opt-in draft PR publishing for verified public Python patches, with live
+GitHub acceptance still pending. It does not require enabling private retrieval.
 
 ## Register a development GitHub App
 
@@ -35,6 +37,39 @@ Without a webhook relay, keep private retrieval disabled; sign-in/indexing still
 See GitHub's [authorization flow](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/generating-a-user-access-token-for-a-github-app),
 [installation tokens](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/generating-an-installation-access-token-for-a-github-app)
 and [webhook validation](https://docs.github.com/en/webhooks/using-webhooks/validating-webhook-deliveries).
+
+## Optional draft pull request publishing (F13)
+
+Keep `GITHUB_PUBLISHING_ENABLED=false` for ordinary review/download. For development
+validation, configure local GitHub mode, `GITHUB_APP_ID` and `GITHUB_PRIVATE_KEY_PATH`,
+then explicitly opt in with `GITHUB_PUBLISHING_ENABLED=true`. The development App needs
+**Contents: read and write**, **Pull requests: read and write**, and Metadata read.
+Approve any changed installation permissions on GitHub, reconnect as needed, and sync
+repositories. The signed-in user must independently have push rights to the exact public
+target repository. Hosted and private-repository publishing are unsupported.
+
+After a verified adaptation, open **Changes**, inspect the patch and complete source
+notices, select the base branch, acknowledge review and choose **Create draft pull request**.
+The base branch must still point to the exact tested target SHA. A moved base requires a
+fresh adaptation; publishing never rebases an old green patch. The API creates only a new
+`upgrade/<unique-id>` branch and draft PR; it never updates, merges, deletes or force-pushes
+an existing branch. GitHub's [Git data APIs](https://docs.github.com/en/rest/git/trees)
+preserve the base tree and exact tested production bytes, including embedded source notices.
+
+`GET /api/runs/{id}/pull-request` reads local review/receipt state and makes no provider
+requests. The explicit CSRF-protected `POST` requires an `Idempotency-Key`, repository ID,
+base branch, exact patch/notices digests and `reviewed: true`. Owner-scoped SQLite schema v10
+retains one operation per run. An explicit retry reconciles a response lost after branch or
+PR creation, including after process restart. A different key cannot create another PR for
+the same run. Failure receipts retain the branch and commit identity; errors omit provider
+bodies and credentials. Workspace deletion removes the local receipt, never the GitHub PR.
+
+GitHub offers no transaction spanning base-reference checks and PR creation. The controller
+checks immediately before and after creation. A concurrent move retains the actual draft PR
+URL but marks the receipt stale, so it cannot be treated as current-base verification.
+Inspect that PR and revalidate against a fresh pin. Do not enable this for production until
+the live rights-denial, stale-base, duplicate and interrupted-provider exit receipts in the
+[maintained checklist](full-feature-development.md#f13-optional-pr-publishing) are retained.
 
 ## Configure the backend
 

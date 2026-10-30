@@ -413,6 +413,24 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/runs/{run_id}/pull-request': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Publishing Review */
+    get: operations['publishing_review_api_runs__run_id__pull_request_get']
+    put?: never
+    /** Publish Pull Request */
+    post: operations['publish_pull_request_api_runs__run_id__pull_request_post']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/projects/resolve-ref': {
     parameters: {
       query?: never
@@ -1143,9 +1161,8 @@ export interface components {
       /**
        * Publishing Enabled
        * @default false
-       * @constant
        */
-      publishing_enabled: false
+      publishing_enabled: boolean
       /** Model Configured */
       model_configured: boolean
       /** Model Id */
@@ -1336,9 +1353,8 @@ export interface components {
       /**
        * Publishing Enabled
        * @default false
-       * @constant
        */
-      publishing_enabled: false
+      publishing_enabled: boolean
     }
     /** ChangedFile */
     ChangedFile: {
@@ -2099,6 +2115,77 @@ export interface components {
        */
       adaptation_reason: string
     }
+    /** Publication */
+    Publication: {
+      /** Repository Id */
+      repository_id: number
+      /** Repository */
+      repository: string
+      /** Base Branch */
+      base_branch: string
+      /** Base Sha */
+      base_sha: string
+      /** Branch */
+      branch: string
+      /** Patch Sha256 */
+      patch_sha256: string
+      /** Notices Sha256 */
+      notices_sha256: string
+      /** Created At */
+      created_at: string
+      /**
+       * State
+       * @default prepared
+       * @enum {string}
+       */
+      state: 'prepared' | 'committed' | 'branched' | 'published' | 'stale' | 'retryable'
+      /** Tree Sha */
+      tree_sha?: string | null
+      /** Commit Sha */
+      commit_sha?: string | null
+      /** Pr Number */
+      pr_number?: number | null
+      /** Pr Url */
+      pr_url?: string | null
+      /** Failure Code */
+      failure_code?: string | null
+    }
+    /** PublishRequest */
+    PublishRequest: {
+      /** Repository Id */
+      repository_id: number
+      /** Base Branch */
+      base_branch: string
+      /** Patch Sha256 */
+      patch_sha256: string
+      /** Notices Sha256 */
+      notices_sha256: string
+      /**
+       * Reviewed
+       * @constant
+       */
+      reviewed: true
+    }
+    /** PublishReview */
+    PublishReview: {
+      /** Enabled */
+      enabled: boolean
+      /** Reason */
+      reason: string
+      /** Target Origin */
+      target_origin?: string | null
+      /** Base Sha */
+      base_sha?: string | null
+      /** Patch Sha256 */
+      patch_sha256?: string | null
+      /** Notices Sha256 */
+      notices_sha256?: string | null
+      /** Repository Id */
+      repository_id?: number | null
+      /** Base Branch */
+      base_branch?: string | null
+      publication?: components['schemas']['Publication'] | null
+    }
     /** Ref */
     Ref: {
       /** Repo Id */
@@ -2648,6 +2735,16 @@ export interface components {
        */
       private_analysis_enabled: boolean
       /**
+       * Publishing Enabled
+       * @default false
+       */
+      publishing_enabled: boolean
+      /**
+       * Publishing Profile
+       * @default verified-public-python-draft-pr-v1
+       */
+      publishing_profile: string
+      /**
        * Private Release Gates
        * @default [
        *       "live consent/access/revocation validation",
@@ -2664,7 +2761,7 @@ export interface components {
        *       "new entry-point classes/modules, decorated methods/classes and inherited new APIs",
        *       "properties and dunder APIs",
        *       "non-JSON call arguments/results and unreviewed license variants",
-       *       "private analysis, hosted execution and PR publishing"
+       *       "private analysis and hosted execution"
        *     ]
        */
       unsupported: string[]
@@ -3625,6 +3722,74 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['DiffPage']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  publishing_review_api_runs__run_id__pull_request_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        run_id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PublishReview']
+        }
+      }
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  publish_pull_request_api_runs__run_id__pull_request_post: {
+    parameters: {
+      query?: never
+      header: {
+        'idempotency-key': string
+      }
+      path: {
+        run_id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PublishRequest']
+      }
+    }
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['Publication']
         }
       }
       /** @description Validation Error */

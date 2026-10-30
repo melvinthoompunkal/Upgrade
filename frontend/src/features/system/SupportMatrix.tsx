@@ -58,6 +58,14 @@ export function SupportMatrix() {
               <dd>Full SHA, branch or tag resolved once to an immutable commit</dd>
             </div>
             <div>
+              <dt className="font-medium">Pull requests</dt>
+              <dd>
+                {matrix.publishing_enabled
+                  ? 'Verified public Python patches can be explicitly published as draft pull requests.'
+                  : 'Publishing disabled. Exact patch and notice downloads remain available.'}
+              </dd>
+            </div>
+            <div>
               <dt className="font-medium">Private projects</dt>
               <dd>
                 {matrix.private_preflight_enabled

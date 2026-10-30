@@ -1,0 +1,68 @@
+<testsuites id="" name="" tests="27" failures="0" skipped="0" errors="0" time="43.004309">
+<testsuite name="change-review.spec.ts" timestamp="2026-10-30T16:14:09.900Z" hostname="desktop" tests="5" failures="0" skipped="0" time="8.532" errors="0">
+<testcase name="change review loads files lazily, bounds pages, preserves URL history and exact downloads" classname="change-review.spec.ts" time="2.243">
+</testcase>
+<testcase name="keyboard file selection, evidence inspection and invalid deep links recover" classname="change-review.spec.ts" time="2.234">
+</testcase>
+<testcase name="failed integrity check can be retried without showing a verified patch" classname="change-review.spec.ts" time="1.217">
+</testcase>
+<testcase name="unverified patches and already-present outcomes keep their actual verdict" classname="change-review.spec.ts" time="1.606">
+</testcase>
+<testcase name="stale file responses cannot replace the newly selected file" classname="change-review.spec.ts" time="1.232">
+</testcase>
+</testsuite>
+<testsuite name="publishing.spec.ts" timestamp="2026-10-30T16:14:09.900Z" hostname="desktop" tests="4" failures="0" skipped="0" time="5.785" errors="0">
+<testcase name="publishing requires explicit review and retains a draft PR after reopening" classname="publishing.spec.ts" time="1.782">
+</testcase>
+<testcase name="an explicit retry recovers the same publication key after a provider failure" classname="publishing.spec.ts" time="1.191">
+</testcase>
+<testcase name="a moved base requires revalidation and cannot be retried as a fresh write" classname="publishing.spec.ts" time="1.606">
+</testcase>
+<testcase name="permission denial is actionable and never presents a successful publication" classname="publishing.spec.ts" time="1.206">
+</testcase>
+</testsuite>
+<testsuite name="change-review.spec.ts" timestamp="2026-10-30T16:14:09.900Z" hostname="tablet" tests="5" failures="0" skipped="0" time="6.894" errors="0">
+<testcase name="change review loads files lazily, bounds pages, preserves URL history and exact downloads" classname="change-review.spec.ts" time="2.583">
+</testcase>
+<testcase name="keyboard file selection, evidence inspection and invalid deep links recover" classname="change-review.spec.ts" time="1.688">
+</testcase>
+<testcase name="failed integrity check can be retried without showing a verified patch" classname="change-review.spec.ts" time="0.414">
+</testcase>
+<testcase name="unverified patches and already-present outcomes keep their actual verdict" classname="change-review.spec.ts" time="0.988">
+</testcase>
+<testcase name="stale file responses cannot replace the newly selected file" classname="change-review.spec.ts" time="1.221">
+</testcase>
+</testsuite>
+<testsuite name="publishing.spec.ts" timestamp="2026-10-30T16:14:09.900Z" hostname="tablet" tests="4" failures="0" skipped="0" time="5.203" errors="0">
+<testcase name="publishing requires explicit review and retains a draft PR after reopening" classname="publishing.spec.ts" time="1.675">
+</testcase>
+<testcase name="an explicit retry recovers the same publication key after a provider failure" classname="publishing.spec.ts" time="1.135">
+</testcase>
+<testcase name="a moved base requires revalidation and cannot be retried as a fresh write" classname="publishing.spec.ts" time="1.274">
+</testcase>
+<testcase name="permission denial is actionable and never presents a successful publication" classname="publishing.spec.ts" time="1.119">
+</testcase>
+</testsuite>
+<testsuite name="change-review.spec.ts" timestamp="2026-10-30T16:14:09.900Z" hostname="mobile" tests="5" failures="0" skipped="0" time="5.365" errors="0">
+<testcase name="change review loads files lazily, bounds pages, preserves URL history and exact downloads" classname="change-review.spec.ts" time="1.642">
+</testcase>
+<testcase name="keyboard file selection, evidence inspection and invalid deep links recover" classname="change-review.spec.ts" time="1.589">
+</testcase>
+<testcase name="failed integrity check can be retried without showing a verified patch" classname="change-review.spec.ts" time="0.343">
+</testcase>
+<testcase name="unverified patches and already-present outcomes keep their actual verdict" classname="change-review.spec.ts" time="0.66">
+</testcase>
+<testcase name="stale file responses cannot replace the newly selected file" classname="change-review.spec.ts" time="1.131">
+</testcase>
+</testsuite>
+<testsuite name="publishing.spec.ts" timestamp="2026-10-30T16:14:09.900Z" hostname="mobile" tests="4" failures="0" skipped="0" time="3.716" errors="0">
+<testcase name="publishing requires explicit review and retains a draft PR after reopening" classname="publishing.spec.ts" time="1.389">
+</testcase>
+<testcase name="an explicit retry recovers the same publication key after a provider failure" classname="publishing.spec.ts" time="1.124">
+</testcase>
+<testcase name="a moved base requires revalidation and cannot be retried as a fresh write" classname="publishing.spec.ts" time="0.814">
+</testcase>
+<testcase name="permission denial is actionable and never presents a successful publication" classname="publishing.spec.ts" time="0.389">
+</testcase>
+</testsuite>
+</testsuites>

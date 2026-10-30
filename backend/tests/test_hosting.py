@@ -382,9 +382,38 @@ with ProcessLock(root / 'web/worker.lock'), ProcessLock(root / 'execution.lock')
 def test_restore_preserves_newer_provider_charges_and_rollback_preserves_ownership(tmp_path):
     import sqlite3
 
+    from app.publishing.contracts import Publication
+    from app.publishing.store import PublicationStore
+
     store = RunStore(tmp_path / "data/web/runs.sqlite3")
     run = store.enqueue(CheckRequest(kind="meta_smoke"), "running")
     store.claim()
+    publication = Publication(
+        repository_id=101,
+        repository="fixture/target",
+        base_branch="main",
+        base_sha="a" * 40,
+        branch="upgrade/retained-operation",
+        patch_sha256="b" * 64,
+        notices_sha256="c" * 64,
+        created_at="2026-10-30T15:00:00+00:00",
+        state="published",
+        commit_sha="d" * 40,
+        tree_sha="e" * 40,
+        pr_number=23,
+        pr_url="https://github.com/fixture/target/pull/23",
+    )
+    with store.connect() as db:
+        db.execute(
+            "INSERT INTO publications VALUES (?,?,?,?,?)",
+            (
+                "local-workspace",
+                run.id,
+                "retained-key",
+                "f" * 64,
+                publication.model_dump_json(),
+            ),
+        )
     saved = tmp_path / "backup"
     backup(store, tmp_path / "data", saved)
     with store.usage.connect() as db:
@@ -399,7 +428,10 @@ def test_restore_preserves_newer_provider_charges_and_rollback_preserves_ownersh
         assert db.execute("PRAGMA user_version").fetchone()[0] == 8
         row = db.execute("SELECT owner_id,summary FROM runs WHERE id=?", (run.id,)).fetchone()
         assert row[0] == "local-workspace" and json.loads(row[1])["outcome"] == "interrupted"
-    assert RunStore(restored.path).claim() is None  # Upgrade back to 9 does not replay work.
+        assert db.execute("SELECT key FROM publications").fetchone()[0] == "retained-key"
+    upgraded = RunStore(restored.path)
+    assert upgraded.claim() is None  # Re-upgrade does not replay jobs or publishing.
+    assert PublicationStore(upgraded).get("local-workspace", run.id) == publication
 
 
 def test_template_does_not_create_passing_evidence_or_overwrite_approval(

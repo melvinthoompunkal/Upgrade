@@ -20,7 +20,7 @@ accounting, private-code consent records, retention/deletion and offline operato
 F7 adds local verified adaptation for existing synchronous Python functions with JSON
 arguments/results and standard MIT source reuse, using frozen controller-generated tests.
 F8 adds owner-scoped lazy production diff review, frozen-test status, evidence/notices
-and exact hash-bound patch downloads; optional PR publishing is explicitly disabled.
+and exact hash-bound patch downloads; F13 adds a separate opt-in publishing action.
 F9 adds repeatable local validation, exact source/build/evidence receipts, synthetic
 real-API scale/browser checks and fresh offline adaptation-to-review verification.
 F10 adds a local readiness command and the live public-Python validation workflow;
@@ -32,6 +32,9 @@ remains disabled pending live consent/access and applicable organization-policy 
 F12 adds a gated single-host Linux analysis deployment, separate API/worker processes,
 durable worker health, build-bound operator evidence, protected maintenance and key rotation.
 Hosted target execution and production admission remain disabled pending deployment review.
+F13 adds explicit draft PR publishing of exact verified public Python patches, fresh user/App
+write-rights/base checks, unique branches and durable recovery of uncertain provider writes.
+It defaults off and requires live GitHub exit evidence before production enablement.
 All fourteen findings from the three original audits have recorded repairs. GitHub
 authorization, repository indexing and opt-in private snapshots are implemented locally;
 real-account validation remains pending. Live general-discovery/relevance/adaptation
@@ -47,7 +50,7 @@ The broader roadmap supersedes the original MVP's account/private-access exclusi
 F10–F13 organize the remaining work into local public-Python v1 validation, broader
 repository adaptation, multi-user hosting and optional PR publishing. F10 readiness
 automation and F11's local profiles/preflight are implemented; live release gates,
-private analysis, F12 deployment certification and F13 remain open. This does
+private analysis, F12 deployment certification and F13 live certification remain open. This does
 not change the recorded F0–F9 implementation or evidence.
 
 - [Current implementation and boundaries](#1-current-implementation)
@@ -77,11 +80,12 @@ not change the recorded F0–F9 implementation or evidence.
 | F5 local relevance | Owner-scoped immutable target/goal assessments, explicit shortlists/continuation, saved all/relevant modes, global filters/sorts, signed seek cursors, lazy fit details, URL state and compact polling | Controlled-provider validation; live semantic exit checks remain pending. Baseline, frozen acceptance and approved adaptation gates belong to separate F7 jobs |
 | F6 local lifecycle | Fenced leases/heartbeats, fair owner scheduling, active cancellation/revocation, atomic admission/storage reservations, durable provider quotas, registered container recovery, consent/content checks, retention/deletion and backup/restore | Hosted deployment/isolation and real provider/process-termination certification remain exit gates; private model workflows remain disabled |
 | F7 local adaptation | Pinned repository planner, versioned behavior contract, independently prepared frozen function acceptance, ordinary green/assertion red, cumulative constrained production patches, native regression and at most three repairs | Initial synchronous JSON-compatible function/MIT profile, extended by F11 below; controlled-provider/real Docker verification; live semantic validation remains pending |
-| F8 change review | Owner-scoped file summaries and bounded lazy unified diffs, protected-test integrity, before/after hashes, evidence/notices and exact patch downloads | Optional PR publishing remains disabled pending permission and live integration checks |
+| F8 change review | Owner-scoped file summaries and bounded lazy unified diffs, protected-test integrity, before/after hashes, evidence/notices and exact patch downloads | Optional publishing uses the separate F13 workflow; defaults off pending live integration checks |
 | F9 local validation | Repeatable backend/lint/build/browser gate, source/build/artifact hashes, optional dependency scans and fresh offline adaptation review; real-API scale and keyboard/timing/memory checks at three viewports | Full connected-analysis, live-model verified-adaptation and hosted release receipts are still required |
 | F10 public-Python readiness | Sanitized configuration, loopback origin, encryption keyring and exact prepared-image checks; current successful F9/Docker evidence required before live readiness | Readiness performs no model/GitHub calls or target execution; real-account, live semantic, cancellation/recovery and release review gates remain pending |
 | F11 reviewed repository profiles | Pinned runtime manifest, native asyncio tests, sync/async functions and instance methods, new APIs in existing modules/classes, ordered offline HTTPX exchanges, standard BSD-2-Clause notices, branch/tag-to-SHA selection, private snapshot preflight and disclosure UI | JSON calls and reviewed dependencies only; async fixtures/Trio/streaming/new entry-point classes unsupported. Private analysis stays disabled until live consent/access/revocation and organization-policy validation |
 | F12 hosted analysis foundation | Single-host Linux/systemd/Caddy configuration, durable local database/artifacts, separate API/worker, shared locks/health, metadata monitoring, maintenance fencing, atomic key rotation and build-bound deployment approval | Public analysis profiles only; target execution/private access disabled. Production admission requires independently reviewed, current deployment evidence; cross-host replicas and execution isolation remain open |
+| F13 optional PR publishing | Explicit verified-patch/notice review, current GitHub user/App write rights, exact-base checks, unique branch and draft PR, durable owner/run idempotency and uncertain-write reconciliation | Local public Python targets only; opt-in defaults off. Live GitHub certification remains pending; no merge, rebase or existing-reference updates |
 
 Implementation anchors:
 
@@ -1001,7 +1005,9 @@ create/detail/features/continuations now exist. On-demand source tracing uses a 
 with explicit `trace_feature_ids` and `max_files: 0`. F5 adds relevance submission,
 assessment/detail reads and catalog assessment queries. F6 adds explicit cancellation,
 owner usage, deletion receipts and pinned private-model disclosure/consent endpoints.
-`/progress`, refs, adaptation and PR endpoints remain planned.
+F11 implements `POST /api/projects/resolve-ref`; F7 adaptation is an explicit
+`verified_adaptation` run. F13 implements saved `GET` and explicit `POST`
+`/api/runs/{id}/pull-request`. A separate `/progress` endpoint is superseded by compact status/events.
 Generate frontend types from actual
 OpenAPI, and preserve CLI/domain contracts through versioned adapters.
 
@@ -1013,8 +1019,8 @@ OpenAPI, and preserve CLI/domain contracts through versioned adapters.
 | `GET /api/github/installations` | User-authorized installations and grant state |
 | `GET /api/repositories?q=...&owner=...&cursor=...` | Paginated authorized repository index and sync completeness |
 | `POST /api/repositories/sync` | Idempotent bounded refresh, without model inference |
-| `GET /api/repositories/{id}/refs` | Bounded authorized branch/tag selection |
-| Implemented `POST /api/repository-snapshots` | Pin a full SHA and project root to an authorized browse/index snapshot; branch/tag resolution remains planned |
+| Implemented `POST /api/projects/resolve-ref` | Resolve an explicitly named branch/tag once to an immutable SHA |
+| Implemented `POST /api/repository-snapshots` | Pin a full SHA and project root to an authorized browse/index snapshot; F11 supplies separate branch/tag resolution |
 | `POST /api/catalogs` | Explicit budgeted discovery/index job for a source snapshot |
 | `GET /api/catalogs/{id}` | Revision, progress, counts, coverage, limits and versions |
 | Implemented `GET /api/catalogs/{id}/features?revision=N&assessment_id=...&mode=...&q=...&status=...&category=...&sort=...&cursor=...` | Bounded safe summaries, exact revision/context counts, evidence/assessment/fit filters, category/name/relevance sorting; no inference |
@@ -1025,14 +1031,15 @@ OpenAPI, and preserve CLI/domain contracts through versioned adapters.
 | Implemented `GET /api/relevance-assessments/{id}` and `/{id}/features/{feature_id}` | Saved context/counts/shortlist/usage and lazy feature judgment, controller fit gates and complete rejection reasons |
 | `POST /api/runs`, `GET /api/runs?...` | Owner-scoped jobs/history, global search, typed kinds and query-level cursors |
 | Implemented `GET /api/runs/{id}/status` | Compact state/revision/counts without full evidence arrays |
-| Implemented `GET /api/runs/{id}/changes` and `/changes/files/{file_id}` | Hash-bound saved patch summaries and bounded lazy diff pages; no repository reads or inference; publishing disabled |
+| Implemented `GET /api/runs/{id}/changes` and `/changes/files/{file_id}` | Hash-bound saved patch summaries and bounded lazy diff pages; no repository reads or inference; separate F13 opt-in publishing |
 | Existing detail/events/references/artifact routes | Enforce owner/current repository access; add bounded collection routes |
 | Implemented `POST /api/runs/{id}/cancel` | Owner/CSRF-checked idempotent queued cancellation or active cancellation request; controller publishes the terminal result |
 | Implemented `GET /api/usage` | Owner-only queue/storage reservations, daily usage/allowances and explicit disabled private-analysis/hosting flags |
 | Implemented `DELETE /api/privacy/data`, `GET /api/privacy/deletions/{id}` | Delete this owner's saved workspace and inspect a deletion receipt; unfinished jobs block deletion |
 | Implemented `POST /api/privacy/model-disclosure`, `POST /api/privacy/model-consent` | Fresh-access-checked disclosure/decision bound to owner, exact snapshot SHA/root/inventory, endpoint and policy; does not enable private analysis |
 | `POST /api/webhooks/github` | Signed provider deliveries; separate from cookie/CSRF browser routes |
-| `POST /api/adaptations`, later `POST /api/adaptations/{id}/pull-request` | Capability-gated implementation and explicitly reviewed publishing |
+| Implemented `POST /api/runs` with `kind: verified_adaptation` | Capability-gated implementation and frozen verification |
+| Implemented `GET`, `POST /api/runs/{id}/pull-request` | Inert saved review/status and separate explicit, hash-bound, idempotent draft PR publication |
 
 All nested identifiers must be resolved within the authorized owner/context. Reject a
 feature ID from a different catalog, a relevance context from a different target, or a
@@ -1351,7 +1358,8 @@ notices, red/green/regression captures, model attempts/usage, repair count and a
 evidence. Worker leases, cancellation, access fencing, quotas and owner-only artifact APIs
 are reused. The browser exposes **Verify adaptation** from saved feature assessment detail,
 shows the verdict/protected-test status and phase-specific captures, and links to exact
-patch exports. F8 supplies dedicated lazy diff review; optional PR publishing remains disabled.
+patch exports. F8 supplies dedicated lazy diff review; F13 supplies separate opt-in publishing,
+disabled by default pending live validation.
 
 Implementation: [contracts](../backend/app/adaptation_contracts.py),
 [planner/model stages](../backend/app/adaptation_models.py),
@@ -1406,12 +1414,10 @@ or inconsistent required receipts return a sanitized 409; foreign runs/files rem
 Verified, unverified, already-present/no-patch and unfinished outcomes remain distinct.
 The original F7 runner receipt owns execution verification; review never upgrades a verdict.
 
-**Optional PR publishing is disabled** in both capabilities and review responses. No
-branch/commit/PR endpoint or GitHub write token is introduced. The optional extension
-still requires fresh user/App write rights, base-SHA revalidation, unique branches,
-durable idempotency, moved-base rejection and live-provider exit checks. Repeated calls
-to an unavailable publishing endpoint cannot write. Patch review/download is the
-implemented F8 release scope, as permitted by the release boundary below.
+**F8 review/download remains independent of optional publishing.** F13 supplies a
+separate explicit workflow with fresh user/App write rights, base-SHA revalidation,
+unique branches, durable idempotency and moved-base rejection. Publishing defaults off
+pending live-provider exit checks; local F13 implementation is documented below.
 
 Implementation: [review contracts](../backend/app/change_review_contracts.py),
 [saved-patch reader](../backend/app/api/change_review.py),
@@ -1510,12 +1516,12 @@ listed prerequisites.
 | F5: relevance and scalable browsing | Implemented locally; live semantic validation pending | Goal/target assessments, all/relevant modes, server query/filter/sort, lazy details, URL state and compact polling | F4 | Honest assessed/unassessed/eligible counts; zero model calls on view changes; scale/accessibility checks |
 | F6: job/hosting hardening | Implemented locally; hosted exit gate pending | Fenced leases/heartbeats, fair scheduling, active cancellation/revocation, shared quotas/storage reservations, private-code consent/content checks, retention/deletion, metrics and offline recovery/backup/restore | Starts with F1; required before multi-user release | Controlled restart/cancel/revocation/tenant/quota/deletion/restore cases and browser controls; real hard-stop/provider and hosted isolation/load/deployment receipts remain required |
 | F7: verified adaptation | Implemented locally for the reviewed synchronous Python function / standard MIT profile; live semantic and broader adapters pending | Real planner, behavior contract, frozen red acceptance, constrained exact patches, actual limits, regression green and capped repairs | F0, F3, F5; F6 for hosting | Controlled-provider Git/negative-path checks and real offline Docker red-to-green receipt; failed/exhausted cases retain evidence |
-| F8: change review and optional PR | Local patch review implemented; optional PR publishing disabled | Lazy bounded diff/review UI, exact patch download, frozen-test integrity and notice exports; optional publishing remains a separate extension | F7; GitHub write permission only for future PR | Hash-matching downloads, bounded paging, changed-receipt rejection and owner isolation; publishing rights/base/idempotency/live checks still required before enabling PR |
+| F8: change review and optional PR | Local patch review implemented; F13 supplies optional publishing | Lazy bounded diff/review UI, exact patch download, frozen-test integrity and notice exports; separate F13 opt-in publishing | F7; F13 for publishing | Hash-matching downloads, bounded paging, changed-receipt rejection and owner isolation; live publishing checks remain required |
 | F9: release validation and docs | Local automation implemented; live/hosted release gates pending | Repeatable strict check runner, source/build/evidence integrity, optional package scans, synthetic real-API performance/accessibility and fresh offline adaptation review; reconciled setup/status docs | All packages needed by the chosen release | Retained dated local manifest/JUnit/measurements; full connected/live semantic and applicable hosted workflows still required |
 | F10: local public-Python v1 validation | Readiness automation and runbook implemented; live integration validation pending | Check local prerequisites and current F9/Docker evidence, then complete the real GitHub/Meta browser workflow within existing supported public Python profiles and repair exposed defects | F0–F9 within the local release scope | Fresh real-account discovery/relevance and live-model adaptation receipts, unchanged frozen-test red-to-green/regression evidence, provider cancellation/recovery checks and applicable section 14 acceptance |
 | F11: broader repository adaptation | Local public profiles and private preflight implemented; private analysis/live exit gates pending | Reviewed runtime/native asyncio and integration-v2 acceptance, BSD-2-Clause reuse, immutable branch/tag selection, snapshot support/disclosure UI and support matrix | F3, F6, F7, F8; F10 for release | Independent generated source/target Git projects with exact frozen red-to-green/regression; controlled consent/access/revocation/retention checks. Live private and semantic evidence remains required |
 | F12: hosted product | Single-host analysis infrastructure implemented; production certification and target execution pending | Separate API/worker services, durable local storage/leases/quotas, gated analysis profiles, metadata monitoring, maintenance locks, atomic key rotation and operational runbook | F1, F2, F6, F9, F10; F11 for any expanded profiles offered | Actual-host TLS/provider/tenant/load/recovery/restore/rotation/rollback and independent review receipts remain required; untrusted target execution needs a separate reviewed boundary |
-| F13: optional PR publishing | Planned; optional and disabled | Explicit publishing of a reviewed patch through authorized branches/commits/PRs with fresh rights/base checks and durable idempotency | F2, F7, F8, F10 and current GitHub write rights | Live rights-denial, moved-base, duplicate-request and provider-failure checks; exact published patch/notices and no merge or force push |
+| F13: optional PR publishing | Implemented locally; defaults off; live certification pending | Explicit reviewed patch/notices, current user/App rights and base checks, unique branch/draft PR, durable idempotency and uncertain-write recovery | F2, F7, F8, F10 and current GitHub write rights | Controlled real-artifact/API/browser checks; live rights-denial, moved-base, duplicate/provider-failure and exact published patch/notices receipts remain required |
 
 Connected analysis requires F0–F6 and the applicable F9 checks. Verified adaptation
 requires F7/F8 patch review in addition. F10 closes those live release gates for the
@@ -1742,14 +1748,78 @@ bind the tested sources/build and distinguish the broad pass from the final fixt
 ### F13: optional PR publishing
 
 PR publishing can remain optional because patch review/download already completes
-the local delivery path. Keep it disabled until the explicit publishing workflow passes.
+the local delivery path. **Implemented locally; defaults off; live certification pending.**
 
-- Add an explicit action for a reviewed patch, recheck current user/App write rights
-  and the authorized repository's exact base SHA, then create a unique branch and PR.
-- Bind publishing to the exact patch/notices and use durable idempotency. Reject a moved
-  base and require revalidation rather than silently rebasing an old verified patch.
-- Retain live permission, stale-base, duplicate-request and provider-failure receipts.
-  Never merge or force-push existing branches as part of publishing.
+The Changes page adds a separate **Publish reviewed patch** form for verified runs when
+`GITHUB_PUBLISHING_ENABLED=true`. It shows the exact target/base, patch/notices digests,
+base branch and explicit review acknowledgment. Loading/reopening the page reads only
+local state; creating or retrying a draft PR requires a button click and CSRF protection.
+
+The publishing controller validates the full F7/F8 receipt chain, reconstructs each exact
+postimage from GitHub's immutable base blobs and checks before/after SHA-256 hashes.
+It preserves monorepo prefixes and complete embedded source notices. Tree walking rejects
+links, executable/special modes and case collisions. The Git data tree is based on the
+whole original repository tree; only the bounded verified production paths are replaced.
+The original/default branch is never updated, rebased, deleted, merged or force-pushed.
+
+Every explicit attempt checks the numeric repository identity, current user push rights,
+current App Contents/Pull requests write grants, installation state and access epoch.
+Rights and the exact base SHA are rechecked before branch and PR creation. A moved base
+requires a fresh adaptation; no old verified patch is silently rebased. GitHub cannot make
+base checks and PR creation atomic: a move during the call retains the actual PR URL with
+a stale receipt and requires revalidation.
+
+SQLite schema v10 retains one owner/run publication, exact patch/notices/base identity,
+unique branch, deterministic commit inputs, actual PR URL and sanitized failure state.
+Retries reconcile uncertain branch/PR responses, including after process restart or a
+different browser key; closed PRs are included so a retry cannot create a replacement.
+Publication shares the canonical execution/deletion lock. Owner deletion removes local
+metadata without deleting external branches/PRs. GitHub credentials remain server-side;
+the existing user access token enforces the user/App permission intersection.
+The reviewed F12 rollback now accepts schemas 9/10 and preserves publication operations
+through backup/restore, downgrade and re-upgrade, alongside ownership and newer usage charges.
+
+Supported scope is local GitHub mode and verified public Python targets. Hosted/private
+publishing remains unsupported. See [setup and API](github-setup.md#optional-draft-pull-request-publishing-f13),
+[publishing modules](../backend/app/publishing/), [API tests](../backend/tests/test_publishing.py)
+and [browser tests](../frontend/tests/publishing.spec.ts). Local controlled providers cover
+exact bytes/notices, write denial, stale bases, duplicate/concurrent submission, process
+reopen, interrupted writes, changed branches, tenant isolation, CSRF and retention.
+Live development-account rights-denial, moved-base, duplicate-request and provider-failure
+receipts remain required before production enablement.
+
+### Completion audit after F13 implementation
+
+F0–F9's local implementation is present; F10 readiness, F11 reviewed public profiles,
+F12 hosted-analysis infrastructure and F13 local publishing are also implemented.
+The original checklist is **not fully release-complete**. Its explicit outstanding
+acceptance requirements cannot be replaced with controlled tests or documentation edits:
+
+| Remaining gate | Required evidence / dependency |
+|---|---|
+| F2/F10 connected analysis | Development GitHub App, real account/repository grants, token rotation/revocation, browser-driven live multi-feature Meta discovery and all/relevant assessment |
+| F7/F10 verified adaptation | Fresh live-model supported patch with frozen assertion red, unchanged acceptance/regression green, exact scope/notices and independent receipt review |
+| F6/F11 private and lifecycle | Real provider cancellation/hard-stop recovery; live private consent/access/revocation and applicable organization-policy checks before private analysis is enabled |
+| F12 hosting | Actual Linux host/TLS/provider/tenant/load/recovery/restore/rotation/rollback evidence and independent deployment review; target execution still needs a separate reviewed isolation boundary |
+| F13 publishing | Live development-repository permission denial, moved base, duplicate and interrupted-provider checks; exact remote bytes/notices and unchanged default branch |
+
+The checked local environment uses `AUTH_MODE=local` and `DEPLOYMENT_MODE=local` with no
+GitHub App client/App ID/private-key configuration. No live sign-in, PR creation or hosted
+certification is claimed. Local release validation retains current source/build hashes
+and reports every live gate pending, including optional PR publishing.
+
+The user-supplied [OpenClaw repository](https://github.com/openclaw/openclaw) was inspected
+read-only through the connected GitHub account. Its root manifest uses Node/TypeScript,
+outside the reviewed Python adaptation profile; the connected account has read access
+and no push grant. This is a real negative permission/support preflight, not an end-to-end
+App publishing check. The [sanitized receipt](../audit/full-feature-foundations/f13-openclaw-preflight.json)
+records the numeric repository identity, manifest blob and observed permissions without
+cloning the large repository, executing it or transmitting code to a model.
+
+F13 local verification uses the strict release command with Docker and dependency audits,
+plus focused authenticated API/patch and repeated desktop/tablet/mobile publishing checks.
+The [F13 manifest](../audit/full-feature-foundations/f13-checks.json) retains tested
+source/build/evidence hashes and distinguishes local results from pending live gates.
 
 ## 14. Acceptance and release verification
 
@@ -1831,7 +1901,8 @@ semantic validation grouped under F10. Its readiness command and runbook now ide
 local blockers while keeping live gates pending. F11 supplies reviewed broader public
 execution/acceptance profiles and private snapshot preflight/disclosure actions; private
 analysis remains fenced pending live validation. F12 owns the hosted product phase.
-F8 supplies local change review and exact downloads, with optional PR publishing disabled.
+F8 supplies local change review and exact downloads. F13 supplies opt-in draft PR publishing,
+disabled by default pending live GitHub certification.
 F7 supplies local verified adaptation, extended by F11's reviewed public integration
 profiles; live semantic validation and unlisted adapters remain open.
 F6's hosted exit gates remain a release dependency for F12 multi-user hosting. F13 is the

@@ -187,7 +187,7 @@ class Capabilities(BaseModel):
     schema_version: str = "1"
     kinds: list[RunKind]
     patch_supported: bool = False
-    publishing_enabled: Literal[False] = False
+    publishing_enabled: bool = False
     model_configured: bool
     model_id: str
     checked_at: str

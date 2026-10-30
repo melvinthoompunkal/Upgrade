@@ -3,7 +3,7 @@
 import sqlite3
 
 LOCAL_OWNER = "local-workspace"
-SCHEMA_VERSION = 9
+SCHEMA_VERSION = 10
 
 
 def migrate(db: sqlite3.Connection) -> None:
@@ -118,4 +118,8 @@ def migrate(db: sqlite3.Connection) -> None:
     from app.jobs.schema import migrate_jobs
 
     migrate_jobs(db)
+    db.execute("""CREATE TABLE IF NOT EXISTS publications (
+        owner_id TEXT NOT NULL, run_id TEXT NOT NULL, key TEXT NOT NULL,
+        fingerprint TEXT NOT NULL, receipt TEXT NOT NULL,
+        PRIMARY KEY(owner_id,run_id), UNIQUE(owner_id,key))""")
     db.execute(f"PRAGMA user_version={SCHEMA_VERSION}")

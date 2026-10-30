@@ -105,12 +105,12 @@ The delivered backend was implemented independently; Graft's UI remains in `.res
 
 | Area | Current delivery | Remaining work / boundary |
 |---|---|---|
-| Backend | Python 3.12, FastAPI, Pydantic 2, Uvicorn; health, run/target/capability/evidence/artifact routes; `backend/uv.lock` | General catalog/adaptation routes and hosted operation remain pending |
-| Frontend | React/Vite/TypeScript workspace, generated transport types, responsive evidence inspection and exports; `frontend/package-lock.json` | General feature catalog, adaptation review and PR publishing remain pending |
-| Models | Meta Chat Completions; configured default `muse-spark-1.3`, Standard mode | Tracer/profiler use medium reasoning; Matcher uses high; repository planner/patch agents pending |
+| Backend | Python 3.12, FastAPI, Pydantic 2, Uvicorn; owner-scoped catalogs/relevance/adaptation/review and opt-in publishing routes; `backend/uv.lock` | Live integration and hosted certification remain pending |
+| Frontend | React/Vite/TypeScript workspace, generated transport types, scalable catalog/relevance browsing, adaptation review/exports and opt-in draft PR publishing; `frontend/package-lock.json` | Publishing defaults off; live GitHub and semantic release evidence remains pending |
+| Models | Meta Chat Completions; configured default `muse-spark-1.3`, Standard mode | Tracer/profiler use medium reasoning; Matcher/planner/test preparer/implementation use high; live general workflow validation pending |
 | API client | `AsyncOpenAI` transport; SDK automatic retries disabled; explicit application retries/attempt accounting | No provider/model fallback; current default at most two HTTP retries per request |
-| Orchestration | Shared typed web/CLI inputs and workflow context, sequential selection controller, one run-owned client/budget | Complete adaptation state machine remains pending |
-| Repository handling | Git CLI, independent pins, project-root inventories, public Python structure/native test adapters, sample managed worktree and preservation checks | Public profile limits apply; no production edits or general discovery |
+| Orchestration | Shared typed web/CLI inputs and workflow context, selection/catalog/relevance controllers and frozen acceptance/production repair state machine, one run-owned budget | Reviewed profiles only; live and hosted gates remain pending |
+| Repository handling | Git CLI, independent pins, public Python inventories/discovery/native tests, constrained verified production patches and preservation checks | Public reviewed profile limits apply; private analysis stays disabled |
 | Code indexing | Python `ast`, parsed TOML, bounded text/symbol tools | Static evidence with disclosed limits; no exhaustive dependency closure/runtime call graph |
 | Execution | Prepared, pinned Linux Docker image; fixed offline suites and resource restrictions | Only reviewed Python/HTTPX fixture/dependencies; no host execution fallback |
 | Tests | Existing target suite and frozen hand-authored retry diagnostic; backend contract/policy/workflow tests | Final adaptation contract, production patch, green acceptance/regression and repair loop pending |
@@ -166,7 +166,7 @@ remain [release gates](docs/full-feature-development.md#13-development-sequence-
 | Production patch within five files / one new file / 400 changed lines / zero new runtime dependencies | F7 enforces actual patches for the reviewed synchronous Python function/MIT profile; broader profiles remain unsupported |
 | Same frozen acceptance and regression green; at most three repair rounds | F7 controller implemented with real offline Docker evidence and controlled planning; live semantic release validation pending |
 | Meta call metadata and budgets | Delivered for smoke, tracing, profiling, matching, catalogs, relevance and F7 pinned-code planning |
-| Browser input/progress/evidence/ranking/tests/diff | Input, progress, evidence, ranking, tests and exports delivered; F8 adds lazy production diff review for F7 adaptations, with optional PR publishing disabled |
+| Browser input/progress/evidence/ranking/tests/diff | Input, progress, evidence, ranking, tests and exports delivered; F8 lazy production diff review and F13 opt-in draft PR publishing, disabled by default pending live validation |
 | Reports, notices, logs and provenance exports | Delivered on disk and through owner-scoped downloads, including F7 exact patches and F8 change review |
 | GitHub connection | F2 local lifecycle adds installation state, opt-in private pinned snapshots, credential broker, signed webhooks, provider revocation and current-access checks; real-account gate remains pending |
 

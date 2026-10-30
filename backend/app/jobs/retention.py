@@ -149,6 +149,7 @@ class Retention:
             "repository_sync",
             "model_consents",
             "owned_resources",
+            "publications",
         ):
             db.execute(f"DELETE FROM {table} WHERE owner_id=?", (owner,))
         for table in (

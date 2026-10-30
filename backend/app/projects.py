@@ -229,7 +229,8 @@ def support_matrix(request: Request):
             source_use_profiles={},
         )
     return SupportMatrix(
-        private_preflight_enabled=request.app.state.settings.github_private_fetch_enabled
+        private_preflight_enabled=request.app.state.settings.github_private_fetch_enabled,
+        publishing_enabled=request.app.state.settings.github_publishing_enabled,
     )
 
 

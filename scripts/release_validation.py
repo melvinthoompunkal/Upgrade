@@ -30,6 +30,10 @@ PENDING_GATES = {
     "multi_user_hosting": [
         "F6 hosted isolation, multi-user load, deployment/rollback and hard-stop certification.",
     ],
+    "optional_pr_publishing": [
+        "Real GitHub user/App write denial, moved base, duplicate and uncertain-write checks.",
+        "Exact published patch/notices and unchanged default branch on a development repository.",
+    ],
 }
 
 

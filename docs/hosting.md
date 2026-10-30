@@ -174,12 +174,14 @@ the forward migration, and run deployment checks. Add fresh build-bound evidence
 after the review succeeds, then start the worker. Queued work requires current approval;
 abandoned running work is interrupted and cannot silently replay paid inference.
 
-Database schema 9 adds only worker status. Older binaries reject newer schemas.
-For this additive migration, `rollback-hosting` transactionally interrupts running
-jobs, removes worker status and sets schema 8 while preserving all other rows. Stop
-the worker and all API services first, retain a backup, run the command with the F12
-release's interpreter/credentials, then select the compatible schema-8 release before
-restarting services. Do not run the F12 API against the downgraded database: it will
+Database schema 9 adds worker status; schema 10 adds local publishing receipts.
+Older binaries reject newer schemas. The reviewed `rollback-hosting` path accepts
+schema 9 or 10, transactionally interrupts running jobs, removes worker status and
+sets schema 8 while preserving all other rows, including publication idempotency and
+uncertain provider outcomes. These receipts survive re-upgrade to prevent duplicate PRs. Stop
+the worker and all API services first, retain a backup, run the command with the
+current F13 release's interpreter/credentials, then select the compatible schema-8 release before
+restarting services. Do not run the current API against the downgraded database: it will
 upgrade it again. Later schema changes require a new reviewed rollback.
 
 For recovery from a bad deployment, restore the backup into a **new** directory with

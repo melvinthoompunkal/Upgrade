@@ -70,11 +70,25 @@ def test_real_f7_review_pages_and_exact_download(inputs, tmp_path, monkeypatch):
         assert client.get(url + f"/changes/files/{file['id']}?offset=9999").status_code == 422
         assert client.get(url + f"/changes/files/{file['id']}?limit=201").status_code == 422
         assert client.get(url + f"/changes/files/{file['id']}?offset=-1").status_code == 422
-        # No write path is enabled, even with repeated requests.
+        # The optional write path remains disabled by default.
         for _ in range(2):
-            assert client.post(
-                url + "/pull-request", headers={"Origin": "http://127.0.0.1:5173"}
-            ).status_code in {404, 405}
+            assert (
+                client.post(
+                    url + "/pull-request",
+                    headers={
+                        "Origin": "http://127.0.0.1:5173",
+                        "Idempotency-Key": "disabled-publish",
+                    },
+                    json={
+                        "repository_id": 1,
+                        "base_branch": "main",
+                        "reviewed": True,
+                        "patch_sha256": review["patch"]["sha256"],
+                        "notices_sha256": "a" * 64,
+                    },
+                ).status_code
+                == 409
+            )
         assert client.get(url + "/changes").json() == review
     assert (len(provider.calls), len(captures.calls)) == calls
 

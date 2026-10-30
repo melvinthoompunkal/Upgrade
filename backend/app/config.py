@@ -34,6 +34,7 @@ class Settings(BaseSettings):
     github_private_key_path: Path | None = Field(default=None, repr=False)
     github_webhook_secret: SecretStr | None = Field(default=None, repr=False)
     github_private_fetch_enabled: bool = False
+    github_publishing_enabled: bool = False
     token_encryption_keys: SecretStr | None = Field(default=None, repr=False)
     deployment_mode: Literal["local", "hosted"] = "local"
     data_root: Path | None = None
@@ -109,6 +110,13 @@ class Settings(BaseSettings):
                 raise ValueError("Private fetch requires App ID, private key and webhook secret.")
         elif self.github_private_fetch_enabled:
             raise ValueError("Private fetch requires GitHub authentication mode.")
+        if self.github_publishing_enabled and (
+            self.auth_mode != "github"
+            or not self.github_app_id
+            or not self.github_private_key_path
+            or self.deployment_mode != "local"
+        ):
+            raise ValueError("PR publishing requires local GitHub mode, App ID and private key.")
         if self.deployment_mode == "hosted":
             if (
                 self.auth_mode != "github"

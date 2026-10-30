@@ -53,6 +53,7 @@ def capabilities(request: Request):
             "verified_adaptation",
         ],
         patch_supported=not hosted,
+        publishing_enabled=settings.github_publishing_enabled and not hosted,
         scope="Public Python analysis only; target execution is unavailable."
         if hosted
         else "Public Python project structure; optional native baseline and crawler example.",

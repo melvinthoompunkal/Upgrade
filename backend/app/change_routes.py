@@ -1,4 +1,4 @@
-"""Owner-scoped, manifest-backed change review. Publishing remains disabled."""
+"""Owner-scoped, manifest-backed change review."""
 
 from fastapi import APIRouter, Query, Request
 
@@ -11,7 +11,11 @@ router = APIRouter(prefix="/api/runs/{run_id}/changes")
 
 @router.get("", response_model=ChangeReview)
 def change_review(run_id: str, request: Request):
-    return SavedChanges(artifacts(request, run_id)).review
+    review = SavedChanges(artifacts(request, run_id)).review
+    review.publishing_enabled = (
+        request.app.state.settings.github_publishing_enabled and review.verdict == "verified"
+    )
+    return review
 
 
 @router.get("/files/{file_id}", response_model=DiffPage)

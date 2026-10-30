@@ -1,0 +1,44 @@
+{
+  "schema_version": "f13-live-repository-preflight-v1",
+  "checked_at": "2026-10-30 16:11:56 UTC",
+  "scope": "Read-only connected GitHub metadata and root manifest inspection; no writes, repository clone or model calls.",
+  "repository": {
+    "id": "1103012935",
+    "full_name": "openclaw/openclaw",
+    "url": "https://github.com/openclaw/openclaw.git",
+    "default_branch": "main",
+    "visibility": "public",
+    "size_kib": 11728148,
+    "permissions": {
+      "admin": false,
+      "maintain": false,
+      "pull": true,
+      "push": false,
+      "triage": false
+    }
+  },
+  "manifest": {
+    "url": "https://github.com/openclaw/openclaw/blob/main/package.json",
+    "blob_sha": "21758c47bd9e0ff1941320ddfa480fff691b50d9",
+    "name": "openclaw",
+    "engines": {
+      "node": ">=24.16.0 <25 || >=26.1.0"
+    },
+    "package_manager": "pnpm@12.15.0+sha512.b3951d6d6ff4a9f13dc7cf56cd28d2b8eb37dbcc9c68e52e1e1191873ea9f82a017287ab50baadc5ccc494f036c67c0e47eb13608c2fa36f47711b61ea128e61",
+    "typescript_declared": true,
+    "test_script": "node scripts/test-projects.mts"
+  },
+  "outcomes": {
+    "public_read": "passed",
+    "connected_account_push": "denied",
+    "reviewed_adaptation_profile": "unsupported_node_typescript_root",
+    "local_github_app": "not_configured",
+    "live_publishing": "not_run",
+    "full_release": "pending"
+  },
+  "next_requirements": [
+    "A development repository with push rights and a supported public Python target.",
+    "Configured development GitHub App with current Contents/Pull requests write grants.",
+    "Independent live connected-analysis, semantic adaptation and applicable hosting exit evidence."
+  ]
+}

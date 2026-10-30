@@ -172,20 +172,22 @@ def rotate_credentials(store, cipher):
 
 
 def rollback_hosting_schema(store):
-    """Only schema 9 -> 8; caller fences worker and all HTTP writes before invoking."""
+    """Reviewed 9/10 -> 8; preserve publishing receipts and fence all writers first."""
     from app.api.migrations import SCHEMA_VERSION
 
-    if SCHEMA_VERSION != 9:
+    if SCHEMA_VERSION != 10:
         raise ValueError("Re-review rollback before adding another schema migration.")
     with store.connect() as db:
         db.execute("BEGIN IMMEDIATE")
-        if db.execute("PRAGMA user_version").fetchone()[0] != 9:
+        if db.execute("PRAGMA user_version").fetchone()[0] not in {9, 10}:
             raise ValueError("Only the reviewed hosting schema can be rolled back.")
         for row in db.execute(
             "SELECT summary FROM runs WHERE json_extract(summary,'$.status')='running'"
         ).fetchall():
             JobLeases(store).settle_in(db, RunSummary.model_validate_json(row[0]), "interrupted")
         db.execute("DROP TABLE worker_status")
+        # Schema 10's additive publications table must survive a downgrade/re-upgrade:
+        # its unique run/key bindings and uncertain outcomes prevent duplicate GitHub PRs.
         db.execute("PRAGMA user_version=8")
     return {"state": "complete", "schema_version": 8, "automatic_replay": False}
 

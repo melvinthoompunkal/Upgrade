@@ -16,6 +16,8 @@ class SupportMatrix(BaseModel):
     ref_selection: list[str] = ["full_sha", "branch", "lightweight_tag", "annotated_tag"]
     private_preflight_enabled: bool = False
     private_analysis_enabled: bool = False
+    publishing_enabled: bool = False
+    publishing_profile: str = "verified-public-python-draft-pr-v1"
     private_release_gates: list[str] = [
         "live consent/access/revocation validation",
         "applicable organization policy validation",
@@ -27,5 +29,5 @@ class SupportMatrix(BaseModel):
         "new entry-point classes/modules, decorated methods/classes and inherited new APIs",
         "properties and dunder APIs",
         "non-JSON call arguments/results and unreviewed license variants",
-        "private analysis, hosted execution and PR publishing",
+        "private analysis and hosted execution",
     ]
