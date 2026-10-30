@@ -12,11 +12,11 @@ from app.api.contracts import RunSummary
 from app.api.security import require_local_origin
 from app.auth.snapshots import access_error, service
 from app.config import META_BASE_URL
+from app.deployment import execution_lock_path
 from app.errors import GraftError
 from app.execution import ProcessLock
 from app.jobs.leases import JobLeases
 from app.jobs.privacy import POLICY
-from app.tools.runner import PROJECT_ROOT
 
 router = APIRouter(prefix="/api")
 
@@ -84,7 +84,7 @@ def delete_data(request: Request):
 
     require_local_origin(request)
     try:
-        with ProcessLock(PROJECT_ROOT / "data/execution.lock"):
+        with ProcessLock(execution_lock_path(request.app.state.settings)):
             return Retention(request.app.state.runs, request.app.state.data_root).delete_owner(
                 request.state.principal.owner_id
             )

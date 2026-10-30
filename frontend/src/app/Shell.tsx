@@ -134,10 +134,26 @@ export function Shell() {
         <div className="sidebar-bottom">
           <div className="local-note">
             <span className={`connection-dot ${error ? 'connection-offline' : ''}`} />
-            <strong>{error ? 'Backend unavailable' : 'Runs on your machine'}</strong>
-            <p>Evidence stays in your local workspace.</p>
+            <strong>
+              {error
+                ? 'Backend unavailable'
+                : capabilities?.deployment_mode === 'hosted'
+                  ? 'Hosted workspace'
+                  : 'Runs on your machine'}
+            </strong>
+            <p>
+              {capabilities?.deployment_mode === 'hosted'
+                ? 'Saved evidence is private to your account.'
+                : 'Evidence stays in your local workspace.'}
+            </p>
           </div>
-          <a href="http://127.0.0.1:8000/docs" target="_blank" rel="noreferrer">
+          <a
+            href={
+              capabilities?.deployment_mode === 'hosted' ? '/docs' : 'http://127.0.0.1:8000/docs'
+            }
+            target="_blank"
+            rel="noreferrer"
+          >
             API reference
             <ArrowSquareOut size={15} />
           </a>
@@ -177,7 +193,15 @@ export function Shell() {
           </div>
           <div className="topbar-status">
             <span className={`connection-dot ${error ? 'connection-offline' : ''}`} />
-            <span>{error ? 'Offline' : capabilities ? 'Local connection' : 'Connecting'}</span>
+            <span>
+              {error
+                ? 'Offline'
+                : capabilities
+                  ? capabilities.deployment_mode === 'hosted'
+                    ? 'Hosted connection'
+                    : 'Local connection'
+                  : 'Connecting'}
+            </span>
             <span className="topbar-divider" />
             <span className="model-label">Muse Spark</span>
           </div>
@@ -203,7 +227,10 @@ export function Shell() {
         </main>
         <footer className="page-footer">
           <span>Built on evidence. Made for better software.</span>
-          <span>Upgrade / Local workspace</span>
+          <span>
+            Upgrade /{' '}
+            {capabilities?.deployment_mode === 'hosted' ? 'Hosted workspace' : 'Local workspace'}
+          </span>
         </footer>
       </div>
     </div>

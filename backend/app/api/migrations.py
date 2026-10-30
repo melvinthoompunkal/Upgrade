@@ -3,7 +3,7 @@
 import sqlite3
 
 LOCAL_OWNER = "local-workspace"
-SCHEMA_VERSION = 8
+SCHEMA_VERSION = 9
 
 
 def migrate(db: sqlite3.Connection) -> None:

@@ -1,7 +1,7 @@
 import { useRef, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowRight } from '@phosphor-icons/react'
-import { createRun, type ProjectSelection } from '../../api/client'
+import { createRun, workflowEnabled, type ProjectSelection } from '../../api/client'
 import { useWorkspace } from '../../app/workspace-context'
 import { Notice } from '../../components/ui'
 import { CatalogStart } from '../catalog/CatalogStart'
@@ -22,7 +22,10 @@ export function ProjectRun() {
   const supported = (project: ProjectSelection | null) =>
     project?.support.capability === 'evidence_analysis'
   const ready =
-    supported(source) && (!includeTarget || supported(target)) && capabilities?.worker_available
+    supported(source) &&
+    (!includeTarget || supported(target)) &&
+    capabilities?.worker_available &&
+    workflowEnabled(capabilities, 'project_analysis')
 
   async function submit(event: FormEvent) {
     event.preventDefault()
@@ -32,7 +35,11 @@ export function ProjectRun() {
       source_project: source.id,
       target_project: includeTarget ? target!.id : null,
       goal: goal.trim(),
-      run_baseline: includeTarget && baseline && !!target?.support.execution_supported,
+      run_baseline:
+        includeTarget &&
+        baseline &&
+        !!target?.support.execution_supported &&
+        capabilities?.target_execution_supported !== false,
     }
     const body = JSON.stringify(request)
     if (submission.current.body !== body) submission.current = { body, key: crypto.randomUUID() }
@@ -96,14 +103,19 @@ export function ProjectRun() {
               type="checkbox"
               className="project-check"
               checked={baseline}
-              disabled={!target.support.execution_supported}
+              disabled={
+                !target.support.execution_supported ||
+                capabilities?.target_execution_supported === false
+              }
               onChange={(event) => setBaseline(event.target.checked)}
             />
             <span>
               Run the target’s original tests offline
               <br />
               <small className="text-muted">
-                Requires the prepared Docker image. Skips and collection errors cannot pass.
+                {capabilities?.target_execution_supported === false
+                  ? 'Target tests are unavailable on this deployment.'
+                  : 'Requires the prepared Docker image. Skips and collection errors cannot pass.'}
               </small>
             </span>
           </label>

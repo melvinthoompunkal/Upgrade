@@ -84,6 +84,9 @@ class RunStore:
         access_epoch: int | None = None,
     ) -> RunSummary:
         """Admit a run and its domain records in the caller's transaction."""
+        from app.hosting.release import require_job
+
+        require_job(self.settings, request)
         body = request.model_dump_json()
         fingerprint = hashlib.sha256(body.encode()).hexdigest()
         if require_connected:

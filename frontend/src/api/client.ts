@@ -30,6 +30,13 @@ export type FeatureAssessment = Schemas['FeatureAssessment']
 export type RunRequest =
   operations['create_run_api_runs_post']['requestBody']['content']['application/json']
 
+export function workflowEnabled(capabilities: Capabilities | null, kind: RunRequest['kind']) {
+  return (
+    !!capabilities &&
+    (capabilities.deployment_mode !== 'hosted' || capabilities.kinds.includes(kind))
+  )
+}
+
 export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
   const headers = new Headers(options.headers)
   headers.set('Content-Type', 'application/json')

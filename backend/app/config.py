@@ -35,7 +35,10 @@ class Settings(BaseSettings):
     github_webhook_secret: SecretStr | None = Field(default=None, repr=False)
     github_private_fetch_enabled: bool = False
     token_encryption_keys: SecretStr | None = Field(default=None, repr=False)
-    deployment_mode: Literal["local"] = "local"
+    deployment_mode: Literal["local", "hosted"] = "local"
+    data_root: Path | None = None
+    deployment_id: str = Field(default="", pattern=r"^[A-Za-z0-9_-]{0,80}$")
+    hosted_release_path: Path | None = None
     operator_github_ids: tuple[int, ...] = ()
     job_lease_seconds: int = Field(default=30, ge=5, le=300)
     job_max_seconds: int = Field(default=1200, ge=1, le=3600)
@@ -54,7 +57,13 @@ class Settings(BaseSettings):
     global_daily_model_output_tokens: int = Field(default=640_000, ge=1)
     retention_days: int = Field(default=30, ge=1, le=365)
 
-    @field_validator("github_app_id", "github_private_key_path", mode="before")
+    @field_validator(
+        "github_app_id",
+        "github_private_key_path",
+        "data_root",
+        "hosted_release_path",
+        mode="before",
+    )
     @classmethod
     def empty_optional_setting(cls, value: object) -> object:
         return None if isinstance(value, str) and not value.strip() else value
@@ -100,6 +109,28 @@ class Settings(BaseSettings):
                 raise ValueError("Private fetch requires App ID, private key and webhook secret.")
         elif self.github_private_fetch_enabled:
             raise ValueError("Private fetch requires GitHub authentication mode.")
+        if self.deployment_mode == "hosted":
+            if (
+                self.auth_mode != "github"
+                or urlsplit(self.app_base_url).scheme != "https"
+                or urlsplit(self.app_base_url).hostname in {"localhost", "127.0.0.1", "::1"}
+                or not self.deployment_id
+                or self.data_root is None
+                or not self.data_root.is_absolute()
+            ):
+                raise ValueError(
+                    "Hosted mode requires GitHub, public HTTPS, a deployment ID "
+                    "and absolute DATA_ROOT."
+                )
+            if self.github_private_fetch_enabled:
+                raise ValueError("Hosted private retrieval requires a separately reviewed profile.")
+            if self.hosted_release_path is not None and (
+                not self.hosted_release_path.is_absolute()
+                or self.hosted_release_path.resolve().is_relative_to(self.data_root.resolve())
+            ):
+                raise ValueError(
+                    "Keep the absolute hosted release path outside writable data storage."
+                )
         return self
 
     @field_validator("model_api_key", mode="before")

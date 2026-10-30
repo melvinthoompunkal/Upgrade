@@ -11,7 +11,7 @@ import {
   TerminalWindow,
   FileCode,
 } from '@phosphor-icons/react'
-import { createRun, formatDate, type RunSummary } from '../../api/client'
+import { createRun, formatDate, workflowEnabled, type RunSummary } from '../../api/client'
 import { useWorkspace } from '../../app/workspace-context'
 import { ErrorState, Notice, SectionHeading, Skeleton, StatusMark } from '../../components/ui'
 import { DataLifecycle } from './DataLifecycle'
@@ -82,7 +82,7 @@ export function SystemChecks() {
       <div className="page-heading">
         <div>
           <h1>System checks</h1>
-          <p>A clear view of your local setup. Run checks when you need them.</p>
+          <p>Review service availability and saved checks.</p>
         </div>
         <button className="button-secondary" onClick={refresh}>
           <ArrowClockwise size={17} />
@@ -111,21 +111,29 @@ export function SystemChecks() {
             <section>
               <h3>Docker runner</h3>
               <p>
-                {capabilities?.image_receipt_present
-                  ? 'Reviewed image receipt found'
-                  : 'Prepared image receipt missing'}
+                {capabilities?.target_execution_supported === false
+                  ? 'Target execution unavailable'
+                  : capabilities?.image_receipt_present
+                    ? 'Reviewed image receipt found'
+                    : 'Prepared image receipt missing'}
               </p>
-              <small>Run a baseline to check Docker and image validity.</small>
+              <small>
+                {capabilities?.target_execution_supported === false
+                  ? 'Public code analysis is supported separately.'
+                  : 'Run a baseline to check Docker and image validity.'}
+              </small>
             </section>
           </div>
           <div>
             <StatusMark passed={capabilities?.worker_available ?? null} />
             <section>
-              <h3>Local worker</h3>
+              <h3>
+                {capabilities?.deployment_mode === 'hosted' ? 'Analysis worker' : 'Local worker'}
+              </h3>
               <p>
                 {capabilities?.worker_available
                   ? 'Available / one workflow at a time'
-                  : 'Unavailable / check the backend process'}
+                  : 'Unavailable / retry when the service is ready'}
               </p>
               <small>Queue limits are enforced before each submission.</small>
             </section>
@@ -178,6 +186,7 @@ export function SystemChecks() {
                 disabled={
                   starting !== null ||
                   !capabilities?.worker_available ||
+                  !workflowEnabled(capabilities, check.kind) ||
                   (check.kind === 'meta_smoke' &&
                     (!capabilities.model_configured || capabilities.diagnostics_allowed === false))
                 }
@@ -189,56 +198,63 @@ export function SystemChecks() {
           )
         })}
       </div>
-      <div className="setup-instructions">
-        <div>
-          <TerminalWindow size={24} />
-          <h2>Configure once, check when needed.</h2>
-          <p>
-            Keep credentials in your local backend environment. Build the reviewed Docker image
-            before running target tests.
-          </p>
-          <Notice>
-            A retry diagnostic can intentionally fail assertions to demonstrate missing behavior.
-            Ordinary baseline failures are reported separately.
-          </Notice>
-        </div>
-        <div className="surface p-6">
-          <h3 className="mb-4">From the project root</h3>
-          {[
-            {
-              label: 'Install backend dependencies',
-              command: 'uv sync --project backend --locked',
-            },
-            {
-              label: 'Create local configuration, if missing',
-              command:
-                'if (-not (Test-Path backend/.env)) { Copy-Item backend/.env.example backend/.env }',
-            },
-            {
-              label: 'Build the reviewed runner image',
-              command: 'uv run --project backend --locked python scripts/build_runner.py',
-            },
-          ].map((item) => (
-            <div className="setup-command" key={item.command}>
-              <label>{item.label}</label>
-              <div>
-                <code>{item.command}</code>
-                <button
-                  className="icon-button"
-                  aria-label={`Copy ${item.label.toLowerCase()}`}
-                  onClick={() => copy(item.command)}
-                >
-                  {copied === item.command ? <CheckCircle size={16} /> : <Copy size={16} />}
-                </button>
+      {capabilities?.deployment_mode === 'hosted' ? (
+        <Notice>
+          Public code analysis is available for the approved workflows. Contact your service
+          operator if a workflow is unavailable.
+        </Notice>
+      ) : (
+        <div className="setup-instructions">
+          <div>
+            <TerminalWindow size={24} />
+            <h2>Configure once, check when needed.</h2>
+            <p>
+              Keep credentials in your local backend environment. Build the reviewed Docker image
+              before running target tests.
+            </p>
+            <Notice>
+              A retry diagnostic can intentionally fail assertions to demonstrate missing behavior.
+              Ordinary baseline failures are reported separately.
+            </Notice>
+          </div>
+          <div className="surface p-6">
+            <h3 className="mb-4">From the project root</h3>
+            {[
+              {
+                label: 'Install backend dependencies',
+                command: 'uv sync --project backend --locked',
+              },
+              {
+                label: 'Create local configuration, if missing',
+                command:
+                  'if (-not (Test-Path backend/.env)) { Copy-Item backend/.env.example backend/.env }',
+              },
+              {
+                label: 'Build the reviewed runner image',
+                command: 'uv run --project backend --locked python scripts/build_runner.py',
+              },
+            ].map((item) => (
+              <div className="setup-command" key={item.command}>
+                <label>{item.label}</label>
+                <div>
+                  <code>{item.command}</code>
+                  <button
+                    className="icon-button"
+                    aria-label={`Copy ${item.label.toLowerCase()}`}
+                    onClick={() => copy(item.command)}
+                  >
+                    {copied === item.command ? <CheckCircle size={16} /> : <Copy size={16} />}
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
-          <p className="field-help">
-            Only create backend/.env if it does not exist. Set MODEL_API_KEY locally, then restart
-            the backend. Never paste a key into the browser.
-          </p>
+            ))}
+            <p className="field-help">
+              Only create backend/.env if it does not exist. Set MODEL_API_KEY locally, then restart
+              the backend. Never paste a key into the browser.
+            </p>
+          </div>
         </div>
-      </div>
+      )}
       <DataLifecycle />
       <SupportMatrix />
     </div>

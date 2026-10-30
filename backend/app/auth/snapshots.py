@@ -220,10 +220,10 @@ def access_error(error: GraftError):
 def create_snapshot(body: SnapshotRequest, request: Request):
     owner = require_connection(request)
     provider = service(request)
-    from app.tools.runner import PROJECT_ROOT
+    from app.deployment import execution_lock_path
 
     try:
-        with ProcessLock(PROJECT_ROOT / "data/execution.lock"):
+        with ProcessLock(execution_lock_path(request.app.state.settings)):
             return provider.create(owner, body)
     except GraftError as error:
         raise access_error(error) from None

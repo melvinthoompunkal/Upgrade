@@ -3,6 +3,9 @@
 
 def migrate_jobs(db):
     statements = (
+        """CREATE TABLE IF NOT EXISTS worker_status (
+            id INTEGER PRIMARY KEY CHECK(id=1), worker TEXT NOT NULL,
+            heartbeat REAL NOT NULL, available INTEGER NOT NULL)""",
         """CREATE TABLE IF NOT EXISTS job_leases (
             run_id TEXT PRIMARY KEY, token TEXT NOT NULL, worker TEXT NOT NULL,
             expires REAL NOT NULL, heartbeat REAL NOT NULL, cancel_code TEXT)""",

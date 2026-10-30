@@ -15,6 +15,7 @@ from test_projects import independent as independent
 from test_projects import pin
 
 from app import catalog_store
+from app.api.migrations import SCHEMA_VERSION
 from app.api.storage import RunStore
 from app.catalog_contracts import CatalogContinue, CatalogCreate, CatalogJob, DiscoveryOptions
 from app.catalog_discovery import CatalogAnalyzer
@@ -716,7 +717,7 @@ def test_v5_migration_preserves_projects_runs_events_and_credentials(library):
     assert len(migrated.events(run.id, 0, owner_id=OWNER)) == 1
     assert ProjectStore(migrated, projects.root).get(OWNER, selected.id) == selected
     with migrated.connect() as db:
-        assert db.execute("PRAGMA user_version").fetchone()[0] == 8
+        assert db.execute("PRAGMA user_version").fetchone()[0] == SCHEMA_VERSION
         assert (
             db.execute("SELECT ciphertext FROM credentials").fetchone()[0]
             == b"opaque-encrypted-record"

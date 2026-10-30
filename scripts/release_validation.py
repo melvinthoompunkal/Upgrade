@@ -69,6 +69,7 @@ def source_manifest(root: Path) -> dict[str, str]:
                 "backend",
                 "frontend",
                 "scripts",
+                "deploy",
                 "sandbox",
                 "examples",
                 "docs",

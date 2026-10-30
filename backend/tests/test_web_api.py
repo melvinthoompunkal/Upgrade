@@ -39,6 +39,9 @@ def wait_finished(store, run_id):
 def worker_project_root(tmp_path, monkeypatch):
     # Test workers must never share the real workspace's execution lock.
     monkeypatch.setattr("app.api.worker.PROJECT_ROOT", tmp_path / "project")
+    monkeypatch.setattr(
+        "app.api.worker.execution_lock_path", lambda _: tmp_path / "project/data/execution.lock"
+    )
 
 
 @pytest.fixture

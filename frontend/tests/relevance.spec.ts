@@ -262,7 +262,7 @@ test('requesting relevance and editing a goal are explicit new jobs', async ({ p
     'Remove duplicate sequences',
   )
   await page.getByRole('button', { name: 'Assess relevance', exact: true }).click()
-  expect(writes).toHaveLength(2)
+  await expect.poll(() => writes.length).toBe(2)
   expect(writes[1].body).toMatchObject({
     goal: 'A different feature goal',
     target_project: null,

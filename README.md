@@ -14,6 +14,11 @@ analysis workflows. F7 adds verified adaptation; F11 expands the reviewed public
 profiles to sync/async functions, instance methods and scripted offline HTTPX behavior.
 The original crawler selection still produces an analysis proposal.
 
+F12 adds a gated single-host Linux analysis deployment with separate API/worker
+services, durable shared storage, metadata monitoring and operational recovery.
+See [the hosting runbook](docs/hosting.md). Production admission requires reviewed
+deployment evidence; hosted target execution remains unavailable.
+
 The [browser workspace guide](docs/frontend.md) covers startup, workflow coverage,
 verification, and remaining backend milestones. The original
 [frontend and integration plan](docs/frontend-integration-plan.md) retains the broader

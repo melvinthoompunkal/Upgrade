@@ -11,8 +11,10 @@ from fastapi import APIRouter, HTTPException, Request
 
 from app.api.security import require_local_origin
 from app.api.storage import RunStore, now
+from app.deployment import execution_lock_path
 from app.errors import GraftError
 from app.execution import ProcessLock
+from app.hosting.release import require_release
 from app.jobs.control import CURRENT
 from app.jobs.resources import Resources
 from app.project_contracts import ProjectAnalysisRequest, ProjectRequest, ProjectSelection
@@ -22,7 +24,6 @@ from app.project_support import inspect_project
 from app.selection_artifacts import prepare_directory
 from app.support_matrix import SupportMatrix
 from app.tools.repositories import RepositoryManager
-from app.tools.runner import PROJECT_ROOT
 from app.tools.runner_artifacts import physical_root
 
 router = APIRouter(prefix="/api/projects")
@@ -210,6 +211,7 @@ def resolve_project_ref(body: RefRequest, request: Request):
     from app.auth.snapshots import access_error
 
     require_local_origin(request)
+    require_release(request.app.state.settings)
     try:
         return resolve_ref(body, request)
     except GraftError as error:
@@ -218,6 +220,14 @@ def resolve_project_ref(body: RefRequest, request: Request):
 
 @router.get("/support-matrix", response_model=SupportMatrix)
 def support_matrix(request: Request):
+    if request.app.state.settings.deployment_mode == "hosted":
+        return SupportMatrix(
+            runtime_profile="public-python-analysis-only",
+            runtime_packages={},
+            native_adapters=[],
+            acceptance_adapters=[],
+            source_use_profiles={},
+        )
     return SupportMatrix(
         private_preflight_enabled=request.app.state.settings.github_private_fetch_enabled
     )
@@ -229,7 +239,7 @@ def inspect_snapshot(snapshot_id: str, request: Request):
 
     require_local_origin(request)
     try:
-        with ProcessLock(PROJECT_ROOT / "data/execution.lock"):
+        with ProcessLock(execution_lock_path(request.app.state.settings)):
             return project_store(request).from_snapshot(
                 request.state.principal.owner_id, snapshot_id
             )
@@ -242,8 +252,9 @@ def inspect_snapshot(snapshot_id: str, request: Request):
 @router.post("", response_model=ProjectSelection, status_code=201)
 def pin_project(body: ProjectRequest, request: Request):
     require_local_origin(request)
+    require_release(request.app.state.settings)
     try:
-        with ProcessLock(PROJECT_ROOT / "data/execution.lock"):
+        with ProcessLock(execution_lock_path(request.app.state.settings)):
             return project_store(request).create(request.state.principal.owner_id, body)
     except GraftError as error:
         raise HTTPException(409, str(error)) from None

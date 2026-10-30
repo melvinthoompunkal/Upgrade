@@ -14,7 +14,7 @@ import {
   Stack,
   Target as TargetIcon,
 } from '@phosphor-icons/react'
-import { createRun, formatDate, shortSha, type RunRequest } from '../../api/client'
+import { createRun, formatDate, shortSha, workflowEnabled, type RunRequest } from '../../api/client'
 import { useWorkspace } from '../../app/workspace-context'
 import { ErrorState, Notice, RunBadge } from '../../components/ui'
 
@@ -49,6 +49,7 @@ export function NewRun() {
   const canRun =
     capabilities?.model_configured &&
     capabilities.worker_available &&
+    workflowEnabled(capabilities, kind) &&
     (kind === 'source_trace' || capabilities.image_receipt_present)
 
   useEffect(() => {

@@ -2,12 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   api,
+  workflowEnabled,
   shortSha,
   type Assessment,
   type Catalog,
   type ProjectSelection,
 } from '../../api/client'
 import { Notice } from '../../components/ui'
+import { useWorkspace } from '../../app/workspace-context'
 import { ProjectPin } from '../new-run/ProjectPin'
 import { assessmentFinished } from './useAssessment'
 
@@ -22,6 +24,7 @@ export function AssessmentPanel({
   selected: string
   onCreated: (assessment: Assessment) => void
 }) {
+  const { capabilities } = useWorkspace()
   const [goal, setGoal] = useState('')
   const [target, setTarget] = useState<ProjectSelection | null>(null)
   const [includeTarget, setIncludeTarget] = useState(false)
@@ -41,6 +44,7 @@ export function AssessmentPanel({
     assessment && goal === assessment.goal && (targetId ?? null) === assessment.target_project,
   )
   const ready =
+    workflowEnabled(capabilities, 'relevance_assessment') &&
     goal.trim() &&
     (!includeTarget || targetId) &&
     (!includeTarget || useSavedTarget || target?.support.capability === 'evidence_analysis')
@@ -201,7 +205,7 @@ export function AssessmentPanel({
             {sameContext && (assessment?.counts.unassessed ?? 0) > 0 && (
               <button
                 className="button-secondary"
-                disabled={busy || Boolean(running)}
+                disabled={!ready || busy || Boolean(running)}
                 onClick={() => submit(true)}
               >
                 Assess more

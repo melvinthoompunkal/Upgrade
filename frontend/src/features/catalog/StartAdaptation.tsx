@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { createRun, type FeatureAssessment } from '../../api/client'
+import { createRun, workflowEnabled, type FeatureAssessment } from '../../api/client'
+import { useWorkspace } from '../../app/workspace-context'
 
 export function StartAdaptation({
   assessmentId,
@@ -9,6 +10,7 @@ export function StartAdaptation({
   assessmentId: string
   feature: FeatureAssessment
 }) {
+  const { capabilities } = useWorkspace()
   const navigate = useNavigate()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -40,9 +42,16 @@ export function StartAdaptation({
   }
   return (
     <div className="space-y-2">
-      <button className="button-primary" disabled={busy} onClick={start}>
+      <button
+        className="button-primary"
+        disabled={busy || !workflowEnabled(capabilities, 'verified_adaptation')}
+        onClick={start}
+      >
         {busy ? 'Starting adaptation…' : 'Verify adaptation'}
       </button>
+      {capabilities?.deployment_mode === 'hosted' && (
+        <p className="field-help">Verified adaptation is unavailable on this deployment.</p>
+      )}
       <p className="field-help">
         Prepare frozen tests, check the original baseline, and verify a bounded patch. Supports
         reviewed sync/async Python functions, methods and HTTPX calls with standard MIT or

@@ -1,0 +1,118 @@
+<testsuites id="" name="" tests="48" failures="0" skipped="0" errors="0" time="50.259696">
+<testsuite name="account.spec.ts" timestamp="2026-10-30T15:26:50.387Z" hostname="desktop" tests="9" failures="0" skipped="0" time="9.08" errors="0">
+<testcase name="account changes clear private results before the new history arrives" classname="account.spec.ts" time="0.73">
+</testcase>
+<testcase name="account changes do not copy the previous account draft" classname="account.spec.ts" time="0.308">
+</testcase>
+<testcase name="signed-out accounts see onboarding without loading private runs" classname="account.spec.ts" time="0.332">
+</testcase>
+<testcase name="repository sync sends CSRF and browsing does not run a model" classname="account.spec.ts" time="1.633">
+</testcase>
+<testcase name="history search queries the server and keeps URL context" classname="account.spec.ts" time="1.818">
+</testcase>
+<testcase name="private snapshot fetch is explicit and shows pinned browse-only support" classname="account.spec.ts" time="0.866">
+</testcase>
+<testcase name="installation states explain suspension and missing permissions" classname="account.spec.ts" time="0.374">
+</testcase>
+<testcase name="disconnect reports when provider revocation needs manual completion" classname="account.spec.ts" time="0.434">
+</testcase>
+<testcase name="event catch-up stays bounded to the latest 200 entries" classname="account.spec.ts" time="2.585">
+</testcase>
+</testsuite>
+<testsuite name="hosting.spec.ts" timestamp="2026-10-30T15:26:50.387Z" hostname="desktop" tests="3" failures="0" skipped="0" time="1.691" errors="0">
+<testcase name="hosted service disables local diagnostics even when a worker and model are available" classname="hosting.spec.ts" time="0.429">
+</testcase>
+<testcase name="hosted source analysis cannot accidentally request target execution" classname="hosting.spec.ts" time="0.489">
+</testcase>
+<testcase name="missing hosted approval disables job actions while saved views remain accessible" classname="hosting.spec.ts" time="0.773">
+</testcase>
+</testsuite>
+<testsuite name="jobs.spec.ts" timestamp="2026-10-30T15:26:50.387Z" hostname="desktop" tests="3" failures="0" skipped="0" time="2.627" errors="0">
+<testcase name="cancel waits for the controller and keeps the run inspectable" classname="jobs.spec.ts" time="1.735">
+</testcase>
+<testcase name="storage deletion requires review and explicit confirmation" classname="jobs.spec.ts" time="0.521">
+</testcase>
+<testcase name="unfinished jobs block data deletion" classname="jobs.spec.ts" time="0.371">
+</testcase>
+</testsuite>
+<testsuite name="projects.spec.ts" timestamp="2026-10-30T15:26:50.387Z" hostname="desktop" tests="4" failures="0" skipped="0" time="2.082" errors="0">
+<testcase name="public source analysis is the default and needs neither target nor model configuration" classname="projects.spec.ts" time="0.595">
+</testcase>
+<testcase name="editing a pinned project invalidates its selection" classname="projects.spec.ts" time="0.461">
+</testcase>
+<testcase name="unsupported projects show their blocker and cannot queue analysis" classname="projects.spec.ts" time="0.434">
+</testcase>
+<testcase name="native baseline uses the explicitly selected target ID" classname="projects.spec.ts" time="0.592">
+</testcase>
+</testsuite>
+<testsuite name="relevance.spec.ts" timestamp="2026-10-30T15:26:50.387Z" hostname="desktop" tests="5" failures="0" skipped="0" time="5.062" errors="0">
+<testcase name="saved all/relevant views keep honest counts and issue no inference writes" classname="relevance.spec.ts" time="1.597">
+</testcase>
+<testcase name="requesting relevance and editing a goal are explicit new jobs" classname="relevance.spec.ts" time="0.617">
+</testcase>
+<testcase name="a selected assessment shows failed gates and supports keyboard return at tablet width" classname="relevance.spec.ts" time="1.218">
+</testcase>
+<testcase name="adaptation starts explicitly from a saved feature and retries with the same key" classname="relevance.spec.ts" time="0.536">
+</testcase>
+<testcase name="an older search cannot overwrite the current saved query" classname="relevance.spec.ts" time="1.094">
+</testcase>
+</testsuite>
+<testsuite name="account.spec.ts" timestamp="2026-10-30T15:26:50.387Z" hostname="mobile" tests="9" failures="0" skipped="0" time="11.065" errors="0">
+<testcase name="account changes clear private results before the new history arrives" classname="account.spec.ts" time="0.839">
+</testcase>
+<testcase name="account changes do not copy the previous account draft" classname="account.spec.ts" time="0.446">
+</testcase>
+<testcase name="signed-out accounts see onboarding without loading private runs" classname="account.spec.ts" time="0.417">
+</testcase>
+<testcase name="repository sync sends CSRF and browsing does not run a model" classname="account.spec.ts" time="1.54">
+</testcase>
+<testcase name="history search queries the server and keeps URL context" classname="account.spec.ts" time="1.784">
+</testcase>
+<testcase name="private snapshot fetch is explicit and shows pinned browse-only support" classname="account.spec.ts" time="1.665">
+</testcase>
+<testcase name="installation states explain suspension and missing permissions" classname="account.spec.ts" time="1.153">
+</testcase>
+<testcase name="disconnect reports when provider revocation needs manual completion" classname="account.spec.ts" time="0.673">
+</testcase>
+<testcase name="event catch-up stays bounded to the latest 200 entries" classname="account.spec.ts" time="2.548">
+</testcase>
+</testsuite>
+<testsuite name="hosting.spec.ts" timestamp="2026-10-30T15:26:50.387Z" hostname="mobile" tests="3" failures="0" skipped="0" time="2.565" errors="0">
+<testcase name="hosted service disables local diagnostics even when a worker and model are available" classname="hosting.spec.ts" time="1.259">
+</testcase>
+<testcase name="hosted source analysis cannot accidentally request target execution" classname="hosting.spec.ts" time="0.563">
+</testcase>
+<testcase name="missing hosted approval disables job actions while saved views remain accessible" classname="hosting.spec.ts" time="0.743">
+</testcase>
+</testsuite>
+<testsuite name="jobs.spec.ts" timestamp="2026-10-30T15:26:50.387Z" hostname="mobile" tests="3" failures="0" skipped="0" time="3.734" errors="0">
+<testcase name="cancel waits for the controller and keeps the run inspectable" classname="jobs.spec.ts" time="2.034">
+</testcase>
+<testcase name="storage deletion requires review and explicit confirmation" classname="jobs.spec.ts" time="0.512">
+</testcase>
+<testcase name="unfinished jobs block data deletion" classname="jobs.spec.ts" time="1.188">
+</testcase>
+</testsuite>
+<testsuite name="projects.spec.ts" timestamp="2026-10-30T15:26:50.387Z" hostname="mobile" tests="4" failures="0" skipped="0" time="2.211" errors="0">
+<testcase name="public source analysis is the default and needs neither target nor model configuration" classname="projects.spec.ts" time="0.62">
+</testcase>
+<testcase name="editing a pinned project invalidates its selection" classname="projects.spec.ts" time="0.508">
+</testcase>
+<testcase name="unsupported projects show their blocker and cannot queue analysis" classname="projects.spec.ts" time="0.47">
+</testcase>
+<testcase name="native baseline uses the explicitly selected target ID" classname="projects.spec.ts" time="0.613">
+</testcase>
+</testsuite>
+<testsuite name="relevance.spec.ts" timestamp="2026-10-30T15:26:50.387Z" hostname="mobile" tests="5" failures="0" skipped="0" time="7.073" errors="0">
+<testcase name="saved all/relevant views keep honest counts and issue no inference writes" classname="relevance.spec.ts" time="1.916">
+</testcase>
+<testcase name="requesting relevance and editing a goal are explicit new jobs" classname="relevance.spec.ts" time="1.334">
+</testcase>
+<testcase name="a selected assessment shows failed gates and supports keyboard return at tablet width" classname="relevance.spec.ts" time="0.661">
+</testcase>
+<testcase name="adaptation starts explicitly from a saved feature and retries with the same key" classname="relevance.spec.ts" time="1.285">
+</testcase>
+<testcase name="an older search cannot overwrite the current saved query" classname="relevance.spec.ts" time="1.877">
+</testcase>
+</testsuite>
+</testsuites>

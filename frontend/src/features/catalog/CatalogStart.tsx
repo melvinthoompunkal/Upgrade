@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { api, type Catalog, type ProjectSelection } from '../../api/client'
+import { api, workflowEnabled, type Catalog, type ProjectSelection } from '../../api/client'
 import { useWorkspace } from '../../app/workspace-context'
 import { Notice } from '../../components/ui'
 
@@ -83,6 +83,7 @@ export function CatalogStart({ source }: { source: ProjectSelection | null }) {
           source.support.capability !== 'evidence_analysis' ||
           !capabilities?.model_configured ||
           !capabilities?.worker_available ||
+          !workflowEnabled(capabilities, 'catalog_discovery') ||
           files < 1 ||
           files > 256 ||
           traces < 0 ||

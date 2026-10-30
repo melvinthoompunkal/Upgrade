@@ -13,8 +13,9 @@ class ExecutionBusy(GraftError):
 
 
 class ProcessLock:
-    def __init__(self, path: Path):
+    def __init__(self, path: Path, *, shared: bool = False):
         self.path, self.stream = path, None
+        self.shared = shared
 
     def acquire(self) -> bool:
         prepare_directory(self.path.parent)
@@ -29,7 +30,8 @@ class ProcessLock:
             else:
                 import fcntl
 
-                fcntl.flock(stream.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                mode = fcntl.LOCK_SH if self.shared else fcntl.LOCK_EX
+                fcntl.flock(stream.fileno(), mode | fcntl.LOCK_NB)
         except OSError:
             stream.close()
             return False
@@ -63,8 +65,12 @@ def cli_execution(root: Path):
     from app.jobs.control import ExecutionContext, execution_context
     from app.jobs.resources import Resources
 
+    settings = Settings()
+    if settings.deployment_mode == "hosted":
+        raise ExecutionBusy(
+            "Local workflow CLIs are disabled in hosted mode. Use owner-scoped API jobs."
+        )
     with ProcessLock(root / "data/execution.lock"):
-        settings = Settings()
         store = RunStore(root / "data/web/runs.sqlite3", settings)
         artifact_root = root / "data/artifacts"
         resources = Resources(store)

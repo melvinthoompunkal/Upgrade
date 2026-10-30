@@ -1,0 +1,39 @@
+[Unit]
+Description=Upgrade hosted analysis worker
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=upgrade
+Group=upgrade
+WorkingDirectory=/opt/upgrade/current/backend
+LoadCredentialEncrypted=backend.env:/etc/upgrade/backend.env.cred
+ExecStart=/opt/upgrade/current/backend/.venv/bin/python -m app.hosting.runtime worker
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=45
+KillMode=control-group
+UMask=0077
+StateDirectory=upgrade
+StateDirectoryMode=0700
+ProtectSystem=strict
+ReadWritePaths=/var/lib/upgrade
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+NoNewPrivileges=true
+CapabilityBoundingSet=
+RestrictNamespaces=true
+RestrictSUIDSGID=true
+LockPersonality=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+InaccessiblePaths=-/run/docker.sock -/var/run/docker.sock
+MemoryMax=2G
+TasksMax=128
+
+[Install]
+WantedBy=multi-user.target

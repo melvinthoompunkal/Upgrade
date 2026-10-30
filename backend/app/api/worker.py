@@ -16,6 +16,7 @@ from app.baseline import record_baseline
 from app.catalog_store import CatalogStore
 from app.catalog_workflow import record_catalog
 from app.config import Settings
+from app.deployment import execution_lock_path
 from app.errors import GraftError
 from app.execution import ProcessLock
 from app.fit_select import record_fit_selection
@@ -52,6 +53,8 @@ class LocalWorker:
         self.active = None
         self.recovery_pending = True
         self.last_cleanup = 0
+        self.status_stop = threading.Event()
+        self.status_thread = None
 
     def start(self) -> None:
         self.lock = ProcessLock(self.store.path.parent / "worker.lock")
@@ -60,14 +63,43 @@ class LocalWorker:
             return
         self.available = True
         self.thread.start()
+        if self.settings.deployment_mode == "hosted":
+            self.status_thread = threading.Thread(target=self.publish_status, daemon=True)
+            self.status_thread.start()
+
+    def publish_status(self) -> None:
+        from app.hosting.release import released_profiles
+        from app.hosting.status import WorkerStatus
+
+        status = WorkerStatus(self.store)
+        try:
+            while not self.status_stop.is_set():
+                released = bool(released_profiles(self.settings))
+                if not released and self.active:
+                    self.active.stop("interrupted")
+                status.heartbeat(
+                    self.worker_id, self.available and not self.recovery_pending and released
+                )
+                if self.status_stop.wait(3):
+                    break
+        except Exception:
+            self.available = False
+            self.stop_requested.set()
+            if self.active:
+                self.active.stop("interrupted")
+        finally:
+            status.stop(self.worker_id)
 
     def stop(self) -> None:
         self.stop_requested.set()
         if self.active:
             self.active.stop("interrupted")
-        if self.available:
+        if self.thread.ident is not None:
             self.thread.join()  # Drain the owned workflow so its runner cleanup can finish.
         self.available = False
+        self.status_stop.set()
+        if self.status_thread:
+            self.status_thread.join()
         if self.lock:
             self.lock.close()
 
@@ -153,7 +185,7 @@ class LocalWorker:
     def loop(self) -> None:
         while not self.stop_requested.is_set():
             # Changing storage does not change the shared target/provider execution domain.
-            execution = ProcessLock(PROJECT_ROOT / "data/execution.lock")
+            execution = ProcessLock(execution_lock_path(self.settings))
             if not execution.acquire():
                 self.stop_requested.wait(0.5)
                 continue
@@ -169,7 +201,16 @@ class LocalWorker:
                 JobLeases(self.store).recover()
                 reconcile_containers(self.store)
                 Resources(self.store).settle_artifacts(self.root)
-                row = self.store.claim(mode=self.settings.auth_mode, worker=self.worker_id)
+                from app.hosting.release import released_profiles
+
+                can_claim = self.settings.deployment_mode == "local" or bool(
+                    released_profiles(self.settings)
+                )
+                row = (
+                    self.store.claim(mode=self.settings.auth_mode, worker=self.worker_id)
+                    if can_claim
+                    else None
+                )
                 if row is None:
                     if monotonic() - self.last_cleanup > 60:
                         from app.jobs.retention import Retention
@@ -258,6 +299,10 @@ class LocalWorker:
     def _process(self, row, control) -> None:
         run_id = row["id"]
         try:
+            from app.hosting.release import require_job
+
+            request = TypeAdapter(RunRequest).validate_json(row["request"])
+            require_job(self.settings, request)
             epoch = None
             if self.settings.auth_mode == "github":
                 from app.auth.crypto import ReconnectRequired
@@ -275,7 +320,6 @@ class LocalWorker:
                     raise ReconnectRequired(
                         "GitHub access changed after submission. Start a new run."
                     )
-            request = TypeAdapter(RunRequest).validate_json(row["request"])
             if request.kind == "meta_smoke":
                 from app.jobs.policy import operator_allowed
 

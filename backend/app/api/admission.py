@@ -10,7 +10,7 @@ from app.errors import GraftError
 def authorize_job(request, *, model_required: bool = False) -> int | None:
     require_local_origin(request)
     if not request.app.state.worker.available:
-        raise HTTPException(503, "The local worker is unavailable. Start one backend process.")
+        raise HTTPException(503, "The worker is unavailable. Retry when the service is ready.")
     settings = request.app.state.settings
     if model_required and not settings.model_configured:
         raise HTTPException(409, "Configure MODEL_API_KEY before starting a model run.")

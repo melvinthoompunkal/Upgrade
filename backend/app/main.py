@@ -26,6 +26,11 @@ from app.auth.webhooks import router as webhook_router
 from app.catalog_routes import router as catalog_router
 from app.change_routes import router as change_router
 from app.config import Settings
+from app.deployment import data_directory
+from app.hosting.maintenance import MaintenanceMiddleware
+from app.hosting.routes import router as hosting_router
+from app.hosting.status import RemoteWorker
+from app.hosting.transport import HostedTransportMiddleware
 from app.jobs.routes import router as jobs_router
 from app.projects import router as project_router
 from app.relevance_routes import router as relevance_router
@@ -50,7 +55,7 @@ def create_app(
     frontend_root: Path | None = None,
 ) -> FastAPI:
     settings = settings if settings is not None else Settings()
-    data_root = data_root or PROJECT_ROOT / "data"
+    data_root = data_directory(settings, data_root)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -68,15 +73,21 @@ def create_app(
                 app.state.runs, CredentialCipher(settings.token_encryption_keys.get_secret_value())
             )
             app.state.github = GitHubClient(settings)
-        app.state.worker = LocalWorker(
-            app.state.runs,
-            app.state.artifact_root,
-            settings,
-            connection_check=(lambda owner: app.state.auth.current_access(owner, app.state.github))
-            if settings.auth_mode == "github"
-            else None,
+        app.state.worker = (
+            RemoteWorker(app.state.runs)
+            if settings.deployment_mode == "hosted"
+            else LocalWorker(
+                app.state.runs,
+                app.state.artifact_root,
+                settings,
+                connection_check=(
+                    lambda owner: app.state.auth.current_access(owner, app.state.github)
+                )
+                if settings.auth_mode == "github"
+                else None,
+            )
         )
-        if start_worker:
+        if start_worker and settings.deployment_mode == "local":
             app.state.worker.start()
         try:
             yield
@@ -85,6 +96,9 @@ def create_app(
 
     application = FastAPI(title="Upgrade", version=__version__, lifespan=lifespan)
     application.add_middleware(SessionMiddleware)
+    if settings.deployment_mode == "hosted":
+        application.add_middleware(HostedTransportMiddleware, origin=settings.app_base_url)
+        application.add_middleware(MaintenanceMiddleware, root=data_root)
     application.add_middleware(
         TrustedHostMiddleware,
         allowed_hosts=["127.0.0.1", "localhost", "testserver", "test"]
@@ -102,6 +116,7 @@ def create_app(
     application.include_router(catalog_router)
     application.include_router(relevance_router)
     application.include_router(jobs_router)
+    application.include_router(hosting_router)
 
     @application.get("/health", response_model=HealthResponse)
     async def health() -> HealthResponse:

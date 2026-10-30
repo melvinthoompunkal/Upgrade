@@ -29,6 +29,9 @@ F11 adds reviewed sync/async integration acceptance, scripted offline HTTPX exch
 native asyncio tests, AnyIO runtime pins, standard BSD-2-Clause reuse, immutable branch/tag
 selection and access-checked private snapshot preflight/disclosure actions. Private analysis
 remains disabled pending live consent/access and applicable organization-policy validation.
+F12 adds a gated single-host Linux analysis deployment, separate API/worker processes,
+durable worker health, build-bound operator evidence, protected maintenance and key rotation.
+Hosted target execution and production admission remain disabled pending deployment review.
 All fourteen findings from the three original audits have recorded repairs. GitHub
 authorization, repository indexing and opt-in private snapshots are implemented locally;
 real-account validation remains pending. Live general-discovery/relevance/adaptation
@@ -44,7 +47,7 @@ The broader roadmap supersedes the original MVP's account/private-access exclusi
 F10–F13 organize the remaining work into local public-Python v1 validation, broader
 repository adaptation, multi-user hosting and optional PR publishing. F10 readiness
 automation and F11's local profiles/preflight are implemented; live release gates,
-private analysis and F12–F13 remain open. This does
+private analysis, F12 deployment certification and F13 remain open. This does
 not change the recorded F0–F9 implementation or evidence.
 
 - [Current implementation and boundaries](#1-current-implementation)
@@ -78,6 +81,7 @@ not change the recorded F0–F9 implementation or evidence.
 | F9 local validation | Repeatable backend/lint/build/browser gate, source/build/artifact hashes, optional dependency scans and fresh offline adaptation review; real-API scale and keyboard/timing/memory checks at three viewports | Full connected-analysis, live-model verified-adaptation and hosted release receipts are still required |
 | F10 public-Python readiness | Sanitized configuration, loopback origin, encryption keyring and exact prepared-image checks; current successful F9/Docker evidence required before live readiness | Readiness performs no model/GitHub calls or target execution; real-account, live semantic, cancellation/recovery and release review gates remain pending |
 | F11 reviewed repository profiles | Pinned runtime manifest, native asyncio tests, sync/async functions and instance methods, new APIs in existing modules/classes, ordered offline HTTPX exchanges, standard BSD-2-Clause notices, branch/tag-to-SHA selection, private snapshot preflight and disclosure UI | JSON calls and reviewed dependencies only; async fixtures/Trio/streaming/new entry-point classes unsupported. Private analysis stays disabled until live consent/access/revocation and organization-policy validation |
+| F12 hosted analysis foundation | Single-host Linux/systemd/Caddy configuration, durable local database/artifacts, separate API/worker, shared locks/health, metadata monitoring, maintenance fencing, atomic key rotation and build-bound deployment approval | Public analysis profiles only; target execution/private access disabled. Production admission requires independently reviewed, current deployment evidence; cross-host replicas and execution isolation remain open |
 
 Implementation anchors:
 
@@ -1191,7 +1195,10 @@ Recheck the current source and receipt hashes without inference using
 
 ### Remaining hosted release gates
 
-`DEPLOYMENT_MODE` currently accepts only `local`. Cross-host worker/storage ownership,
+`DEPLOYMENT_MODE` accepts `local` and the gated F12 `hosted` analysis topology.
+Hosted mode requires GitHub authentication, a public HTTPS origin, an absolute data root
+and separate workers; it cannot run target tests or adaptations. Current deployment
+evidence must pass the operator approval gate before admission. Cross-host worker/storage ownership,
 an independently reviewed untrusted-execution boundary, real-account/provider cancellation,
 real hard-process termination/container recovery and deployment load/rollback certification
 remain required before hosting. Local SQLite leases do not establish those guarantees.
@@ -1507,7 +1514,7 @@ listed prerequisites.
 | F9: release validation and docs | Local automation implemented; live/hosted release gates pending | Repeatable strict check runner, source/build/evidence integrity, optional package scans, synthetic real-API performance/accessibility and fresh offline adaptation review; reconciled setup/status docs | All packages needed by the chosen release | Retained dated local manifest/JUnit/measurements; full connected/live semantic and applicable hosted workflows still required |
 | F10: local public-Python v1 validation | Readiness automation and runbook implemented; live integration validation pending | Check local prerequisites and current F9/Docker evidence, then complete the real GitHub/Meta browser workflow within existing supported public Python profiles and repair exposed defects | F0–F9 within the local release scope | Fresh real-account discovery/relevance and live-model adaptation receipts, unchanged frozen-test red-to-green/regression evidence, provider cancellation/recovery checks and applicable section 14 acceptance |
 | F11: broader repository adaptation | Local public profiles and private preflight implemented; private analysis/live exit gates pending | Reviewed runtime/native asyncio and integration-v2 acceptance, BSD-2-Clause reuse, immutable branch/tag selection, snapshot support/disclosure UI and support matrix | F3, F6, F7, F8; F10 for release | Independent generated source/target Git projects with exact frozen red-to-green/regression; controlled consent/access/revocation/retention checks. Live private and semantic evidence remains required |
-| F12: hosted product | Planned; major separate engineering phase | Hosted identity/storage/worker deployment, shared ownership and quotas, reviewed execution isolation, monitoring and operational recovery | F1, F2, F6, F9, F10; F11 for any expanded profiles offered | Chosen-deployment isolation/load/fairness, real hard-stop cleanup, backup/restore, key rotation and migration/rollback receipts |
+| F12: hosted product | Single-host analysis infrastructure implemented; production certification and target execution pending | Separate API/worker services, durable local storage/leases/quotas, gated analysis profiles, metadata monitoring, maintenance locks, atomic key rotation and operational runbook | F1, F2, F6, F9, F10; F11 for any expanded profiles offered | Actual-host TLS/provider/tenant/load/recovery/restore/rotation/rollback and independent review receipts remain required; untrusted target execution needs a separate reviewed boundary |
 | F13: optional PR publishing | Planned; optional and disabled | Explicit publishing of a reviewed patch through authorized branches/commits/PRs with fresh rights/base checks and durable idempotency | F2, F7, F8, F10 and current GitHub write rights | Live rights-denial, moved-base, duplicate-request and provider-failure checks; exact published patch/notices and no merge or force push |
 
 Connected analysis requires F0–F6 and the applicable F9 checks. Verified adaptation
@@ -1657,17 +1664,80 @@ These checks do not close the live release gates.
 
 ### F12: hosted product
 
-Hosting is a major engineering phase beyond the local implementation. Choose the
-deployment target and implement the remaining F6 hosted requirements in section 11.
+The implemented initial target is one Linux host with a durable local volume, Caddy
+HTTPS, two API processes and one separately supervised analysis worker. SQLite WAL
+and filesystem artifacts stay on that host; network filesystems, worker replicas on
+other hosts and storage replicas are unsupported. The F6 owner-scoped transactions,
+fair scheduling, leases, provider quotas, retention/deletion and artifact fencing are reused.
 
-- Establish hosted database/artifact storage and separate workers with shared leases,
-  atomic quotas, owner isolation and managed secrets; carry retention/deletion into
-  replicas, caches and backups.
+Hosted configuration cannot fall back to local authentication or a loopback/HTTP origin.
+API processes use durable worker heartbeats and never start workers or import local
+history. Execution/maintenance locks live in the shared data volume. Systemd delivers
+encrypted credentials, restricts writes, bounds service resources and denies Docker
+socket access. The offered profiles are public Python structural analysis with no
+baseline, catalog discovery and relevance assessment. Hosted target execution,
+adaptation, local example/diagnostic jobs, private retrieval/analysis and PR publishing
+are explicitly rejected at both durable admission and worker execution boundaries.
+
+Admission defaults closed. A read-only operator manifest must bind the deployment ID,
+exact origin, executable build digest, supported profile subset, approval identity,
+expiry (at most 30 days) and hash-checked passing evidence for all eleven deployment
+gates. The preparation command generates only an invalid/pending template. Approval
+is rechecked at admission, before claims/execution and every three seconds during
+active work. Missing/changed approval interrupts active work. The manifest verifies
+integrity and records operator attestation; it does not evaluate or certify the
+meaning of independently reviewed receipts.
+
+`/health` is liveness; `/ready` reports only 200/503 availability, including a durable
+worker heartbeat with a 15-second expiry. Operator-only `/api/operations/metrics`
+exposes metadata counters without code or secrets. Hosted offline operations take
+exclusive maintenance ownership while API requests hold shared locks through response
+streaming. Key rotation re-encrypts all owner-bound credentials atomically using a
+new-first keyring and invalidates in-flight PKCE transactions. Restore clears stale
+worker health and preserves newer daily quota charges. An explicit offline schema
+9-to-8 rollback preserves ownership/data and interrupts running work; unfinished paid
+work remains interrupted without replay. See the
+[hosting runbook](hosting.md) for installation, evidence review, monitoring, backup,
+deletion, rotation, migration and rollback procedures.
+
+Implementation: [deployment paths](../backend/app/deployment.py),
+[service runtime](../backend/app/hosting/runtime.py),
+[approval gate](../backend/app/hosting/release.py),
+[worker health](../backend/app/hosting/status.py),
+[maintenance boundary](../backend/app/hosting/maintenance.py),
+[deployment templates](../deploy/hosted/upgrade-api.service) and
+[offline readiness/template command](../scripts/validate_hosted.py).
+
+Remaining release requirements:
+
+- Validate the supplied single-host database/artifact storage, separate worker,
+  atomic quotas, owner isolation and managed secrets on the actual host. Additional
+  replica topologies must extend retention/deletion into replicas, caches and backups.
 - Independently review the untrusted-execution boundary and validate provider
   cancellation, hard process termination and orphan cleanup on that deployment.
 - Verify HTTPS/origin/proxy settings, monitoring, multi-user load/fairness, backup/restore,
   key rotation and deployment migration/rollback. Release only the profiles with passing
   hosted evidence; local Docker and synthetic scale receipts do not certify hosting.
+
+Controlled local tests and browser checks do not close these deployment gates.
+
+October 30 local verification passed 674 full backend checks, with the explicit
+Docker target-execution case deselected. A final 33-check focused pass additionally
+verified isolated temporary build fixtures, executable-build drift, separate-process
+static analysis, real local process-tree termination, stale-lease fencing, quota-preserving
+restore, atomic rotation and schema rollback. The controlled browser suite passed 48
+desktop/mobile checks; the fixed hosted/asynchronous cases passed 16 additional repeated
+checks. TypeScript/Vite production build, Ruff lint/formatting (175 Python files),
+affected frontend formatting and diff checks passed. These are Windows/control-plane
+receipts with controlled GitHub and build inputs, not Linux cgroup, live-provider,
+public TLS, untrusted-execution or production load certification.
+
+Retained [F12 manifest](../audit/full-feature-foundations/f12-checks.json),
+[full backend JUnit](../audit/full-feature-foundations/f12-backend-junit.xml),
+[final focused JUnit](../audit/full-feature-foundations/f12-focused-junit.xml),
+[browser JUnit](../audit/full-feature-foundations/f12-browser-junit.xml) and
+[repeated browser JUnit](../audit/full-feature-foundations/f12-browser-repeat-junit.xml)
+bind the tested sources/build and distinguish the broad pass from the final fixture update.
 
 ### F13: optional PR publishing
 

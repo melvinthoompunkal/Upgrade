@@ -736,6 +736,23 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/operations/metrics': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Operator Metrics */
+    get: operations['operator_metrics_api_operations_metrics_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/health': {
     parameters: {
       query?: never
@@ -1090,6 +1107,17 @@ export interface components {
     }
     /** Capabilities */
     Capabilities: {
+      /**
+       * Deployment Mode
+       * @default local
+       * @enum {string}
+       */
+      deployment_mode: 'local' | 'hosted'
+      /**
+       * Target Execution Supported
+       * @default true
+       */
+      target_execution_supported: boolean
       /**
        * Schema Version
        * @default 1
@@ -4203,6 +4231,26 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['HTTPValidationError']
+        }
+      }
+    }
+  }
+  operator_metrics_api_operations_metrics_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': unknown
         }
       }
     }

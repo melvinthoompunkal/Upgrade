@@ -4,6 +4,9 @@ The local browser application lives in `frontend/`. Optional GitHub sign-in and 
 indexing are available locally; F2 adds installation states and opt-in pinned private
 snapshots. See [GitHub setup](github-setup.md) for configuration and the pending live checks.
 Local mode remains the default and the full connected-analysis release is not complete.
+F12 also supplies a gated hosted analysis deployment; see [the hosting runbook](hosting.md).
+The browser respects the deployment's approved workflows and disables target tests,
+adaptation and local diagnostics on hosted services.
 For the F10 local public-Python release check, use the
 [readiness command and live validation runbook](full-feature-development.md#f10-local-public-python-v1-validation).
 The UI uses React 19, TypeScript,
@@ -274,7 +277,8 @@ accounts' data is unaffected. Private snapshots expire after 30 days by default;
 workspace data expires after 30 days without a new saved operation. Active jobs delay cleanup.
 
 The local worker periodically applies retention while idle. Settings are documented in
-[`backend/.env.example`](../backend/.env.example). `DEPLOYMENT_MODE` accepts only `local`.
+[`backend/.env.example`](../backend/.env.example). `DEPLOYMENT_MODE=local` retains this
+workflow; `hosted` uses the separate services and gates in [the hosting runbook](hosting.md).
 Paid Meta diagnostics in GitHub mode require an operator ID grant; normal analyses use
 their own disclosed allowance. Private snapshot model transmission remains disabled.
 

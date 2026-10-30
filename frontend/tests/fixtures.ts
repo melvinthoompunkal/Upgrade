@@ -142,6 +142,8 @@ export const fixtureRun: Run = {
   warnings: [],
 }
 export const capabilities: Capabilities = {
+  deployment_mode: 'local',
+  target_execution_supported: true,
   publishing_enabled: false,
   schema_version: '1',
   scope: 'One bounded retry feature; analysis only.',

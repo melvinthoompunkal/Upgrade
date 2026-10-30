@@ -18,6 +18,7 @@ from app.api.contracts import (
     Target,
 )
 from app.api.storage import now
+from app.hosting.release import released_profiles, require_job
 from app.jobs.policy import operator_allowed
 from app.projects import project_store
 from app.tools.git import Git
@@ -36,8 +37,11 @@ def artifacts(request: Request, run_id: str) -> RunArtifacts:
 @router.get("/capabilities", response_model=Capabilities)
 def capabilities(request: Request):
     settings = request.app.state.settings
+    hosted = settings.deployment_mode == "hosted"
     return Capabilities(
-        kinds=[
+        kinds=list(released_profiles(settings))
+        if hosted
+        else [
             "fit_select",
             "source_trace",
             "pinned_baseline",
@@ -48,11 +52,16 @@ def capabilities(request: Request):
             "relevance_assessment",
             "verified_adaptation",
         ],
-        patch_supported=True,
+        patch_supported=not hosted,
+        scope="Public Python analysis only; target execution is unavailable."
+        if hosted
+        else "Public Python project structure; optional native baseline and crawler example.",
+        deployment_mode=settings.deployment_mode,
+        target_execution_supported=not hosted,
         model_configured=settings.model_configured,
         model_id=settings.meta_model_id,
         checked_at=now(),
-        image_receipt_present=(PROJECT_ROOT / "data/runner-image.json").is_file(),
+        image_receipt_present=not hosted and (PROJECT_ROOT / "data/runner-image.json").is_file(),
         worker_available=request.app.state.worker.available,
         diagnostics_allowed=operator_allowed(
             request.app.state.runs, request.state.principal.owner_id, settings
@@ -61,7 +70,9 @@ def capabilities(request: Request):
 
 
 @router.get("/targets", response_model=list[Target])
-def targets():
+def targets(request: Request):
+    if request.app.state.settings.deployment_mode == "hosted":
+        return []
     target = Target(checked_at=now())
     try:
         git = Git(PROJECT_ROOT / "data/web-git")
@@ -87,6 +98,7 @@ def create_run(
     response: Response,
     idempotency_key: str = Header(min_length=16, max_length=100, pattern=r"^[A-Za-z0-9_-]+$"),
 ):
+    require_job(request.app.state.settings, body)
     if body.kind in {"catalog_discovery", "relevance_assessment"}:
         raise HTTPException(422, "Use the catalog or relevance endpoints to create these jobs.")
     if body.kind == "meta_smoke" and not operator_allowed(

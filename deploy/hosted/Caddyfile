@@ -1,0 +1,8 @@
+# Replace the hostname with exactly APP_BASE_URL's hostname. Caddy owns public TLS.
+upgrade.example.com {
+    request_body {
+        max_size 2MB
+    }
+    reverse_proxy 127.0.0.1:8000
+    # Deliberately no access log: OAuth callback URLs carry single-use codes/state.
+}

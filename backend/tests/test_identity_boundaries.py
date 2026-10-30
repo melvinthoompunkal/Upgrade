@@ -14,6 +14,7 @@ from test_auth import ORIGIN, login, mutate, token_data
 from test_auth import authenticated_app as authenticated_app
 
 from app.api.artifacts import digest as artifact_digest
+from app.api.migrations import SCHEMA_VERSION
 from app.api.storage import RunStore
 from app.auth.crypto import ReconnectRequired
 from app.auth.github import GitHubClient, GitHubError, GitHubTokens, GitHubUser
@@ -304,7 +305,7 @@ def test_failed_legacy_migration_rolls_back_and_can_be_retried(tmp_path):
     }
     assert store.page(owner_id="github-owner")[0] == []
     with store.connect() as db:
-        assert db.execute("PRAGMA user_version").fetchone()[0] == 8
+        assert db.execute("PRAGMA user_version").fetchone()[0] == SCHEMA_VERSION
         assert (
             db.execute("SELECT message FROM events WHERE sequence=17").fetchone()[0]
             == "legacy event"

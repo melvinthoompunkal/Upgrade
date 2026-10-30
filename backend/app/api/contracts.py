@@ -182,6 +182,8 @@ class RunDetail(RunSummary):
 
 
 class Capabilities(BaseModel):
+    deployment_mode: Literal["local", "hosted"] = "local"
+    target_execution_supported: bool = True
     schema_version: str = "1"
     kinds: list[RunKind]
     patch_supported: bool = False

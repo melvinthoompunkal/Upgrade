@@ -1,0 +1,50 @@
+<testsuites id="" name="" tests="16" failures="0" skipped="0" errors="0" time="15.486310999999999">
+<testsuite name="hosting.spec.ts" timestamp="2026-10-30T15:34:10.488Z" hostname="desktop" tests="3" failures="0" skipped="0" time="2.575" errors="0">
+<testcase name="hosted service disables local diagnostics even when a worker and model are available" classname="hosting.spec.ts" time="0.85">
+</testcase>
+<testcase name="hosted source analysis cannot accidentally request target execution" classname="hosting.spec.ts" time="0.498">
+</testcase>
+<testcase name="missing hosted approval disables job actions while saved views remain accessible" classname="hosting.spec.ts" time="1.227">
+</testcase>
+</testsuite>
+<testsuite name="hosting.spec.ts" timestamp="2026-10-30T15:34:10.488Z" hostname="desktop" tests="3" failures="0" skipped="0" time="2.106" errors="0">
+<testcase name="hosted service disables local diagnostics even when a worker and model are available" classname="hosting.spec.ts" time="0.869">
+</testcase>
+<testcase name="hosted source analysis cannot accidentally request target execution" classname="hosting.spec.ts" time="0.533">
+</testcase>
+<testcase name="missing hosted approval disables job actions while saved views remain accessible" classname="hosting.spec.ts" time="0.704">
+</testcase>
+</testsuite>
+<testsuite name="relevance.spec.ts" timestamp="2026-10-30T15:34:10.488Z" hostname="desktop" tests="1" failures="0" skipped="0" time="0.423" errors="0">
+<testcase name="requesting relevance and editing a goal are explicit new jobs" classname="relevance.spec.ts" time="0.423">
+</testcase>
+</testsuite>
+<testsuite name="relevance.spec.ts" timestamp="2026-10-30T15:34:10.488Z" hostname="desktop" tests="1" failures="0" skipped="0" time="0.439" errors="0">
+<testcase name="requesting relevance and editing a goal are explicit new jobs" classname="relevance.spec.ts" time="0.439">
+</testcase>
+</testsuite>
+<testsuite name="hosting.spec.ts" timestamp="2026-10-30T15:34:10.488Z" hostname="mobile" tests="3" failures="0" skipped="0" time="2.004" errors="0">
+<testcase name="hosted service disables local diagnostics even when a worker and model are available" classname="hosting.spec.ts" time="0.864">
+</testcase>
+<testcase name="hosted source analysis cannot accidentally request target execution" classname="hosting.spec.ts" time="0.454">
+</testcase>
+<testcase name="missing hosted approval disables job actions while saved views remain accessible" classname="hosting.spec.ts" time="0.686">
+</testcase>
+</testsuite>
+<testsuite name="hosting.spec.ts" timestamp="2026-10-30T15:34:10.488Z" hostname="mobile" tests="3" failures="0" skipped="0" time="2.144" errors="0">
+<testcase name="hosted service disables local diagnostics even when a worker and model are available" classname="hosting.spec.ts" time="0.893">
+</testcase>
+<testcase name="hosted source analysis cannot accidentally request target execution" classname="hosting.spec.ts" time="0.534">
+</testcase>
+<testcase name="missing hosted approval disables job actions while saved views remain accessible" classname="hosting.spec.ts" time="0.717">
+</testcase>
+</testsuite>
+<testsuite name="relevance.spec.ts" timestamp="2026-10-30T15:34:10.488Z" hostname="mobile" tests="1" failures="0" skipped="0" time="0.777" errors="0">
+<testcase name="requesting relevance and editing a goal are explicit new jobs" classname="relevance.spec.ts" time="0.777">
+</testcase>
+</testsuite>
+<testsuite name="relevance.spec.ts" timestamp="2026-10-30T15:34:10.488Z" hostname="mobile" tests="1" failures="0" skipped="0" time="0.485" errors="0">
+<testcase name="requesting relevance and editing a goal are explicit new jobs" classname="relevance.spec.ts" time="0.485">
+</testcase>
+</testsuite>
+</testsuites>
