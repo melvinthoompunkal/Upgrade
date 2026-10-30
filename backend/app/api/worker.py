@@ -22,6 +22,7 @@ from app.jobs.containers import reconcile_containers
 from app.jobs.control import ExecutionContext, ExecutionStopped, execution_context
 from app.jobs.leases import JobLeases
 from app.jobs.quotas import metric
+from app.jobs.resources import Resources
 from app.models.meta_client import MetaClient
 from app.pinned_baseline import record_pinned_baseline
 from app.project_analysis import record_project_analysis
@@ -148,11 +149,7 @@ class LocalWorker:
                 continue
             try:
                 if self.recovery_pending:
-                    recovered = JobLeases(self.store).recover(abandoned_worker=True)
-                    from app.jobs.resources import Resources
-
-                    for run_id in recovered:
-                        Resources(self.store).settle_run(run_id, self.root)
+                    JobLeases(self.store).recover(abandoned_worker=True)
                     from app.jobs.retention import Retention
 
                     retention = Retention(self.store, self.root.parent)
@@ -161,6 +158,7 @@ class LocalWorker:
                     self.recovery_pending = False
                 JobLeases(self.store).recover()
                 reconcile_containers(self.store)
+                Resources(self.store).settle_artifacts(self.root)
                 row = self.store.claim(mode=self.settings.auth_mode, worker=self.worker_id)
                 if row is None:
                     if monotonic() - self.last_cleanup > 60:
@@ -210,9 +208,7 @@ class LocalWorker:
                 done.set()
                 heartbeat.join()
                 metric("runtime_ms", round((monotonic() - control.started) * 1000))
-                from app.jobs.resources import Resources
-
-                Resources(self.store).settle_run(run_id, self.root)
+                Resources(self.store).settle_artifacts(self.root)
                 self.active = None
 
     async def supervised(self, request, progress, row, control):

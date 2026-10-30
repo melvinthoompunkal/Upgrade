@@ -61,8 +61,8 @@ class MetaClient:
         )
         if not 1 <= output_limit <= 8000:
             raise ConfigurationError("Model output-token limit must be between 1 and 8000.")
-        check_transmission(messages)
         for attempt in range(1, self._settings.meta_max_retries + 2):
+            check_transmission(messages)
             self.budget.reserve()
             try:
                 charge("model_attempts")

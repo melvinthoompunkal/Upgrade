@@ -18,7 +18,7 @@ from app.api.storage import RunStore
 from app.config import Settings
 from app.errors import RepositoryError
 from app.jobs.control import ExecutionContext, ResourceLimit, execution_context
-from app.jobs.privacy import PrivateConsentRequired, SensitiveContent, check_transmission
+from app.jobs.privacy import POLICY, PrivateConsentRequired, SensitiveContent, check_transmission
 from app.jobs.quotas import charge
 from app.jobs.resources import Resources
 from app.jobs.retention import Retention
@@ -54,6 +54,42 @@ def test_secret_inside_ordinary_code_never_reaches_provider(tmp_path):
     assert requests == []
     with store.usage.connect() as db:
         assert db.execute("SELECT count(*) FROM resource_usage").fetchone()[0] == 0
+
+
+def test_revoking_private_consent_stops_retries_before_charging_or_transmitting(tmp_path):
+    config = Settings(_env_file=None, model_api_key="controlled-fixture")
+    store = RunStore(tmp_path / "runs.sqlite3", config)
+    identity = "a" * 64
+    with store.connect() as db:
+        db.execute("INSERT INTO model_consents VALUES (?,?,?,?)", ("owner", identity, POLICY, 0))
+    requests = []
+
+    def provider(request):
+        requests.append(request)
+        with store.connect() as db:
+            db.execute("DELETE FROM model_consents WHERE owner_id=?", ("owner",))
+        return httpx.Response(500, json={"error": {"message": "Controlled retry."}})
+
+    async def request():
+        async with MetaClient(
+            config, http_client=httpx.AsyncClient(transport=httpx.MockTransport(provider))
+        ) as client:
+            with pytest.raises(PrivateConsentRequired):
+                await client.request(
+                    stage="test", messages=[{"role": "user", "content": "bounded private code"}]
+                )
+            assert client.budget.requests == 1 and len(client.attempts) == 1
+
+    with execution_context(ExecutionContext("owner", store, private_identity=identity)):
+        asyncio.run(request())
+    assert len(requests) == 1
+    with store.usage.connect() as db:
+        assert (
+            db.execute(
+                "SELECT amount FROM resource_usage WHERE resource='model_attempts'"
+            ).fetchone()[0]
+            == 1
+        )
 
 
 def test_daily_attempt_quotas_are_atomic_and_shared_across_jobs(tmp_path):

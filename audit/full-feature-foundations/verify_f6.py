@@ -1,5 +1,6 @@
 """Verify retained F6 source and test receipts without providers or execution."""
 
+import argparse
 import hashlib
 import json
 from pathlib import Path
@@ -14,7 +15,10 @@ def digest(path):
 
 
 def main():
-    receipt = json.loads((RECEIPTS / "f6-checks.json").read_text(encoding="utf-8"))
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--manifest", default="f6-checks.json", help="Receipt filename to verify.")
+    args = parser.parse_args()
+    receipt = json.loads((RECEIPTS / args.manifest).read_text(encoding="utf-8"))
     for name, expected in receipt["source_files"].items():
         if digest(ROOT / name) != expected:
             raise ValueError(f"Source changed: {name}")
@@ -25,13 +29,9 @@ def main():
             continue
         root = ElementTree.parse(RECEIPTS / name).getroot()
         suites = [root] if root.tag == "testsuite" else root.findall("testsuite")
-        if any(
-            int(s.get("errors", "0")) or int(s.get("failures", "0")) for s in suites
-        ):
+        if any(int(s.get("errors", "0")) or int(s.get("failures", "0")) for s in suites):
             raise ValueError(f"Receipt has failures: {name}")
-    canonical = json.dumps(
-        receipt["source_files"], sort_keys=True, separators=(",", ":")
-    ).encode()
+    canonical = json.dumps(receipt["source_files"], sort_keys=True, separators=(",", ":")).encode()
     if hashlib.sha256(canonical).hexdigest() != receipt["source_manifest_sha256"]:
         raise ValueError("Source manifest changed.")
     print(

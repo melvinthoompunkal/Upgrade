@@ -67,13 +67,22 @@ class Resources:
         )
         return identifier
 
-    def settle_run(self, run_id, root):
+    def settle_artifacts(self, root):
+        """Shrink inactive reservations, including CLI work and crashes after publication.
+
+        Caller owns the workspace execution lock. Running/queued jobs keep their full
+        reservations until their terminal state has been committed.
+        """
+        from app.jobs.retention import contained_path
+
         with self.store.connect() as db:
             rows = db.execute(
-                "SELECT * FROM owned_resources WHERE run_id=? AND kind='artifacts'", (run_id,)
+                "SELECT o.* FROM owned_resources o LEFT JOIN runs r ON r.id=o.run_id "
+                "WHERE o.kind='artifacts' AND o.state='reserved' "
+                "AND (o.run_id IS NULL OR json_extract(r.summary,'$.status')='finished')"
             ).fetchall()
         for row in rows:
-            path = root / row["location"]
+            path = contained_path(root.parent, root.name, row["location"])
             size = tree_bytes(path) if path.exists() else 0
             with self.store.connect() as db:
                 db.execute(

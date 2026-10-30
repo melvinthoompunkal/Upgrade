@@ -15,7 +15,7 @@ from app.config import Settings
 from app.execution import ProcessLock
 from app.jobs.containers import reconcile_containers
 from app.jobs.leases import JobLeases
-from app.jobs.resources import tree_bytes
+from app.jobs.resources import Resources, tree_bytes
 from app.jobs.retention import Retention
 from app.selection_artifacts import prepare_directory
 from app.tools.runner import PROJECT_ROOT
@@ -99,6 +99,7 @@ def restore(source, destination, *, deletions_store=None):
             ]
         for owner in owners:
             Retention(store, destination).delete_owner(owner)
+    Resources(store).settle_artifacts(destination / "artifacts")
     Retention(store, destination).prune()
     return {"state": "complete", "automatic_replay": False}
 
@@ -165,6 +166,8 @@ def main():
                     recovered = JobLeases(store).recover(abandoned_worker=True)
                     reconcile_containers(store)
                     retention.reconcile_pending()
+                    retention.account_existing()
+                    Resources(store).settle_artifacts(args.data_root / "artifacts")
                     result = {"state": "complete", "interrupted_jobs": len(recovered)}
                 elif args.action == "prune":
                     result = {"state": "complete", "deleted_count": retention.prune()}

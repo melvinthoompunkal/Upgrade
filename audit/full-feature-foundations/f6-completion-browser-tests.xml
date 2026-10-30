@@ -1,0 +1,18 @@
+<testsuites id="" name="" tests="6" failures="0" skipped="0" errors="0" time="13.66399">
+<testsuite name="jobs.spec.ts" timestamp="2026-10-29T23:59:37.039Z" hostname="desktop" tests="3" failures="0" skipped="0" time="6.101" errors="0">
+<testcase name="cancel waits for the controller and keeps the run inspectable" classname="jobs.spec.ts" time="3.354">
+</testcase>
+<testcase name="storage deletion requires review and explicit confirmation" classname="jobs.spec.ts" time="1.418">
+</testcase>
+<testcase name="unfinished jobs block data deletion" classname="jobs.spec.ts" time="1.329">
+</testcase>
+</testsuite>
+<testsuite name="jobs.spec.ts" timestamp="2026-10-29T23:59:37.039Z" hostname="mobile" tests="3" failures="0" skipped="0" time="5.504" errors="0">
+<testcase name="cancel waits for the controller and keeps the run inspectable" classname="jobs.spec.ts" time="2.792">
+</testcase>
+<testcase name="storage deletion requires review and explicit confirmation" classname="jobs.spec.ts" time="1.425">
+</testcase>
+<testcase name="unfinished jobs block data deletion" classname="jobs.spec.ts" time="1.287">
+</testcase>
+</testsuite>
+</testsuites>

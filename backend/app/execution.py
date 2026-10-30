@@ -59,17 +59,26 @@ def cli_execution(root: Path):
     """CLI and API spend use the same local account ledger and execution policy."""
     from app.api.storage import RunStore
     from app.config import Settings
+    from app.jobs.containers import reconcile_containers
     from app.jobs.control import ExecutionContext, execution_context
+    from app.jobs.resources import Resources
 
     with ProcessLock(root / "data/execution.lock"):
         settings = Settings()
         store = RunStore(root / "data/web/runs.sqlite3", settings)
+        artifact_root = root / "data/artifacts"
+        resources = Resources(store)
+        reconcile_containers(store)
+        resources.settle_artifacts(artifact_root)
         with execution_context(
             ExecutionContext(
                 "local-workspace",
                 store,
-                artifact_root=root / "data/artifacts",
+                artifact_root=artifact_root,
                 max_seconds=settings.job_max_seconds,
             )
         ):
-            yield
+            try:
+                yield
+            finally:
+                resources.settle_artifacts(artifact_root)

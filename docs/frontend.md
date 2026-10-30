@@ -225,15 +225,18 @@ uv run --project backend --locked python -m app.jobs.operations restore --source
 
 Use `--data-root` for a custom API data directory. Both worker and workspace execution locks
 must be available. Metrics contain IDs/counts/timing/storage metadata, without source text
-or credentials. Reconcile interrupts abandoned claims, removes exact registered containers
-and discards unfinished snapshot operations; it does not replay inference. Prune applies
-retention and preserves unfinished owner jobs.
+or credentials. Reconcile interrupts abandoned claims, removes exact registered containers,
+discards unfinished snapshot operations and settles inactive artifact reservations to actual
+bytes. CLI startup also reconciles registered containers before work and settles its artifact
+storage on success or failure. Failed container cleanup blocks new work and keeps its recovery
+record. Prune applies retention and preserves unfinished owner jobs.
 
 Backup copies both databases plus managed code/artifact trees and records file hashes;
 keep backups private, outside source control, and expire them within 30 days. Keep token
 encryption/App keys separately. Restore validates hashes and SQLite integrity into a new
-directory, settles unfinished jobs as interrupted, and reapplies newer deletion receipts
-from `--data-root`. Retain that current directory/receipts when restoring older copies.
+directory, settles unfinished jobs as interrupted, repairs inactive artifact reservations,
+and reapplies newer deletion receipts from `--data-root`. Retain that current directory/receipts
+when restoring older copies.
 Backups older than 30 days are rejected. Inspect the restored data and restart using that
 data root only after validation; the live directory is never overwritten by restore.
 

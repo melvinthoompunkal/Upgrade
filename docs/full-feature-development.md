@@ -1102,10 +1102,10 @@ API storage. One worker OS lock per store prevents duplicate local executors.
 | Stale work and restart | Progress/result publication and catalog/assessment checkpoints validate the live lease in their write transaction. Expired/abandoned claims become `interrupted`; they cannot be reclaimed or replay paid work. Explicit retry/continuation requires a new operation and budget. |
 | Cancellation and access loss | Owner/CSRF-checked cancellation immediately settles queued work; running work gets a durable request. A watchdog cancels async provider tasks, Git checks cancellation while draining bounded output, and Docker stops/removes its owned container. Disconnect/webhook generation changes stop active work and fence publication. Shutdown interrupts active work and waits for owned cleanup. |
 | Evidence | Artifact digests are journaled when adopted. Cancellation can publish a bounded partial report referencing only previously registered, still hash-valid artifacts. Changed artifacts are excluded; unknown in-flight model usage remains explicit. Stale executors cannot publish a successful or terminal replacement. |
-| Quotas | Queue admission and 200 MiB artifact-space reservations commit together, including catalog/relevance continuations. Pins reserve 200 MiB before retrieval. Default owner/global storage allowances are 2/8 GiB; completed job reservations shrink to actual bytes. Provider attempts are atomically charged per owner and globally, including retries and CLI calls. Actual returned tokens are recorded independently of estimates. |
+| Quotas | Queue admission and 200 MiB artifact-space reservations commit together, including catalog/relevance continuations. Pins reserve 200 MiB before retrieval. Default owner/global storage allowances are 2/8 GiB; completed API/CLI artifact reservations shrink to actual bytes, including recovery after terminal publication. Queued/active jobs keep their full reservation. Provider attempts are atomically charged per owner and globally, including retries and CLI calls. Actual returned tokens are recorded independently of estimates. |
 | Runtime and output | Default job runtime is 1,200 seconds. Canonical model budgets still bound attempts and returned usage. Git output is spooled with byte/time checks; owned code/artifact trees are checked during execution and before artifact writes. A clone can briefly exceed its storage allowance between polling checks; returned token usage can exceed a threshold on its last response. |
-| Container recovery | API and CLI record generated container identities before creation. Restart/offline reconciliation removes only registered exact names under execution ownership. Failed cleanup retains its recovery record and stops worker admission. No claim of real hostile-container isolation or hard-kill certification is made. |
-| Private transmission | Fresh-access-checked disclosure identifies exact source/optional target snapshots, SHA/root/inventory, Meta endpoint and policy `meta-private-excerpts-v1`. Consent is owner/context/policy-bound and revocable. Transmission checks reject likely embedded secrets before reserving an attempt. Private snapshots remain browse-only and cannot enter the public project/catalog/relevance workflows. Pattern checks are not proof that all secrets can be detected. |
+| Container recovery | API and CLI record generated container identities before creation. Worker/CLI startup and offline reconciliation remove only registered exact names under execution ownership. Failed cleanup retains its recovery record and blocks new work. No claim of real hostile-container isolation or hard-kill certification is made. |
+| Private transmission | Fresh-access-checked disclosure identifies exact source/optional target snapshots, SHA/root/inventory, Meta endpoint and policy `meta-private-excerpts-v1`. Consent is owner/context/policy-bound and revocable. Every attempt, including retries, checks consent and rejects likely embedded secrets before reserving or charging an attempt. Private snapshots remain browse-only and cannot enter the public project/catalog/relevance workflows. Pattern checks are not proof that all secrets can be detected. |
 | Retention/deletion | Default private snapshot lifetime is 30 days. Public saved workspace/code data expires after 30 days without a saved operation; browsing does not extend that lifetime. Unfinished owner jobs defer cleanup. Explicit owner deletion removes pinned copies, run exports, catalog/assessment rows, artifact journals, caches and consents after path validation, and returns a receipt. Current daily spend counters survive deletion so deletion cannot reset quotas. |
 | Observability and recovery | Owner usage is available in System checks. Offline operator commands report queue/outcome, usage/latency/runtime, reserved storage and cleanup metadata; no code, credentials or model reasoning is exported as metrics. Backup includes both SQLite databases and managed code/artifact trees with file hashes. Restore requires a new directory, validates integrity, interrupts unfinished work, and reapplies newer deletion receipts from the current data root. |
 
@@ -1145,8 +1145,22 @@ hash-matching restore without replay. The final
 [114 passing cleanup regressions](../audit/full-feature-foundations/f6-cleanup-tests.xml) additionally
 cover quota-blocked token cleanup, cancellation before container creation and unresolved
 container admission. These are controlled local checks, not live-provider or hosting receipts.
-Recheck source and receipt hashes without inference using
-`python audit/full-feature-foundations/verify_f6.py`.
+
+The October 29 completion review at base commit `847ba79` found that F6 was already
+included in the commit labeled F5. It repaired three uncovered lifecycle gaps: CLI
+artifact reservations now settle on success/failure; worker startup, offline reconciliation
+and restore settle reservations left behind after terminal publication; and model retries
+recheck revocable private-code consent before charging or transmitting. CLI startup also
+reconciles registered containers and blocks execution if cleanup fails. Nine new backend
+regressions cover those cases and preservation of active/queued reservations; seven
+reproduced failures before the repairs. Fresh receipts are retained separately from the
+original implementation evidence in [the completion manifest](../audit/full-feature-foundations/f6-completion-checks.json),
+[backend results](../audit/full-feature-foundations/f6-completion-tests.xml) and
+[desktop/mobile browser results](../audit/full-feature-foundations/f6-completion-browser-tests.xml).
+The completion suite passed all 510 backend checks and all six F6 desktop/mobile browser
+checks; production build/TypeScript, Ruff formatting/lint and diff checks passed.
+Recheck the current source and receipt hashes without inference using
+`python audit/full-feature-foundations/verify_f6.py --manifest f6-completion-checks.json`.
 
 ### Remaining hosted release gates
 
