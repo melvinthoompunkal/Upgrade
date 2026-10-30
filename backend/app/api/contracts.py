@@ -5,6 +5,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from app.adaptation_contracts import AdaptationRequest, AdaptationResult
 from app.catalog_contracts import CatalogJob
 from app.contracts import ModelCall, Ref, RepoSnapshot
 from app.evidence_contracts import Coverage, FeatureCard
@@ -21,6 +22,7 @@ RunKind = Literal[
     "project_analysis",
     "catalog_discovery",
     "relevance_assessment",
+    "verified_adaptation",
 ]
 
 
@@ -67,7 +69,8 @@ RunRequest = Annotated[
     | CheckRequest
     | ProjectAnalysisRequest
     | CatalogJob
-    | RelevanceJob,
+    | RelevanceJob
+    | AdaptationRequest,
     Field(discriminator="kind"),
 ]
 
@@ -141,6 +144,7 @@ class TestCase(BaseModel):
 
 
 class TestSuite(BaseModel):
+    phase: str | None = None
     suite: str
     status: str
     elapsed_ms: int
@@ -151,6 +155,7 @@ class TestSuite(BaseModel):
 
 
 class RunDetail(RunSummary):
+    adaptation: AdaptationResult | None = None
     relevance_assessment_id: str | None = None
     catalog_id: str | None = None
     catalog_revision: int | None = None

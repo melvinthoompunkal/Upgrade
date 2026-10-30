@@ -40,6 +40,7 @@ SUITES = {
     "acceptance": "/acceptance/test_retries.py",
     "project_baseline": "/snapshot/tests",
     "project_unittest": "/snapshot/tests",
+    "project_acceptance": "/acceptance/test_feature.py",
 }
 CONTAINER_TIMEOUT_SECONDS = 60
 
@@ -130,7 +131,7 @@ def container_command(
                 f"type=bind,source={resolved},target={target}" + (",readonly" if readonly else ""),
             ]
         )
-    project_suite = suite in {"project_baseline", "project_unittest"}
+    project_suite = suite in {"project_baseline", "project_unittest", "project_acceptance"}
     return (
         "docker",
         "create",

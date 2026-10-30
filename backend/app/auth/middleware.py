@@ -50,8 +50,11 @@ class SessionMiddleware(BaseHTTPMiddleware):
                         )
                     )
         principal = request.state.principal
-        with execution_context(ExecutionContext(
-            principal.owner_id if principal else "anonymous", request.app.state.runs,
-        )):
+        with execution_context(
+            ExecutionContext(
+                principal.owner_id if principal else "anonymous",
+                request.app.state.runs,
+            )
+        ):
             response = await call_next(request)
         return private_response(response)

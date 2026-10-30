@@ -8,6 +8,7 @@ from uuid import uuid4
 
 from pydantic import TypeAdapter
 
+from app.adaptation_workflow import record_adaptation
 from app.api.artifacts import digest, public_text, summary_from_report
 from app.api.contracts import Problem, RunRequest
 from app.api.storage import RunStore
@@ -73,6 +74,15 @@ class LocalWorker:
     async def execute(
         self, request: RunRequest, progress, *, owner: str = "local-workspace", access_epoch=None
     ) -> tuple[dict, Path]:
+        if request.kind == "verified_adaptation":
+            return await record_adaptation(
+                request,
+                ProjectStore(self.store, self.root.parent / "projects"),
+                owner,
+                self.root,
+                self.settings,
+                progress,
+            )
         if request.kind == "relevance_assessment":
             return await record_relevance(
                 request,
@@ -224,7 +234,13 @@ class LocalWorker:
 
         kwargs = (
             {"owner": row["owner_id"], "access_epoch": control.access_epoch}
-            if request.kind in {"project_analysis", "catalog_discovery", "relevance_assessment"}
+            if request.kind
+            in {
+                "project_analysis",
+                "catalog_discovery",
+                "relevance_assessment",
+                "verified_adaptation",
+            }
             else {}
         )
         task = asyncio.create_task(self.execute(request, progress, **kwargs))

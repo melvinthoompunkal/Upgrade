@@ -1,0 +1,14 @@
+<testsuites id="" name="" tests="4" failures="0" skipped="0" errors="0" time="9.599666">
+<testsuite name="adaptation.spec.ts" timestamp="2026-10-30T00:52:12.422Z" hostname="desktop" tests="2" failures="0" skipped="0" time="3.63" errors="0">
+<testcase name="verified adaptation shows protected tests, phased captures and patch exports" classname="adaptation.spec.ts" time="1.412">
+</testcase>
+<testcase name="exhausted adaptation is explicitly unverified on reopen" classname="adaptation.spec.ts" time="2.218">
+</testcase>
+</testsuite>
+<testsuite name="adaptation.spec.ts" timestamp="2026-10-30T00:52:12.422Z" hostname="mobile" tests="2" failures="0" skipped="0" time="3.875" errors="0">
+<testcase name="verified adaptation shows protected tests, phased captures and patch exports" classname="adaptation.spec.ts" time="1.544">
+</testcase>
+<testcase name="exhausted adaptation is explicitly unverified on reopen" classname="adaptation.spec.ts" time="2.331">
+</testcase>
+</testsuite>
+</testsuites>

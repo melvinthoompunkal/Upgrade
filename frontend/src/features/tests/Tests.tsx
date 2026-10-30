@@ -8,6 +8,9 @@ const suiteNames: Record<string, string> = {
   isolation: 'Runner isolation',
   baseline: 'Ordinary baseline',
   acceptance: 'Retry behavior diagnostic',
+  project_acceptance: 'Frozen feature acceptance',
+  project_baseline: 'Native regression suite',
+  project_unittest: 'Native unittest suite',
 }
 
 export function Tests({ run }: { run: Run }) {
@@ -25,7 +28,9 @@ export function Tests({ run }: { run: Run }) {
   return (
     <>
       <SectionHeading title="Observed behavior, captured in tests">
-        Isolation, baseline, and the retry diagnostic are separate results.
+        {run.kind === 'verified_adaptation'
+          ? 'Original baseline, frozen acceptance and each production verification round are separate results.'
+          : 'Isolation, baseline, and the retry diagnostic are separate results.'}
       </SectionHeading>
       {diagnostic?.expected_diagnostic ? (
         <div className="mb-6">
@@ -72,17 +77,26 @@ export function Tests({ run }: { run: Run }) {
             run.artifacts?.filter(
               (item) =>
                 item.available &&
-                item.label.startsWith(`test-captures/${suite.suite}/`) &&
+                item.label.startsWith(
+                  `test-captures/${suite.phase ? `${suite.phase}/` : ''}${suite.suite}/`,
+                ) &&
                 /(?:stdout|stderr)/.test(item.label),
             ) ?? []
           return (
-            <details open className="test-suite surface" key={suite.suite}>
+            <details
+              open
+              className="test-suite surface"
+              key={`${suite.phase ?? ''}:${suite.suite}`}
+            >
               <summary>
                 <span className="suite-icon">
                   <Flask size={23} />
                 </span>
                 <div>
-                  <h3>{suiteNames[suite.suite] ?? suite.suite}</h3>
+                  <h3>
+                    {suite.phase && `${suite.phase}: `}
+                    {suiteNames[suite.suite] ?? suite.suite}
+                  </h3>
                   <p>
                     {suite.expected_diagnostic
                       ? 'Expected missing-behavior diagnostic'

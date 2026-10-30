@@ -56,6 +56,14 @@ private-code consent records, retention/deletion and offline recovery/backup too
 System checks includes account storage controls. Private model analysis and hosted
 execution remain disabled; see [the F6 record](docs/full-feature-development.md#f6-local-implementation).
 
+F7 adds **Verify adaptation** from a supported saved feature assessment. It plans from
+pinned code, freezes independently prepared acceptance tests, requires an ordinary green
+baseline and assertion red, and tests exact bounded production patches with at most three
+repairs. The initial profile covers existing synchronous Python functions with JSON
+inputs/results and standard MIT source reuse. Exact patches, notices and verification
+captures are exported; dedicated diff review and optional PR publishing remain F8.
+See [the F7 implementation record](docs/full-feature-development.md#f7-local-implementation).
+
 ## Setup
 
 Requires Python 3.12 and [uv](https://docs.astral.sh/uv/). From the repository root:

@@ -1,0 +1,90 @@
+<testsuites id="" name="" tests="38" failures="0" skipped="0" errors="0" time="103.340658">
+<testsuite name="adaptation.spec.ts" timestamp="2026-10-30T00:42:55.565Z" hostname="desktop" tests="2" failures="0" skipped="0" time="3.921" errors="0">
+<testcase name="verified adaptation shows protected tests, phased captures and patch exports" classname="adaptation.spec.ts" time="1.528">
+</testcase>
+<testcase name="exhausted adaptation is explicitly unverified on reopen" classname="adaptation.spec.ts" time="2.393">
+</testcase>
+</testsuite>
+<testsuite name="relevance.spec.ts" timestamp="2026-10-30T00:42:55.565Z" hostname="desktop" tests="5" failures="0" skipped="0" time="11.482" errors="0">
+<testcase name="saved all/relevant views keep honest counts and issue no inference writes" classname="relevance.spec.ts" time="3.627">
+</testcase>
+<testcase name="requesting relevance and editing a goal are explicit new jobs" classname="relevance.spec.ts" time="1.669">
+</testcase>
+<testcase name="a selected assessment shows failed gates and supports keyboard return at tablet width" classname="relevance.spec.ts" time="2.043">
+</testcase>
+<testcase name="adaptation starts explicitly from a saved feature and retries with the same key" classname="relevance.spec.ts" time="2.049">
+</testcase>
+<testcase name="an older search cannot overwrite the current saved query" classname="relevance.spec.ts" time="2.094">
+</testcase>
+</testsuite>
+<testsuite name="workspace.spec.ts" timestamp="2026-10-30T00:42:55.565Z" hostname="desktop" tests="12" failures="0" skipped="0" time="33.051" errors="0">
+<testcase name="example pins source and editing the repository clears its SHA" classname="workspace.spec.ts" time="1.282">
+</testcase>
+<testcase name="invalid URL preserves the form and never queues work" classname="workspace.spec.ts" time="1.181">
+</testcase>
+<testcase name="run creation is idempotent and opens a stable workspace URL" classname="workspace.spec.ts" time="2.69">
+</testcase>
+<testcase name="features use actual candidate counts and controller scores" classname="workspace.spec.ts" time="1.393">
+</testcase>
+<testcase name="citation inspector opens an exact excerpt and restores focus" classname="workspace.spec.ts" time="1.897">
+</testcase>
+<testcase name="expected retry diagnostic stays distinct from the ordinary baseline" classname="workspace.spec.ts" time="1.405">
+</testcase>
+<testcase name="exports preview and download only registered artifacts" classname="workspace.spec.ts" time="1.425">
+</testcase>
+<testcase name="no-fit results retain the candidate and explain every rejection" classname="workspace.spec.ts" time="2.434">
+</testcase>
+<testcase name="active run reconnects and catches up without repeating execution" classname="workspace.spec.ts" time="4.683">
+</testcase>
+<testcase name="zero-feature failure and analysis-only changes are explicit" classname="workspace.spec.ts" time="2.426">
+</testcase>
+<testcase name="missing configuration leaves historical runs accessible" classname="workspace.spec.ts" time="2.088">
+</testcase>
+<testcase name="all run views fit the viewport and support mobile navigation" classname="workspace.spec.ts" time="10.147">
+</testcase>
+</testsuite>
+<testsuite name="adaptation.spec.ts" timestamp="2026-10-30T00:42:55.565Z" hostname="mobile" tests="2" failures="0" skipped="0" time="4.717" errors="0">
+<testcase name="verified adaptation shows protected tests, phased captures and patch exports" classname="adaptation.spec.ts" time="1.84">
+</testcase>
+<testcase name="exhausted adaptation is explicitly unverified on reopen" classname="adaptation.spec.ts" time="2.877">
+</testcase>
+</testsuite>
+<testsuite name="relevance.spec.ts" timestamp="2026-10-30T00:42:55.565Z" hostname="mobile" tests="5" failures="0" skipped="0" time="12.99" errors="0">
+<testcase name="saved all/relevant views keep honest counts and issue no inference writes" classname="relevance.spec.ts" time="4.374">
+</testcase>
+<testcase name="requesting relevance and editing a goal are explicit new jobs" classname="relevance.spec.ts" time="1.811">
+</testcase>
+<testcase name="a selected assessment shows failed gates and supports keyboard return at tablet width" classname="relevance.spec.ts" time="2.232">
+</testcase>
+<testcase name="adaptation starts explicitly from a saved feature and retries with the same key" classname="relevance.spec.ts" time="1.98">
+</testcase>
+<testcase name="an older search cannot overwrite the current saved query" classname="relevance.spec.ts" time="2.593">
+</testcase>
+</testsuite>
+<testsuite name="workspace.spec.ts" timestamp="2026-10-30T00:42:55.565Z" hostname="mobile" tests="12" failures="0" skipped="0" time="34.056" errors="0">
+<testcase name="example pins source and editing the repository clears its SHA" classname="workspace.spec.ts" time="1.328">
+</testcase>
+<testcase name="invalid URL preserves the form and never queues work" classname="workspace.spec.ts" time="1.161">
+</testcase>
+<testcase name="run creation is idempotent and opens a stable workspace URL" classname="workspace.spec.ts" time="2.425">
+</testcase>
+<testcase name="features use actual candidate counts and controller scores" classname="workspace.spec.ts" time="1.563">
+</testcase>
+<testcase name="citation inspector opens an exact excerpt and restores focus" classname="workspace.spec.ts" time="1.581">
+</testcase>
+<testcase name="expected retry diagnostic stays distinct from the ordinary baseline" classname="workspace.spec.ts" time="1.471">
+</testcase>
+<testcase name="exports preview and download only registered artifacts" classname="workspace.spec.ts" time="1.901">
+</testcase>
+<testcase name="no-fit results retain the candidate and explain every rejection" classname="workspace.spec.ts" time="2.605">
+</testcase>
+<testcase name="active run reconnects and catches up without repeating execution" classname="workspace.spec.ts" time="4.853">
+</testcase>
+<testcase name="zero-feature failure and analysis-only changes are explicit" classname="workspace.spec.ts" time="2.408">
+</testcase>
+<testcase name="missing configuration leaves historical runs accessible" classname="workspace.spec.ts" time="2.074">
+</testcase>
+<testcase name="all run views fit the viewport and support mobile navigation" classname="workspace.spec.ts" time="10.686">
+</testcase>
+</testsuite>
+</testsuites>

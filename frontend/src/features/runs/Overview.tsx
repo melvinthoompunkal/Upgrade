@@ -15,8 +15,10 @@ import { SectionHeading } from '../../components/ui'
 import { Citation } from '../evidence/Inspector'
 import { ProjectOverview } from './ProjectOverview'
 import { CatalogRunOverview } from '../catalog/CatalogRunOverview'
+import { AdaptationOverview } from './AdaptationOverview'
 
 export function Overview({ run }: { run: Run }) {
+  if (run.kind === 'verified_adaptation') return <AdaptationOverview run={run} />
   if (run.kind === 'project_analysis') return <ProjectOverview run={run} />
   if (run.kind === 'catalog_discovery') return <CatalogRunOverview run={run} />
   if (run.kind === 'relevance_assessment')

@@ -59,7 +59,7 @@ def post(client, body=None, key=KEY, **kwargs):
 def test_capabilities_are_configuration_not_connectivity(client):
     capabilities = client.get("/api/capabilities").json()
     assert capabilities["model_configured"] is True
-    assert capabilities["patch_supported"] is False
+    assert capabilities["patch_supported"] is True
     assert set(capabilities["kinds"]) == {
         "fit_select",
         "source_trace",
@@ -69,6 +69,7 @@ def test_capabilities_are_configuration_not_connectivity(client):
         "project_analysis",
         "catalog_discovery",
         "relevance_assessment",
+        "verified_adaptation",
     }
     assert "offline-test-key" not in json.dumps(capabilities)
     assert "verified" not in capabilities

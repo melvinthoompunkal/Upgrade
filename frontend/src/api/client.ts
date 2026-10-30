@@ -86,4 +86,5 @@ export const kindLabel: Record<RunSummary['kind'], string> = {
   project_analysis: 'Project analysis',
   catalog_discovery: 'Source discovery',
   relevance_assessment: 'Relevance assessment',
+  verified_adaptation: 'Verified adaptation',
 }

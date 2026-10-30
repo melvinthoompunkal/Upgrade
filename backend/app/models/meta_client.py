@@ -161,11 +161,13 @@ class MetaClient:
         messages: list[ChatCompletionMessageParam],
         schema: type[T],
         reasoning: Literal["low", "medium", "high"] = "low",
+        output_tokens: int | None = None,
     ) -> ModelResult[T]:
         completion, call = await self.request(
             stage=stage,
             messages=messages,
             reasoning=reasoning,
+            output_tokens=output_tokens,
             response_format=response_format(schema),
         )
         return ModelResult(data=self.parse(completion, call, schema), call=call)

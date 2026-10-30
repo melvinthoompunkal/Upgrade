@@ -17,6 +17,8 @@ F4 adds owner-scoped source catalogs, bounded semantic discovery and immutable c
 F5 adds saved target/goal relevance contexts and inference-free all/relevant browsing.
 F6 adds local leased job ownership, active cancellation, fair admission, shared resource
 accounting, private-code consent records, retention/deletion and offline operator recovery.
+F7 adds local verified adaptation for existing synchronous Python functions with JSON
+arguments/results and standard MIT source reuse, using frozen controller-generated tests.
 All fourteen findings from the three original audits have recorded repairs. GitHub
 authorization, repository indexing and opt-in private snapshots are implemented locally;
 real-account validation remains pending. Live general-discovery and relevance validation,
@@ -54,9 +56,10 @@ The broader roadmap supersedes the original MVP's account/private-access exclusi
 | F2 local connection | GitHub App sign-in/index, installation states/setup validation, opt-in private pinned snapshots, restricted installation tokens/ephemeral Git broker, signed webhook inbox and provider revocation; fresh access checks and publication fencing | Real-account sign-in/private-grant/rotation/revocation exit checks remain pending; private fetch defaults off; F6 supplies local cancellation while hosted lifecycle remains unverified |
 | F3 public projects | Owner-scoped immutable project IDs, root selection, `python-evidence-v1` structural analysis and reviewed `python-pytest-v1` / `python-unittest-v1` native offline adapters; crawler is an explicit example | Public Python profiles only; target relevance uses F5; acceptance-driven adaptation remains F7; incompatible suites retain their failures |
 | F4 source catalogs | Owner-scoped SQLite revisions, bounded model hints and corroborated cards, aliases/hierarchy, coverage/spend ledgers, immutable cursor pages, cache and explicit continuation/on-demand traces | Public F3 Python pins only; controlled-provider verification; live semantic discovery and scale receipts remain pending |
-| F5 local relevance | Owner-scoped immutable target/goal assessments, explicit shortlists/continuation, saved all/relevant modes, global filters/sorts, signed seek cursors, lazy fit details, URL state and compact polling | Controlled-provider validation; live semantic exit checks remain pending. General-project baseline, frozen acceptance and approved adaptation gates remain unknown until F7 |
+| F5 local relevance | Owner-scoped immutable target/goal assessments, explicit shortlists/continuation, saved all/relevant modes, global filters/sorts, signed seek cursors, lazy fit details, URL state and compact polling | Controlled-provider validation; live semantic exit checks remain pending. Baseline, frozen acceptance and approved adaptation gates belong to separate F7 jobs |
 | F6 local lifecycle | Fenced leases/heartbeats, fair owner scheduling, active cancellation/revocation, atomic admission/storage reservations, durable provider quotas, registered container recovery, consent/content checks, retention/deletion and backup/restore | Hosted deployment/isolation and real provider/process-termination certification remain exit gates; private model workflows remain disabled |
-| F7–F8 | Not implemented | Real planner, frozen acceptance, constrained patches, repair, verified diff/download and optional explicit PR publishing |
+| F7 local adaptation | Pinned repository planner, versioned behavior contract, independently prepared frozen function acceptance, ordinary green/assertion red, cumulative constrained production patches, native regression and at most three repairs | Existing synchronous JSON-compatible Python functions and standard MIT source notices only; controlled-provider/real Docker verification; live semantic and broader adapter validation remain pending |
+| F8 change review | Patch/evidence exports available through F7 | Dedicated lazy diff review and optional explicit PR publishing remain pending |
 | F9 verification | Recorded local backend/browser/build checks, live sample selection and public preflight | Full connected-analysis and verified-adaptation release receipts are still required |
 
 Implementation anchors:
@@ -108,7 +111,8 @@ Current selection is sequential, with at most one evidence clarification and a s
 allowance of 32 HTTP attempts, 400,000 returned input tokens, 40,000 returned output
 tokens and 1,200 seconds checked at request boundaries. A stage must not reset it.
 `selected` and `no_safe_fit` exit 0; specific workflow failures exit 1.
-Actual patch scope and post-implementation verification remain false until F7 exists.
+This legacy selection workflow applies no patch. The separate F7 catalog adaptation
+workflow records actual scope and post-implementation verification for its supported profile.
 
 Optional 4B needs independent depth and duplicate-filter traces, per-feature notices,
 coverage and measured combined usage. The target already suppresses repeated visits;
@@ -238,7 +242,7 @@ development and release evidence:
 - Source tests are cited, not executed. Read-backed references and AST overlap establish
   provenance, not semantic completeness; an examined file may have unread lines.
 - Scope/dependency gates currently assess a proposal. Actual diff, dependency and
-  unchanged-test red-to-green checks remain F7 work.
+  unchanged-test red-to-green checks now belong to the separate F7 function adapter.
 - Real GitHub sign-in/private grants and provider rotation/revocation remain unverified;
   local access checks are implemented. F6 adds controlled local cancellation, consent
   records/content exclusion and retention/deletion; private model workflows remain disabled.
@@ -863,12 +867,14 @@ Browser URL state preserves context, mode, filters, cursor and feature. Search i
 300 ms, stale requests are aborted, mobile details have Back/Escape/focus return, and job
 polling uses the existing compact run-status endpoint.
 
-General F3 projects currently have **zero eligible adaptations**: fit-v1 arithmetic and
+Saved F5 assessments retain **zero eligible adaptations**: fit-v1 arithmetic and
 thresholds are reused, all ten controller gates and complete rejections are saved, but no
 bound ordinary baseline, frozen assertion-red acceptance, approved scope/dependency plan or
 approved source-use policy is fabricated. An already-present feature explicitly fails the
-gap gate, even at 100/100 fit ratings. F7 must supply those missing contracts before an
-entry can pass every gate. Recommendation rows contain only actual eligible IDs.
+gap gate, even at 100/100 fit ratings. F7 starts a separate explicitly selected preparation
+job and supplies the missing baseline, frozen acceptance, source-use and scope evidence.
+It does not rewrite earlier F5 judgments or claim that relevance establishes verification.
+Recommendation rows contain only actual eligible IDs in their saved assessment context.
 
 Implementation: [contracts](../backend/app/relevance_contracts.py),
 [store](../backend/app/relevance_store.py), [judgment and fit policy](../backend/app/relevance_analysis.py),
@@ -1259,17 +1265,95 @@ Required work:
    feature automatically when the selected one fails.
 8. Publish actual patch, before/after mapping, red/green/regression captures, repair count,
    final verdict and notices. A failed/exhausted patch remains explicitly unverified.
-9. Add the real Changes UI: reviewable diff with lazy large-file loading, protected-test
+9. In F8, add the real Changes UI: reviewable diff with lazy large-file loading, protected-test
    status, evidence links and an honest result. Keep `selected` separate from `verified`.
-10. Offer patch download first. For explicit PR publishing, recheck current user/app write
+10. F7 supplies exact patch/evidence downloads; in F8, for explicit PR publishing, recheck current user/app write
     rights and base SHA, create a unique branch in the authorized repository, and make
     publishing idempotent. If the base moved, mark stale and revalidate; do not silently
     rebase an old green patch. Existing default branches are never force-pushed or merged.
 
+### F7 local implementation
+
+`verified_adaptation` is an explicit owner-scoped `/api/runs` request containing a saved
+`assessment_id`, its `feature_id`, and optional bounded `options`. The chosen catalog
+revision, source/target full SHAs and roots, goal, adapter and feature identity are locked.
+Admission requires supported source code/test evidence, relevance and fit thresholds,
+a native offline target adapter and the reviewed MIT source-use profile. Preparation
+is separate from eligibility: the ordinary baseline and frozen assertion red must both
+pass their respective checks before implementation. Already-green acceptance returns
+`already_present`, with no implementation request. No alternative feature is substituted.
+
+The initial `python-function-plan-v1` / `python-function-acceptance-v1` adapter supports
+existing module-level synchronous functions, JSON positional/keyword arguments, JSON
+return comparisons, and exact ValueError/TypeError/KeyError/IndexError semantics. A real
+planner reads the pinned target through bounded evidence tools. A separate model call
+prepares declarative cases from the finalized source-backed included/excluded behavior
+and failure semantics. The controller generates the Python tests; models cannot submit
+arbitrary test code. Every included rule must have an acceptance case. Source code,
+target integration symbols and citation windows are checked against pinned inventories.
+Async/HTTP interactions, new integration APIs and other licenses need additional reviewed
+adapters. The existing typed retry-v1 selection validation is unchanged.
+
+The controller freezes contract/spec/test bytes, complete source notices, original target
+inputs, runner/controller definitions, image receipt and image ID before testing. The
+standard MIT grant is matched against the complete pinned notice; all source notices are
+exported and carried as comments in the actual tested integration patch. Unexpected
+exceptions, collection failures, missing packages, skipped/xfail cases and timeouts cannot
+establish red. Native pytest/unittest suites and six isolation checks use the existing
+credential-free, network-disabled Docker runner; source tests never run and no target
+code runs on the host.
+
+Production proposals replace only approved Python files and bind to current preimage
+hashes. The actual cumulative base diff is limited to five production files, one new file,
+400 changed lines including notices, and zero new external runtime dependencies. Protected
+tests, manifests, lockfiles, binary/empty files, traversal, links, executable file modes,
+definition deletions, dynamic imports/code and missing integration changes are rejected.
+Each published diff is applied by Git to a fresh disposable base and its resulting bytes
+must match the verified mapping. That exact export runs unchanged frozen acceptance and
+the native regression suite, with stable case identities and authenticated log/JUnit
+captures. One aggregate budget covers planning, acceptance, implementation and at most
+three production-only repairs. Fixers receive bounded failure packets and the allowed
+target files; no further repository read tools are exposed after freezing.
+
+Results retain each proposal, actual patch, before/after hashes, freeze binding, source
+notices, red/green/regression captures, model attempts/usage, repair count and an explicit
+`verified`, `already_present` or `unverified` verdict. Exhaustion and failures keep available
+evidence. Worker leases, cancellation, access fencing, quotas and owner-only artifact APIs
+are reused. The browser exposes **Verify adaptation** from saved feature assessment detail,
+shows the verdict/protected-test status and phase-specific captures, and links to exact
+patch exports. Dedicated lazy diff review and PR publishing remain F8.
+
+Implementation: [contracts](../backend/app/adaptation_contracts.py),
+[planner/model stages](../backend/app/adaptation_models.py),
+[acceptance adapter](../backend/app/adaptation_acceptance.py),
+[actual patch policy](../backend/app/adaptation_policy.py),
+[capture verifier](../backend/app/adaptation_runner.py),
+[implementation/repair](../backend/app/adaptation_implementation.py) and
+[workflow](../backend/app/adaptation_workflow.py). Verification receipts are recorded
+under `audit/full-feature-foundations/f7-*`; controlled model responses are explicitly
+distinct from live Meta semantic validation and hosted certification.
+
+October 29 local verification: the full backend run before final review passed 547 tests
+(one explicit Docker case skipped); the final affected F7 suite passed 39 (that Docker
+case skipped there and passed separately). Desktop/mobile browser checks passed 38,
+with four final export/verdict checks additionally validating the patch response digest.
+The TypeScript/Vite build, Ruff lint, formatting of all 143 checked Python files and
+`git diff --check` passed. [Machine receipt](../audit/full-feature-foundations/f7-checks.json)
+records the tested source hashes, environment, exact scope and remaining exit gates.
+The [retained Docker report](../audit/full-feature-foundations/f7-docker-report.json)
+records separate disposable source/target Git repositories, six passing isolation cases,
+one ordinary baseline green, one frozen assertion red changing to green, and the unchanged
+native regression green. The actual patch changes one production file / 25 lines including
+notices, with zero repairs. Its [evidence archive](../audit/full-feature-foundations/f7-docker-run.zip)
+retains exact inputs, generated tests, patch, mappings, bindings and captures; independent
+hash/case checks match the final controller bytes. Target code/tests are archived to avoid
+accidental host-side test collection. GitHub fetching and Meta responses are controlled in
+this receipt; it is real isolated target execution, not live semantic/provider certification.
+
 ## 13. Development sequence and deliverables
 
 Use these packages as the implementation checklist. F0/F1 and the local F2-F6 foundations
-are implemented; continue with the outstanding live/hosted gates and F7 work. Update
+are implemented; continue with the outstanding live/hosted gates, broader F7 adapters and F8. Update
 this document with reviewed behavior and machine evidence as each package lands. Work
 that does not depend on another package can proceed independently, but release gates
 still require the listed prerequisites.
@@ -1283,7 +1367,7 @@ still require the listed prerequisites.
 | F4: persistent source catalog | Implemented locally for public Python; live model exit validation pending | Semantic hints, independently corroborated cards, hierarchy/aliases, bounded shared budgets, atomic revisions/cache, signed cursor pages, continuation and on-demand traces | F3 | Real disposable pinned Git fixtures with controlled Meta responses; supported/documentation-only/failed/no-test cases, immutable pages and two-account checks; retained F4 receipts |
 | F5: relevance and scalable browsing | Implemented locally; live semantic validation pending | Goal/target assessments, all/relevant modes, server query/filter/sort, lazy details, URL state and compact polling | F4 | Honest assessed/unassessed/eligible counts; zero model calls on view changes; scale/accessibility checks |
 | F6: job/hosting hardening | Implemented locally; hosted exit gate pending | Fenced leases/heartbeats, fair scheduling, active cancellation/revocation, shared quotas/storage reservations, private-code consent/content checks, retention/deletion, metrics and offline recovery/backup/restore | Starts with F1; required before multi-user release | Controlled restart/cancel/revocation/tenant/quota/deletion/restore cases and browser controls; real hard-stop/provider and hosted isolation/load/deployment receipts remain required |
-| F7: verified adaptation | Pending | Real planner, behavior contract, frozen red acceptance, constrained patches, actual limits, regression green and capped repairs | F0, F3, F5; F6 for hosting | Real independent source-to-target red-to-green receipt; failed/exhausted cases retain evidence |
+| F7: verified adaptation | Implemented locally for the reviewed synchronous Python function / standard MIT profile; live semantic and broader adapters pending | Real planner, behavior contract, frozen red acceptance, constrained exact patches, actual limits, regression green and capped repairs | F0, F3, F5; F6 for hosting | Controlled-provider Git/negative-path checks and real offline Docker red-to-green receipt; failed/exhausted cases retain evidence |
 | F8: change review and optional PR | Pending | Diff/review UI, patch download, notice export, explicit idempotent publishing | F7; GitHub write permission only for PR | Downloaded patch digest matches verified result; stale/unauthorized/repeated publishing behaves correctly |
 | F9: release validation and docs | Local receipts only | Fresh complete workflows, security/performance checks, setup/operations and reconciled status pages | All packages needed by the chosen release | Dated receipt tied to commit/build, environment, actual inputs, limits and retained artifacts |
 
@@ -1369,8 +1453,9 @@ controlled-provider receipts as live private-access or hosting evidence.
 F4 supplies persistent discovery and F5 supplies target/goal assessments and honest
 all/relevant browsing on pinned F3 public Python projects. Live discovery and relevance
 validation remain exit checks. F6 lifecycle hardening is implemented locally; the next
-implementation package is F7 adaptation. F6's hosted exit gates remain a release dependency
-for multi-user hosting. F7/F8 complete verified adaptation and actual change review.
+implementation package is F8 change review. F7 supplies local verified adaptation within
+its reviewed function/MIT profile; live semantic and broader adapter checks remain open.
+F6's hosted exit gates remain a release dependency for multi-user hosting.
 Optional 4B remains a bounded comparison extension, not a substitute for these packages.
 
 Keep current status, resolved findings, remaining exit criteria and verification history

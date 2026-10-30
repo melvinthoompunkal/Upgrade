@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api, type FeatureAssessment } from '../../api/client'
 import { ErrorState, Skeleton } from '../../components/ui'
+import { StartAdaptation } from './StartAdaptation'
 
 export function AssessmentDetail({
   assessmentId,
@@ -39,6 +40,11 @@ export function AssessmentDetail({
         {value.reason ||
           'This feature has not been assessed. Use Assess this feature to request analysis.'}
       </p>
+      <StartAdaptation
+        key={`${assessmentId}:${featureId}`}
+        assessmentId={assessmentId}
+        feature={value}
+      />
       {value.fit && (
         <p>
           Fit score: {value.fit.total}/100. A rating is a judgment, not a probability of success.

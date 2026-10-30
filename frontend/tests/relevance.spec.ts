@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test'
-import { mockApi } from './fixtures'
+import { mockApi, fixtureRun } from './fixtures'
 import type {
   Assessment,
   Catalog,
@@ -288,6 +288,56 @@ test('a selected assessment shows failed gates and supports keyboard return at t
   await expect(page.getByRole('link', { name: 'Capability 00001', exact: true })).toBeFocused()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   expect(writes).toHaveLength(0)
+})
+
+test('adaptation starts explicitly from a saved feature and retries with the same key', async ({
+  page,
+}) => {
+  await setup(page)
+  const requests: { body: Record<string, unknown>; key: string }[] = []
+  await page.route('**/api/relevance-assessments/*/features/*', (route) =>
+    route.fulfill({
+      json: {
+        feature_id: entries[0].feature_id,
+        relevance_status: 'relevant',
+        relevance_score: 5,
+        reason: 'A candidate for independent acceptance.',
+        target_status: 'potential_gap',
+        fit_status: 'ineligible',
+        fit: fixtureRun.fit!.candidates[0],
+        gates: [],
+        rejections: [],
+        judgment: null,
+        failure_code: null,
+        evidence: [],
+        evidence_limit_reached: false,
+      },
+    }),
+  )
+  await page.route('**/api/runs', async (route) => {
+    if (route.request().method() !== 'POST') return route.fallback()
+    requests.push({
+      body: route.request().postDataJSON(),
+      key: route.request().headers()['idempotency-key'],
+    })
+    return requests.length === 1
+      ? route.fulfill({ status: 503, json: { detail: 'Temporary queue outage.' } })
+      : route.fulfill({ json: fixtureRun })
+  })
+  await page.goto(`/catalogs/${catalogId}?revision=1&assessment=${assessmentId}`)
+  await page.getByRole('link', { name: 'Capability 00001', exact: true }).click()
+  expect(requests).toHaveLength(0)
+  await page.getByRole('button', { name: 'Verify adaptation', exact: true }).click()
+  await expect(page.getByRole('alert').filter({ hasText: 'Temporary queue outage.' })).toBeVisible()
+  await page.getByRole('button', { name: 'Verify adaptation', exact: true }).click()
+  await expect(page).toHaveURL(/runs\/fixture-run\/overview/)
+  expect(requests).toHaveLength(2)
+  expect(requests[0].key).toBe(requests[1].key)
+  expect(requests[1].body).toMatchObject({
+    kind: 'verified_adaptation',
+    assessment_id: assessmentId,
+    feature_id: entries[0].feature_id,
+  })
 })
 
 test('an older search cannot overwrite the current saved query', async ({ page }) => {

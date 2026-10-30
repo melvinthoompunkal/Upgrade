@@ -677,6 +677,34 @@ export interface components {
       /** Login */
       login: string
     }
+    /** AdaptationOptions */
+    AdaptationOptions: {
+      /**
+       * Max Repairs
+       * @default 3
+       */
+      max_repairs: number
+      /**
+       * Max Requests
+       * @default 32
+       */
+      max_requests: number
+      /**
+       * Max Input Tokens
+       * @default 400000
+       */
+      max_input_tokens: number
+      /**
+       * Max Output Tokens
+       * @default 40000
+       */
+      max_output_tokens: number
+      /**
+       * Max Seconds
+       * @default 1200
+       */
+      max_seconds: number
+    }
     /** AdaptationPlan */
     AdaptationPlan: {
       /** Rationale */
@@ -692,6 +720,69 @@ export interface components {
       runtime_dependency_additions: components['schemas']['FrozenList_Annotated_str__FieldInfo_annotation_NoneType__required_True__metadata__MinLen_min_length_1_____']
       /** Requires New Service */
       requires_new_service: boolean
+    }
+    /** AdaptationRequest */
+    AdaptationRequest: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'verified_adaptation'
+      /** Assessment Id */
+      assessment_id: string
+      /** Feature Id */
+      feature_id: string
+      options?: components['schemas']['AdaptationOptions']
+    }
+    /** AdaptationResult */
+    AdaptationResult: {
+      /**
+       * Schema Version
+       * @default verified-adaptation-v1
+       * @constant
+       */
+      schema_version: 'verified-adaptation-v1'
+      /** Feature Id */
+      feature_id: string
+      /**
+       * Verdict
+       * @default unverified
+       * @enum {string}
+       */
+      verdict: 'unverified' | 'already_present' | 'verified'
+      /**
+       * Repair Count
+       * @default 0
+       */
+      repair_count: number
+      /**
+       * Protected Tests Unchanged
+       * @default false
+       */
+      protected_tests_unchanged: boolean
+      /** Patch Artifact */
+      patch_artifact?: string | null
+      /** Patch Sha256 */
+      patch_sha256?: string | null
+      /**
+       * Changed Files
+       * @default 0
+       */
+      changed_files: number
+      /**
+       * Changed Lines
+       * @default 0
+       */
+      changed_lines: number
+      /**
+       * New Files
+       * @default 0
+       */
+      new_files: number
+      /** Rounds */
+      rounds?: {
+        [key: string]: unknown
+      }[]
     }
     /** Artifact */
     Artifact: {
@@ -929,6 +1020,7 @@ export interface components {
         | 'project_analysis'
         | 'catalog_discovery'
         | 'relevance_assessment'
+        | 'verified_adaptation'
       )[]
       /**
        * Patch Supported
@@ -1986,6 +2078,7 @@ export interface components {
         | 'project_analysis'
         | 'catalog_discovery'
         | 'relevance_assessment'
+        | 'verified_adaptation'
       /** Title */
       title: string
       /**
@@ -2021,6 +2114,7 @@ export interface components {
        * @default false
        */
       cancel_requested: boolean
+      adaptation?: components['schemas']['AdaptationResult'] | null
       /** Relevance Assessment Id */
       relevance_assessment_id?: string | null
       /** Catalog Id */
@@ -2096,6 +2190,7 @@ export interface components {
         | 'project_analysis'
         | 'catalog_discovery'
         | 'relevance_assessment'
+        | 'verified_adaptation'
       /** Title */
       title: string
       /**
@@ -2367,6 +2462,8 @@ export interface components {
     }
     /** TestSuite */
     TestSuite: {
+      /** Phase */
+      phase?: string | null
       /** Suite */
       suite: string
       /** Status */
@@ -2896,6 +2993,7 @@ export interface operations {
           | components['schemas']['ProjectAnalysisRequest']
           | components['schemas']['CatalogJob']
           | components['schemas']['RelevanceJob']
+          | components['schemas']['AdaptationRequest']
       }
     }
     responses: {

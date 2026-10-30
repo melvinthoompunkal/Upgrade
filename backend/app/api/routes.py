@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter, Header, HTTPException, Query, Request, Response
 
+from app.adaptation_inputs import adaptation_inputs
 from app.api.admission import authorize_job
 from app.api.artifacts import RunArtifacts
 from app.api.contracts import (
@@ -45,7 +46,9 @@ def capabilities(request: Request):
             "project_analysis",
             "catalog_discovery",
             "relevance_assessment",
+            "verified_adaptation",
         ],
+        patch_supported=True,
         model_configured=settings.model_configured,
         model_id=settings.meta_model_id,
         checked_at=now(),
@@ -91,8 +94,17 @@ def create_run(
     ):
         raise HTTPException(403, "Meta diagnostics require a configured operator account.")
     epoch = authorize_job(
-        request, model_required=body.kind in {"fit_select", "source_trace", "meta_smoke"}
+        request,
+        model_required=body.kind
+        in {"fit_select", "source_trace", "meta_smoke", "verified_adaptation"},
     )
+    if body.kind == "verified_adaptation":
+        adaptation_inputs(
+            body,
+            project_store(request),
+            request.state.principal.owner_id,
+            request.app.state.settings.meta_model_id,
+        )
     if body.kind == "project_analysis":
         project_store(request).admit(request.state.principal.owner_id, body)
     run = request.app.state.runs.enqueue(

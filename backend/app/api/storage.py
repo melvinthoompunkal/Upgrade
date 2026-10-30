@@ -116,6 +116,7 @@ class RunStore:
             "pinned_baseline": "Committed target baseline",
             "catalog_discovery": "Source feature discovery",
             "relevance_assessment": "Feature relevance assessment",
+            "verified_adaptation": "Verified adaptation",
         }.get(request.kind, "Source analysis")
         summary = RunSummary(
             id=uuid4().hex,

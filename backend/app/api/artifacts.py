@@ -8,6 +8,7 @@ from pathlib import Path
 from fastapi import HTTPException
 from pydantic import ValidationError
 
+from app.adaptation_contracts import AdaptationResult
 from app.api.contracts import (
     Artifact,
     Problem,
@@ -43,6 +44,7 @@ TITLES = {
     "project_analysis": "Public project analysis",
     "catalog_discovery": "Source feature discovery",
     "relevance_assessment": "Feature relevance assessment",
+    "verified_adaptation": "Verified adaptation",
 }
 
 
@@ -167,6 +169,8 @@ class RunArtifacts:
             ("/" not in name and name.endswith((".json", ".md")))
             or name.startswith(("trace-bundles/", "notices/", "test-captures/", "repositories/"))
             or re.fullmatch(r"assessments/[a-f0-9]{32}\.json", name)
+            or re.fullmatch(r"rounds/round-[0-3](?:\.patch|-(?:proposal|mapping)\.json)", name)
+            or name == "acceptance/test_feature.py"
         ) or any(part in {".git", ".env", "objects", "snapshot"} for part in Path(name).parts):
             raise HTTPException(404, "Artifact is not exportable.")
         try:
@@ -193,6 +197,9 @@ class RunArtifacts:
 
     def published(self, name: str) -> bytes:
         raw = self.raw(name)
+        # Patch hashes bind the exact tested bytes; path redaction would corrupt the diff.
+        if name.endswith(".patch") or name == "acceptance/test_feature.py":
+            return raw
         if name.endswith(".json"):
             return json.dumps(public_json(json.loads(raw)), indent=2).encode()
         return public_text(raw.decode("utf-8", errors="replace")).encode()
@@ -339,6 +346,11 @@ class RunArtifacts:
     def detail(self) -> RunDetail:
         values = self.summary.model_dump()
         report = self.report
+        if report.get("adaptation"):
+            try:
+                values["adaptation"] = AdaptationResult.model_validate(report["adaptation"])
+            except ValidationError:
+                self.warnings.append("The adaptation result could not be validated.")
         values["catalog_id"] = report.get("catalog_id")
         values["catalog_revision"] = report.get("catalog_revision")
         values["relevance_assessment_id"] = report.get("assessment_id")
@@ -422,8 +434,16 @@ class RunArtifacts:
                 suite = TestSuite.model_validate(
                     {
                         **public_json(capture),
-                        "expected_diagnostic": capture.get("suite") == "acceptance"
-                        and report.get("retry_diagnostic_status") == "expected_red",
+                        "expected_diagnostic": (
+                            capture.get("suite") == "acceptance"
+                            and report.get("retry_diagnostic_status") == "expected_red"
+                        )
+                        or (
+                            capture.get("suite") == "project_acceptance"
+                            and capture.get("phase") == "before"
+                            and capture.get("status") == "failed"
+                            and report.get("eligible_feature_count") == 1
+                        ),
                     }
                 )
                 suites.append(suite)

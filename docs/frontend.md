@@ -61,8 +61,11 @@ do not bind it to a public interface. No hosted Site was created.
   Search, category, evidence/assessment/fit filters, sorts, paging and feature details perform
   no model calls. Counts distinguish assessed, failed and not-yet-assessed entries.
   **Assess more** or **Assess this feature** explicitly starts a fresh budgeted job; changing
-  the goal or target creates a new context. General-project adaptation eligibility remains
-  blocked by the missing baseline/frozen-acceptance/approved-plan gates until F7.
+  the goal or target creates a new context. **Verify adaptation** in a sufficiently assessed
+  feature detail starts a separate F7 job: it prepares/finalizes behavior and frozen tests,
+  checks the original baseline and meaningful assertion red, then verifies a constrained
+  production patch with at most three repairs. The current profile supports existing
+  synchronous Python functions with JSON arguments/results and standard MIT source reuse.
 - **Runs:** persisted history, global server search, workflow filters, bounded pagination, stable URLs,
   and refresh recovery. Existing known CLI report directories are imported at
   backend startup in local mode and labeled recorded CLI runs. GitHub accounts see only
@@ -80,8 +83,12 @@ do not bind it to a public interface. No hosted Site was created.
 - **System checks:** explicitly run the real Meta probe, committed target
   baseline, or working-file baseline. Configuration presence is distinguished
   from an actual connectivity check. No model calls happen on page load.
-- **Changes:** explains that current runs perform analysis only. There is no
-  simulated implementation, repair history, patch download, or verified badge.
+- **Adaptation runs:** show actual verified/already-present/unverified outcomes, protected-test
+  status, production scope and repair count. Tests distinguish the original captures and
+  each implementation/repair round. Exports include exact downloadable patches, before/after
+  hashes, frozen contracts/tests, complete notices and hash-bound captures. Changes links
+  to these exports; dedicated lazy diff review and PR publishing remain F8. Other analysis
+  runs continue to identify their analysis-only output.
 - **GitHub preview:** explicit sign-in, account-scoped sessions and repository indexing.
   Sync/continue loads the current user/App intersection; search and visibility filters
   operate on the server. Indexed repositories display browse/index support and cannot
@@ -108,6 +115,12 @@ summary/detail reads on the same queue, execution lock and owner boundaries.
 reads; catalog queries accept `assessment_id`, `mode`, filters and sort. HTTP types are generated from FastAPI's OpenAPI schema into
 `frontend/src/api/schema.d.ts`; regenerate with `npm run generate:api` while the
 backend is running.
+
+F7 uses the same `/api/runs` queue with
+`{"kind":"verified_adaptation","assessment_id":"<saved id>","feature_id":"<catalog feature id>"}`
+and the existing `Idempotency-Key` header. Optional `options` can lower the aggregate
+attempt/token/time budget or `max_repairs` (0–3). Saved F5 fit gates stay unchanged;
+the separate adaptation receipt owns its baseline/gap evidence and final verdict.
 
 The API calls the canonical workflow services. `TraceInputs` and `SelectionInputs`
 are shared with CLI adapters; it never constructs browser-supplied shell strings.
