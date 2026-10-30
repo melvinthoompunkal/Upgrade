@@ -2,6 +2,8 @@
 
 import json
 import os
+import shutil
+from pathlib import Path
 
 import pytest
 from adaptation_fixtures import (
@@ -224,3 +226,10 @@ def test_independent_docker_red_to_green(inputs, tmp_path, monkeypatch):
     red_path = "test-captures/before/project_acceptance/capture.json"
     red = decode_capture((path.parent / red_path).read_bytes(), report["artifact_hashes"][red_path])
     assert acceptance_state(red, spec) == "red"
+    assert report["original_target_unchanged"] and report["adaptation"]["protected_tests_unchanged"]
+    for name, expected in report["artifact_hashes"].items():
+        assert sha256((path.parent / name).read_bytes()) == expected
+    destination = os.environ.get("GRAFT_F9_DOCKER_ARTIFACTS")
+    if destination:
+        # Preserve exact fresh evidence for real API/browser review, without importing target code.
+        shutil.copytree(path.parent, Path(destination))

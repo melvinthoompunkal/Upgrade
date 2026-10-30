@@ -43,7 +43,11 @@ class HealthResponse(BaseModel):
 
 
 def create_app(
-    settings: Settings | None = None, *, data_root: Path | None = None, start_worker: bool = True
+    settings: Settings | None = None,
+    *,
+    data_root: Path | None = None,
+    start_worker: bool = True,
+    frontend_root: Path | None = None,
 ) -> FastAPI:
     settings = settings if settings is not None else Settings()
     data_root = data_root or PROJECT_ROOT / "data"
@@ -110,7 +114,7 @@ def create_app(
             model_configured=settings.model_configured,
         )
 
-    frontend = PROJECT_ROOT / "frontend/dist"
+    frontend = frontend_root if frontend_root is not None else PROJECT_ROOT / "frontend/dist"
     if (frontend / "index.html").is_file():
         application.mount("/assets", StaticFiles(directory=frontend / "assets"), name="assets")
 

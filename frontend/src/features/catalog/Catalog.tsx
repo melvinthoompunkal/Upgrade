@@ -12,6 +12,7 @@ import { Empty, ErrorState, Notice, Skeleton } from '../../components/ui'
 import { AssessmentPanel } from './AssessmentPanel'
 import { AssessmentDetail } from './AssessmentDetail'
 import { assessmentFinished, useAssessment } from './useAssessment'
+import { useQueryDraft } from './useQueryDraft'
 
 const finished = (catalog: CatalogData) => !['queued', 'running'].includes(catalog.state)
 
@@ -36,6 +37,8 @@ export function Catalog() {
   const assessmentId = params.get('assessment') ?? ''
   const mode = params.get('mode') ?? (assessmentId ? 'relevant' : 'all')
   const category = params.get('category') ?? ''
+  const [searchDraft, setSearchDraft] = useQueryDraft(q, 'q', setParams)
+  const [categoryDraft, setCategoryDraft] = useQueryDraft(category, 'category', setParams)
   const sort = params.get('sort') ?? ''
   const relevanceStatus = params.get('relevance_status') ?? ''
   const fitStatus = params.get('fit_status') ?? ''
@@ -131,26 +134,18 @@ export function Catalog() {
       ...(relevanceStatus ? { relevance_status: relevanceStatus } : {}),
       ...(fitStatus ? { fit_status: fitStatus } : {}),
     })
-    const timer = setTimeout(
-      () => {
-        void api<CatalogPage>(`/catalogs/${catalogId}/features?${query}`, {
-          signal: controller.signal,
-        })
-          .then((result) => {
-            if (controller.signal.aborted) return
-            setPage(result)
-            setError('')
-          })
-          .catch((reason) => {
-            if (!controller.signal.aborted) setError(reason.message)
-          })
-      },
-      q ? 300 : 0,
-    )
-    return () => {
-      controller.abort()
-      clearTimeout(timer)
-    }
+    void api<CatalogPage>(`/catalogs/${catalogId}/features?${query}`, {
+      signal: controller.signal,
+    })
+      .then((result) => {
+        if (controller.signal.aborted) return
+        setPage(result)
+        setError('')
+      })
+      .catch((reason) => {
+        if (!controller.signal.aborted) setError(reason.message)
+      })
+    return () => controller.abort()
   }, [
     catalogId,
     revision,
@@ -396,11 +391,9 @@ export function Catalog() {
                 <label htmlFor="catalog-search">Search saved features</label>
                 <input
                   id="catalog-search"
-                  value={q}
+                  value={searchDraft}
                   maxLength={200}
-                  onChange={(event) =>
-                    change({ q: event.target.value, cursor: null, feature: null })
-                  }
+                  onChange={(event) => setSearchDraft(event.target.value)}
                 />
               </div>
               <div className="field-group">
@@ -408,11 +401,9 @@ export function Catalog() {
                 <input
                   id="catalog-category"
                   maxLength={60}
-                  value={category}
+                  value={categoryDraft}
                   placeholder="Exact category, or leave empty"
-                  onChange={(e) =>
-                    change({ category: e.target.value, cursor: null, feature: null })
-                  }
+                  onChange={(e) => setCategoryDraft(e.target.value)}
                 />
               </div>
               <div className="field-group">

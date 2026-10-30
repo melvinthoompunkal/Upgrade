@@ -10,7 +10,8 @@ The first three coding milestones in section 11 are implemented: the Meta backen
 the HTTPX crawler and offline Docker baseline, and pinned repositories with a live Meta source
 trace. Stage 4A adds target profiling and deterministic selection of one bounded retry
 candidate. A local React frontend and a persistent browser API now expose the existing
-analysis workflows. Retry adaptation and final red-to-green verification remain later work.
+analysis workflows. F7 now adds verified adaptation for the supported synchronous Python
+function/MIT profile; the original crawler selection still produces an analysis proposal.
 
 The [browser workspace guide](docs/frontend.md) covers startup, workflow coverage,
 verification, and remaining backend milestones. The original
@@ -69,6 +70,11 @@ protected-test integrity, evidence/notices and exact hash-checked patch download
 Optional PR publishing is explicitly disabled; review performs no inference or GitHub writes.
 See [the F8 implementation record](docs/full-feature-development.md#f8-local-change-review).
 
+F9 adds a repeatable local validation command, source/build/artifact hashes, fresh offline
+adaptation review and real-API scale checks at 390/768/1440 pixels. It also fixes dropped
+keystrokes in catalog search/category inputs. Real-account, live semantic and hosted
+release gates remain explicit; see [the F9 record](docs/full-feature-development.md#f9-local-release-validation).
+
 ## Setup
 
 Requires Python 3.12 and [uv](https://docs.astral.sh/uv/). From the repository root:
@@ -82,7 +88,7 @@ if (-not (Test-Path -LiteralPath 'backend/.env')) {
 
 Enter your Meta key in `backend/.env` locally, or provide `MODEL_API_KEY` through your environment. Environment variables take precedence. The `.env` file, virtual environments, caches, research clones, and runtime artifacts are ignored by Git. The example file contains no credentials.
 
-The adapter targets `https://api.meta.ai/v1` and defaults to `muse-spark-1.3` in Standard mode. `META_MODEL_ID` may explicitly select documented Spark 1.2/1.1 if account access requires it. There is no automatic model/provider fallback. The SDK retries transient failures at most twice per request and applies a configurable timeout.
+The adapter targets `https://api.meta.ai/v1` and defaults to `muse-spark-1.3` in Standard mode. `META_MODEL_ID` may explicitly select documented Spark 1.2/1.1 if account access requires it. There is no automatic model/provider fallback. The controller records and budgets at most two transient retries per request; SDK retries are disabled. Requests use a configurable timeout.
 
 ## Run the backend
 
@@ -194,6 +200,32 @@ It preserves the original target and managed worktree, and produces no patch or
 post-implementation verification. See [Stage 4 usage, policy, and boundaries](docs/stage4.md).
 
 ## Development checks
+
+After `uv sync --project backend --locked` and `npm ci` in `frontend/`, run the F9 local
+validation from the repository root (installed Google Chrome is required):
+
+```powershell
+uv run --project backend --locked python scripts/validate_release.py --with-docker --with-audits
+```
+
+Omit `--with-docker` when Docker/the prepared runner is unavailable. Omit `--with-audits`
+for offline checks; audit mode queries public package databases through `pip-audit` and
+`npm audit`. Tests use controlled provider responses and send no repository code to Meta.
+The command builds and serves its captured frontend on a disposable loopback port with
+an isolated database, no worker, no model key and read-only API access. It never attaches
+to your development server. Results and logs go to a unique
+`data/release-validation/<id>/receipt.json`; no release is certified by local checks.
+
+Recheck a receipt without rerunning tests or inference:
+
+```powershell
+uv run --project backend --locked python scripts/validate_release.py --verify data/release-validation/<id>/receipt.json
+```
+
+Verification compares current source bytes and retained artifact hashes. Source edits
+invalidate that comparison; preserve the receipt with its tested checkout. Test failures,
+skips, missing JUnit and source edits during validation fail the local gate. Normal local
+Windows execution permissions are needed for Chrome, Git fixtures and Docker.
 
 ```powershell
 uv run --project backend --locked pytest backend/tests

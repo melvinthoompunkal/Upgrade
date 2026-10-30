@@ -165,7 +165,7 @@ const target: Target = {
 }
 
 export async function mockApi(page: Page, run: Run = structuredClone(fixtureRun)) {
-  await page.route('http://127.0.0.1:5173/api/**', async (route) => {
+  await page.route('**/api/**', async (route) => {
     const path = new URL(route.request().url()).pathname
     let body: unknown
     if (path === '/api/session')

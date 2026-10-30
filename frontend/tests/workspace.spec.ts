@@ -135,7 +135,7 @@ test('active run reconnects and catches up without repeating execution', async (
   page.on('request', (request) => {
     if (request.method() === 'POST') submissions.push(request.url())
   })
-  await page.route('http://127.0.0.1:5173/api/runs/fixture-run', async (route) => {
+  await page.route('**/api/runs/fixture-run', async (route) => {
     reads++
     if (reads === 2) return route.abort('failed')
     await route.fulfill({
@@ -179,7 +179,7 @@ test('zero-feature failure and analysis-only changes are explicit', async ({ pag
 
 test('missing configuration leaves historical runs accessible', async ({ page }) => {
   await mockApi(page)
-  await page.route('http://127.0.0.1:5173/api/capabilities', (route) =>
+  await page.route('**/api/capabilities', (route) =>
     route.fulfill({ json: { ...capabilities, model_configured: false } }),
   )
   await page.goto('/example')

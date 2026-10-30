@@ -1,0 +1,39 @@
+{
+  "package": "cryptography",
+  "before_version": "48.0.1",
+  "after_version": "50.0.2",
+  "distinct_advisories_before": [
+    {
+      "id": "PYSEC-2026-3554",
+      "fix_versions": [
+        "49.0.0"
+      ],
+      "aliases": [
+        "CVE-2026-69248",
+        "GHSA-m2h6-j472-rp4c"
+      ]
+    },
+    {
+      "id": "PYSEC-2026-3552",
+      "fix_versions": [
+        "50.0.0"
+      ],
+      "aliases": [
+        "GHSA-g6cj-pr64-35w5",
+        "CVE-2026-69247"
+      ]
+    },
+    {
+      "id": "PYSEC-2026-3553",
+      "fix_versions": [
+        "49.0.0"
+      ],
+      "aliases": [
+        "CVE-2026-69249",
+        "GHSA-jwv3-5hgf-82ww"
+      ]
+    }
+  ],
+  "after_scan": "f9-python-audit.json",
+  "upstream_changelog": "https://cryptography.io/en/latest/changelog/"
+}

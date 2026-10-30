@@ -1,0 +1,350 @@
+<testsuites id="" name="" tests="144" failures="0" skipped="0" errors="0" time="188.046548">
+<testsuite name="account.spec.ts" timestamp="2026-10-30T02:27:32.188Z" hostname="desktop" tests="9" failures="0" skipped="0" time="10.383" errors="0">
+<testcase name="account changes clear private results before the new history arrives" classname="account.spec.ts" time="0.937">
+</testcase>
+<testcase name="account changes do not copy the previous account draft" classname="account.spec.ts" time="0.378">
+</testcase>
+<testcase name="signed-out accounts see onboarding without loading private runs" classname="account.spec.ts" time="0.391">
+</testcase>
+<testcase name="repository sync sends CSRF and browsing does not run a model" classname="account.spec.ts" time="2.217">
+</testcase>
+<testcase name="history search queries the server and keeps URL context" classname="account.spec.ts" time="1.802">
+</testcase>
+<testcase name="private snapshot fetch is explicit and shows pinned browse-only support" classname="account.spec.ts" time="0.851">
+</testcase>
+<testcase name="installation states explain suspension and missing permissions" classname="account.spec.ts" time="0.375">
+</testcase>
+<testcase name="disconnect reports when provider revocation needs manual completion" classname="account.spec.ts" time="0.389">
+</testcase>
+<testcase name="event catch-up stays bounded to the latest 200 entries" classname="account.spec.ts" time="3.043">
+</testcase>
+</testsuite>
+<testsuite name="adaptation.spec.ts" timestamp="2026-10-30T02:27:32.188Z" hostname="desktop" tests="2" failures="0" skipped="0" time="1.758" errors="0">
+<testcase name="verified adaptation shows protected tests, phased captures and patch exports" classname="adaptation.spec.ts" time="0.746">
+</testcase>
+<testcase name="exhausted adaptation is explicitly unverified on reopen" classname="adaptation.spec.ts" time="1.012">
+</testcase>
+</testsuite>
+<testsuite name="catalog.spec.ts" timestamp="2026-10-30T02:27:32.188Z" hostname="desktop" tests="6" failures="0" skipped="0" time="5.202" errors="0">
+<testcase name="saved catalog pages and lazy evidence reopen without inference" classname="catalog.spec.ts" time="1.227">
+</testcase>
+<testcase name="global search, status filters and Back preserve a revision" classname="catalog.spec.ts" time="1.494">
+</testcase>
+<testcase name="continuation explicitly creates a new budgeted revision" classname="catalog.spec.ts" time="0.454">
+</testcase>
+<testcase name="on-demand corroboration requests only the selected candidate" classname="catalog.spec.ts" time="0.433">
+</testcase>
+<testcase name="failed discovery remains visible even with zero features" classname="catalog.spec.ts" time="1.154">
+</testcase>
+<testcase name="source discovery is an explicit action on a supported pin" classname="catalog.spec.ts" time="0.44">
+</testcase>
+</testsuite>
+<testsuite name="change-review.spec.ts" timestamp="2026-10-30T02:27:32.188Z" hostname="desktop" tests="5" failures="0" skipped="0" time="5.303" errors="0">
+<testcase name="change review loads files lazily, bounds pages, preserves URL history and exact downloads" classname="change-review.spec.ts" time="1.429">
+</testcase>
+<testcase name="keyboard file selection, evidence inspection and invalid deep links recover" classname="change-review.spec.ts" time="1.094">
+</testcase>
+<testcase name="failed integrity check can be retried without showing a verified patch" classname="change-review.spec.ts" time="0.685">
+</testcase>
+<testcase name="unverified patches and already-present outcomes keep their actual verdict" classname="change-review.spec.ts" time="0.845">
+</testcase>
+<testcase name="stale file responses cannot replace the newly selected file" classname="change-review.spec.ts" time="1.25">
+</testcase>
+</testsuite>
+<testsuite name="jobs.spec.ts" timestamp="2026-10-30T02:27:32.188Z" hostname="desktop" tests="3" failures="0" skipped="0" time="3.719" errors="0">
+<testcase name="cancel waits for the controller and keeps the run inspectable" classname="jobs.spec.ts" time="1.784">
+</testcase>
+<testcase name="storage deletion requires review and explicit confirmation" classname="jobs.spec.ts" time="0.776">
+</testcase>
+<testcase name="unfinished jobs block data deletion" classname="jobs.spec.ts" time="1.159">
+</testcase>
+</testsuite>
+<testsuite name="projects.spec.ts" timestamp="2026-10-30T02:27:32.188Z" hostname="desktop" tests="4" failures="0" skipped="0" time="2.051" errors="0">
+<testcase name="public source analysis is the default and needs neither target nor model configuration" classname="projects.spec.ts" time="0.533">
+</testcase>
+<testcase name="editing a pinned project invalidates its selection" classname="projects.spec.ts" time="0.437">
+</testcase>
+<testcase name="unsupported projects show their blocker and cannot queue analysis" classname="projects.spec.ts" time="0.442">
+</testcase>
+<testcase name="native baseline uses the explicitly selected target ID" classname="projects.spec.ts" time="0.639">
+</testcase>
+</testsuite>
+<testsuite name="release-review.spec.ts" timestamp="2026-10-30T02:27:32.188Z" hostname="desktop" tests="1" failures="0" skipped="0" time="1.077" errors="0">
+<testcase name="fresh offline Docker adaptation opens through production API review and exact download" classname="release-review.spec.ts" time="1.077">
+</testcase>
+</testsuite>
+<testsuite name="release-scale.spec.ts" timestamp="2026-10-30T02:27:32.188Z" hostname="desktop" tests="1" failures="0" skipped="0" time="10.758" errors="0">
+<testcase name="production build browses real API scale fixtures with bounded pages and keyboard focus" classname="release-scale.spec.ts" time="10.758">
+</testcase>
+</testsuite>
+<testsuite name="relevance.spec.ts" timestamp="2026-10-30T02:27:32.188Z" hostname="desktop" tests="5" failures="0" skipped="0" time="6.046" errors="0">
+<testcase name="saved all/relevant views keep honest counts and issue no inference writes" classname="relevance.spec.ts" time="2.532">
+</testcase>
+<testcase name="requesting relevance and editing a goal are explicit new jobs" classname="relevance.spec.ts" time="0.763">
+</testcase>
+<testcase name="a selected assessment shows failed gates and supports keyboard return at tablet width" classname="relevance.spec.ts" time="1.19">
+</testcase>
+<testcase name="adaptation starts explicitly from a saved feature and retries with the same key" classname="relevance.spec.ts" time="0.498">
+</testcase>
+<testcase name="an older search cannot overwrite the current saved query" classname="relevance.spec.ts" time="1.063">
+</testcase>
+</testsuite>
+<testsuite name="workspace.spec.ts" timestamp="2026-10-30T02:27:32.188Z" hostname="desktop" tests="12" failures="0" skipped="0" time="14.825" errors="0">
+<testcase name="example pins source and editing the repository clears its SHA" classname="workspace.spec.ts" time="0.455">
+</testcase>
+<testcase name="invalid URL preserves the form and never queues work" classname="workspace.spec.ts" time="0.411">
+</testcase>
+<testcase name="run creation is idempotent and opens a stable workspace URL" classname="workspace.spec.ts" time="0.611">
+</testcase>
+<testcase name="features use actual candidate counts and controller scores" classname="workspace.spec.ts" time="0.733">
+</testcase>
+<testcase name="citation inspector opens an exact excerpt and restores focus" classname="workspace.spec.ts" time="1.23">
+</testcase>
+<testcase name="expected retry diagnostic stays distinct from the ordinary baseline" classname="workspace.spec.ts" time="0.759">
+</testcase>
+<testcase name="exports preview and download only registered artifacts" classname="workspace.spec.ts" time="1.165">
+</testcase>
+<testcase name="no-fit results retain the candidate and explain every rejection" classname="workspace.spec.ts" time="0.853">
+</testcase>
+<testcase name="active run reconnects and catches up without repeating execution" classname="workspace.spec.ts" time="4.005">
+</testcase>
+<testcase name="zero-feature failure and analysis-only changes are explicit" classname="workspace.spec.ts" time="0.762">
+</testcase>
+<testcase name="missing configuration leaves historical runs accessible" classname="workspace.spec.ts" time="0.52">
+</testcase>
+<testcase name="all run views fit the viewport and support mobile navigation" classname="workspace.spec.ts" time="3.321">
+</testcase>
+</testsuite>
+<testsuite name="account.spec.ts" timestamp="2026-10-30T02:27:32.188Z" hostname="tablet" tests="9" failures="0" skipped="0" time="10.598" errors="0">
+<testcase name="account changes clear private results before the new history arrives" classname="account.spec.ts" time="0.592">
+</testcase>
+<testcase name="account changes do not copy the previous account draft" classname="account.spec.ts" time="0.399">
+</testcase>
+<testcase name="signed-out accounts see onboarding without loading private runs" classname="account.spec.ts" time="0.428">
+</testcase>
+<testcase name="repository sync sends CSRF and browsing does not run a model" classname="account.spec.ts" time="2.077">
+</testcase>
+<testcase name="history search queries the server and keeps URL context" classname="account.spec.ts" time="1.749">
+</testcase>
+<testcase name="private snapshot fetch is explicit and shows pinned browse-only support" classname="account.spec.ts" time="1.29">
+</testcase>
+<testcase name="installation states explain suspension and missing permissions" classname="account.spec.ts" time="0.652">
+</testcase>
+<testcase name="disconnect reports when provider revocation needs manual completion" classname="account.spec.ts" time="0.391">
+</testcase>
+<testcase name="event catch-up stays bounded to the latest 200 entries" classname="account.spec.ts" time="3.02">
+</testcase>
+</testsuite>
+<testsuite name="adaptation.spec.ts" timestamp="2026-10-30T02:27:32.188Z" hostname="tablet" tests="2" failures="0" skipped="0" time="1.517" errors="0">
+<testcase name="verified adaptation shows protected tests, phased captures and patch exports" classname="adaptation.spec.ts" time="0.473">
+</testcase>
+<testcase name="exhausted adaptation is explicitly unverified on reopen" classname="adaptation.spec.ts" time="1.044">
+</testcase>
+</testsuite>
+<testsuite name="catalog.spec.ts" timestamp="2026-10-30T02:27:32.188Z" hostname="tablet" tests="6" failures="0" skipped="0" time="4.047" errors="0">
+<testcase name="saved catalog pages and lazy evidence reopen without inference" classname="catalog.spec.ts" time="0.744">
+</testcase>
+<testcase name="global search, status filters and Back preserve a revision" classname="catalog.spec.ts" time="0.812">
+</testcase>
+<testcase name="continuation explicitly creates a new budgeted revision" classname="catalog.spec.ts" time="0.477">
+</testcase>
+<testcase name="on-demand corroboration requests only the selected candidate" classname="catalog.spec.ts" time="1.188">
+</testcase>
+<testcase name="failed discovery remains visible even with zero features" classname="catalog.spec.ts" time="0.372">
+</testcase>
+<testcase name="source discovery is an explicit action on a supported pin" classname="catalog.spec.ts" time="0.454">
+</testcase>
+</testsuite>
+<testsuite name="change-review.spec.ts" timestamp="2026-10-30T02:27:32.188Z" hostname="tablet" tests="5" failures="0" skipped="0" time="5.994" errors="0">
+<testcase name="change review loads files lazily, bounds pages, preserves URL history and exact downloads" classname="change-review.spec.ts" time="1.47">
+</testcase>
+<testcase name="keyboard file selection, evidence inspection and invalid deep links recover" classname="change-review.spec.ts" time="1.272">
+</testcase>
+<testcase name="failed integrity check can be retried without showing a verified patch" classname="change-review.spec.ts" time="0.482">
+</testcase>
+<testcase name="unverified patches and already-present outcomes keep their actual verdict" classname="change-review.spec.ts" time="1.543">
+</testcase>
+<testcase name="stale file responses cannot replace the newly selected file" classname="change-review.spec.ts" time="1.227">
+</testcase>
+</testsuite>
+<testsuite name="jobs.spec.ts" timestamp="2026-10-30T02:27:32.188Z" hostname="tablet" tests="3" failures="0" skipped="0" time="3.366" errors="0">
+<testcase name="cancel waits for the controller and keeps the run inspectable" classname="jobs.spec.ts" time="1.966">
+</testcase>
+<testcase name="storage deletion requires review and explicit confirmation" classname="jobs.spec.ts" time="0.732">
+</testcase>
+<testcase name="unfinished jobs block data deletion" classname="jobs.spec.ts" time="0.668">
+</testcase>
+</testsuite>
+<testsuite name="projects.spec.ts" timestamp="2026-10-30T02:27:32.188Z" hostname="tablet" tests="4" failures="0" skipped="0" time="1.876" errors="0">
+<testcase name="public source analysis is the default and needs neither target nor model configuration" classname="projects.spec.ts" time="0.53">
+</testcase>
+<testcase name="editing a pinned project invalidates its selection" classname="projects.spec.ts" time="0.391">
+</testcase>
+<testcase name="unsupported projects show their blocker and cannot queue analysis" classname="projects.spec.ts" time="0.378">
+</testcase>
+<testcase name="native baseline uses the explicitly selected target ID" classname="projects.spec.ts" time="0.577">
+</testcase>
+</testsuite>
+<testsuite name="release-review.spec.ts" timestamp="2026-10-30T02:27:32.188Z" hostname="tablet" tests="1" failures="0" skipped="0" time="1.115" errors="0">
+<testcase name="fresh offline Docker adaptation opens through production API review and exact download" classname="release-review.spec.ts" time="1.115">
+</testcase>
+</testsuite>
+<testsuite name="release-scale.spec.ts" timestamp="2026-10-30T02:27:32.188Z" hostname="tablet" tests="1" failures="0" skipped="0" time="11.092" errors="0">
+<testcase name="production build browses real API scale fixtures with bounded pages and keyboard focus" classname="release-scale.spec.ts" time="11.092">
+</testcase>
+</testsuite>
+<testsuite name="relevance.spec.ts" timestamp="2026-10-30T02:27:32.188Z" hostname="tablet" tests="5" failures="0" skipped="0" time="5.697" errors="0">
+<testcase name="saved all/relevant views keep honest counts and issue no inference writes" classname="relevance.spec.ts" time="1.624">
+</testcase>
+<testcase name="requesting relevance and editing a goal are explicit new jobs" classname="relevance.spec.ts" time="0.683">
+</testcase>
+<testcase name="a selected assessment shows failed gates and supports keyboard return at tablet width" classname="relevance.spec.ts" time="1.176">
+</testcase>
+<testcase name="adaptation starts explicitly from a saved feature and retries with the same key" classname="relevance.spec.ts" time="0.43">
+</testcase>
+<testcase name="an older search cannot overwrite the current saved query" classname="relevance.spec.ts" time="1.784">
+</testcase>
+</testsuite>
+<testsuite name="workspace.spec.ts" timestamp="2026-10-30T02:27:32.188Z" hostname="tablet" tests="12" failures="0" skipped="0" time="15.371" errors="0">
+<testcase name="example pins source and editing the repository clears its SHA" classname="workspace.spec.ts" time="0.368">
+</testcase>
+<testcase name="invalid URL preserves the form and never queues work" classname="workspace.spec.ts" time="0.371">
+</testcase>
+<testcase name="run creation is idempotent and opens a stable workspace URL" classname="workspace.spec.ts" time="0.848">
+</testcase>
+<testcase name="features use actual candidate counts and controller scores" classname="workspace.spec.ts" time="0.672">
+</testcase>
+<testcase name="citation inspector opens an exact excerpt and restores focus" classname="workspace.spec.ts" time="1.196">
+</testcase>
+<testcase name="expected retry diagnostic stays distinct from the ordinary baseline" classname="workspace.spec.ts" time="0.661">
+</testcase>
+<testcase name="exports preview and download only registered artifacts" classname="workspace.spec.ts" time="1.134">
+</testcase>
+<testcase name="no-fit results retain the candidate and explain every rejection" classname="workspace.spec.ts" time="1.05">
+</testcase>
+<testcase name="active run reconnects and catches up without repeating execution" classname="workspace.spec.ts" time="3.486">
+</testcase>
+<testcase name="zero-feature failure and analysis-only changes are explicit" classname="workspace.spec.ts" time="0.986">
+</testcase>
+<testcase name="missing configuration leaves historical runs accessible" classname="workspace.spec.ts" time="0.736">
+</testcase>
+<testcase name="all run views fit the viewport and support mobile navigation" classname="workspace.spec.ts" time="3.863">
+</testcase>
+</testsuite>
+<testsuite name="account.spec.ts" timestamp="2026-10-30T02:27:32.188Z" hostname="mobile" tests="9" failures="0" skipped="0" time="8.746" errors="0">
+<testcase name="account changes clear private results before the new history arrives" classname="account.spec.ts" time="0.81">
+</testcase>
+<testcase name="account changes do not copy the previous account draft" classname="account.spec.ts" time="0.377">
+</testcase>
+<testcase name="signed-out accounts see onboarding without loading private runs" classname="account.spec.ts" time="0.339">
+</testcase>
+<testcase name="repository sync sends CSRF and browsing does not run a model" classname="account.spec.ts" time="1.468">
+</testcase>
+<testcase name="history search queries the server and keeps URL context" classname="account.spec.ts" time="0.962">
+</testcase>
+<testcase name="private snapshot fetch is explicit and shows pinned browse-only support" classname="account.spec.ts" time="0.72">
+</testcase>
+<testcase name="installation states explain suspension and missing permissions" classname="account.spec.ts" time="0.396">
+</testcase>
+<testcase name="disconnect reports when provider revocation needs manual completion" classname="account.spec.ts" time="0.655">
+</testcase>
+<testcase name="event catch-up stays bounded to the latest 200 entries" classname="account.spec.ts" time="3.019">
+</testcase>
+</testsuite>
+<testsuite name="adaptation.spec.ts" timestamp="2026-10-30T02:27:32.188Z" hostname="mobile" tests="2" failures="0" skipped="0" time="1.741" errors="0">
+<testcase name="verified adaptation shows protected tests, phased captures and patch exports" classname="adaptation.spec.ts" time="0.717">
+</testcase>
+<testcase name="exhausted adaptation is explicitly unverified on reopen" classname="adaptation.spec.ts" time="1.024">
+</testcase>
+</testsuite>
+<testsuite name="catalog.spec.ts" timestamp="2026-10-30T02:27:32.188Z" hostname="mobile" tests="6" failures="0" skipped="0" time="3.074" errors="0">
+<testcase name="saved catalog pages and lazy evidence reopen without inference" classname="catalog.spec.ts" time="0.69">
+</testcase>
+<testcase name="global search, status filters and Back preserve a revision" classname="catalog.spec.ts" time="0.716">
+</testcase>
+<testcase name="continuation explicitly creates a new budgeted revision" classname="catalog.spec.ts" time="0.407">
+</testcase>
+<testcase name="on-demand corroboration requests only the selected candidate" classname="catalog.spec.ts" time="0.46">
+</testcase>
+<testcase name="failed discovery remains visible even with zero features" classname="catalog.spec.ts" time="0.394">
+</testcase>
+<testcase name="source discovery is an explicit action on a supported pin" classname="catalog.spec.ts" time="0.407">
+</testcase>
+</testsuite>
+<testsuite name="change-review.spec.ts" timestamp="2026-10-30T02:27:32.188Z" hostname="mobile" tests="5" failures="0" skipped="0" time="5.378" errors="0">
+<testcase name="change review loads files lazily, bounds pages, preserves URL history and exact downloads" classname="change-review.spec.ts" time="1.859">
+</testcase>
+<testcase name="keyboard file selection, evidence inspection and invalid deep links recover" classname="change-review.spec.ts" time="1.139">
+</testcase>
+<testcase name="failed integrity check can be retried without showing a verified patch" classname="change-review.spec.ts" time="0.436">
+</testcase>
+<testcase name="unverified patches and already-present outcomes keep their actual verdict" classname="change-review.spec.ts" time="0.772">
+</testcase>
+<testcase name="stale file responses cannot replace the newly selected file" classname="change-review.spec.ts" time="1.172">
+</testcase>
+</testsuite>
+<testsuite name="jobs.spec.ts" timestamp="2026-10-30T02:27:32.188Z" hostname="mobile" tests="3" failures="0" skipped="0" time="3.53" errors="0">
+<testcase name="cancel waits for the controller and keeps the run inspectable" classname="jobs.spec.ts" time="1.936">
+</testcase>
+<testcase name="storage deletion requires review and explicit confirmation" classname="jobs.spec.ts" time="0.454">
+</testcase>
+<testcase name="unfinished jobs block data deletion" classname="jobs.spec.ts" time="1.14">
+</testcase>
+</testsuite>
+<testsuite name="projects.spec.ts" timestamp="2026-10-30T02:27:32.188Z" hostname="mobile" tests="4" failures="0" skipped="0" time="1.839" errors="0">
+<testcase name="public source analysis is the default and needs neither target nor model configuration" classname="projects.spec.ts" time="0.57">
+</testcase>
+<testcase name="editing a pinned project invalidates its selection" classname="projects.spec.ts" time="0.379">
+</testcase>
+<testcase name="unsupported projects show their blocker and cannot queue analysis" classname="projects.spec.ts" time="0.361">
+</testcase>
+<testcase name="native baseline uses the explicitly selected target ID" classname="projects.spec.ts" time="0.529">
+</testcase>
+</testsuite>
+<testsuite name="release-review.spec.ts" timestamp="2026-10-30T02:27:32.188Z" hostname="mobile" tests="1" failures="0" skipped="0" time="1.104" errors="0">
+<testcase name="fresh offline Docker adaptation opens through production API review and exact download" classname="release-review.spec.ts" time="1.104">
+</testcase>
+</testsuite>
+<testsuite name="release-scale.spec.ts" timestamp="2026-10-30T02:27:32.188Z" hostname="mobile" tests="1" failures="0" skipped="0" time="10.624" errors="0">
+<testcase name="production build browses real API scale fixtures with bounded pages and keyboard focus" classname="release-scale.spec.ts" time="10.624">
+</testcase>
+</testsuite>
+<testsuite name="relevance.spec.ts" timestamp="2026-10-30T02:27:32.188Z" hostname="mobile" tests="5" failures="0" skipped="0" time="6.166" errors="0">
+<testcase name="saved all/relevant views keep honest counts and issue no inference writes" classname="relevance.spec.ts" time="2.204">
+</testcase>
+<testcase name="requesting relevance and editing a goal are explicit new jobs" classname="relevance.spec.ts" time="0.462">
+</testcase>
+<testcase name="a selected assessment shows failed gates and supports keyboard return at tablet width" classname="relevance.spec.ts" time="0.463">
+</testcase>
+<testcase name="adaptation starts explicitly from a saved feature and retries with the same key" classname="relevance.spec.ts" time="1.23">
+</testcase>
+<testcase name="an older search cannot overwrite the current saved query" classname="relevance.spec.ts" time="1.807">
+</testcase>
+</testsuite>
+<testsuite name="workspace.spec.ts" timestamp="2026-10-30T02:27:32.188Z" hostname="mobile" tests="12" failures="0" skipped="0" time="14.321" errors="0">
+<testcase name="example pins source and editing the repository clears its SHA" classname="workspace.spec.ts" time="0.46">
+</testcase>
+<testcase name="invalid URL preserves the form and never queues work" classname="workspace.spec.ts" time="0.404">
+</testcase>
+<testcase name="run creation is idempotent and opens a stable workspace URL" classname="workspace.spec.ts" time="0.846">
+</testcase>
+<testcase name="features use actual candidate counts and controller scores" classname="workspace.spec.ts" time="0.631">
+</testcase>
+<testcase name="citation inspector opens an exact excerpt and restores focus" classname="workspace.spec.ts" time="0.448">
+</testcase>
+<testcase name="expected retry diagnostic stays distinct from the ordinary baseline" classname="workspace.spec.ts" time="0.633">
+</testcase>
+<testcase name="exports preview and download only registered artifacts" classname="workspace.spec.ts" time="0.389">
+</testcase>
+<testcase name="no-fit results retain the candidate and explain every rejection" classname="workspace.spec.ts" time="1.541">
+</testcase>
+<testcase name="active run reconnects and catches up without repeating execution" classname="workspace.spec.ts" time="3.457">
+</testcase>
+<testcase name="zero-feature failure and analysis-only changes are explicit" classname="workspace.spec.ts" time="0.958">
+</testcase>
+<testcase name="missing configuration leaves historical runs accessible" classname="workspace.spec.ts" time="0.709">
+</testcase>
+<testcase name="all run views fit the viewport and support mobile navigation" classname="workspace.spec.ts" time="3.845">
+</testcase>
+</testsuite>
+</testsuites>

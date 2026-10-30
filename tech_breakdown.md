@@ -1,6 +1,6 @@
 # Upgrade: MVP technical design
 
-Original research: October 27, 2026. Documentation reconciled October 28, 2026,
+Original research: October 27, 2026. Documentation reconciled October 29, 2026,
 America/New_York.
 
 Use [project status, audits and the development plan](docs/full-feature-development.md)
@@ -9,10 +9,12 @@ package checklist. This document retains architecture, contracts, scoring and th
 original MVP design; its account/private-access exclusions are superseded by that roadmap.
 
 The implemented demo pair is Scrapy → `examples/crawler-target` (`crawler-demo`).
-Selection is delivered; production patching and final verification remain planned.
+Selection is delivered; it still produces a proposal without patching the crawler.
 F3 adds public Python structural analysis with optional reviewed native offline tests;
-the crawler selection is now an explicit example. General feature discovery and matching
-remain separate downstream packages.
+the crawler selection is now an explicit example. F4/F5 add saved general Python catalogs
+and relevance. F7/F8 add verified adaptation and patch review for the supported synchronous
+function/MIT profile. F9 supplies repeatable local regression/build/browser/scale receipts;
+live semantic, real-account and hosted release gates remain pending in the roadmap.
 Setup and actual browser workflows are in [README](README.md) and
 [the browser guide](docs/frontend.md).
 
@@ -33,7 +35,8 @@ remain available and share the workspace execution lock.
 The source defaults are Scrapy at `5c7886a3f27dbf8b66f557cc9945dbc4a6aceaac`.
 Only the recognized pinned source slice/notice can pass the current selection policy;
 accepting a different public source input does not establish adaptation support.
-Arbitrary host target paths and public target URLs are not current inputs. Target
+Arbitrary host target paths are not browser inputs. F3 public URL/full-SHA/root inspection
+creates server-owned source/target project IDs for the separate general workflows. Target
 registration, runner/image settings, credentials and policy remain server-side concerns.
 
 ### Data and status rules for frontend work
@@ -43,7 +46,8 @@ registration, runner/image settings, credentials and policy remain server-side c
   in a failed selection receipt, not a separate current selection status.
 - `selected` means a proposed feature passed analysis policy. Both
   `actual_patch_scope_checked` and `post_implementation_verified` remain false.
-  There is no current `verified` adaptation result, patch download or repair count.
+  The separate F7 workflow does expose an actual adaptation verdict, repair count and
+  patch digest; F8 provides its saved review and exact download. Use each workflow's receipt.
 - Read actual `analyzed_feature_count`, `eligible_feature_count`, candidate membership,
   ratings, gates and rejection reasons. A run can fail before analyzing any feature.
   Do not pad the current one-card result into three candidates or hard-code its score.
@@ -61,8 +65,9 @@ registration, runner/image settings, credentials and policy remain server-side c
   is a delivery label; `/api/capabilities` and actual run events drive capability
   detection and progress.
 - The implemented UI views are Overview, Features, Evidence, Tests, Changes and Exports.
-  Initially Changes explains that the analysis made no code changes. Future build
-  controls depend on backend capabilities. Preserve the implemented shared-service
+  Analysis-only Changes explains that no code changed; F7 adaptations show F8's bounded
+  diff and integrity-checked exports. Build controls depend on backend capabilities.
+  Preserve the implemented shared-service
   boundary as the API expands; do not duplicate workflows in frontend logic.
 
 ## 1. Graft audit
@@ -141,8 +146,9 @@ For the demo, bake approved target dependencies into a pinned runner image in ad
 **Implemented local persistence:** SQLite stores owner-scoped runs, queue state and
 sequenced events; artifact bytes and model call/attempt records remain on disk. A single
 API-owned worker uses the common CLI/API execution lock and marks abandoned work
-interrupted without replaying paid calls. Hosted leases, hard-stop cleanup and lifecycle
-hardening remain [F6 work](docs/full-feature-development.md#13-development-sequence-and-deliverables).
+interrupted without replaying paid calls. F6 adds local leased jobs, cancellation,
+container recovery, quotas and retention. Hosted isolation and real hard-stop certification
+remain [release gates](docs/full-feature-development.md#13-development-sequence-and-deliverables).
 
 ## 3. MVP feature list
 
@@ -150,18 +156,18 @@ hardening remain [F6 work](docs/full-feature-development.md#13-development-seque
 
 | Feature | Current status |
 |---|---|
-| Source, target and goal inputs | Delivered through CLI for public source URL/full SHA plus registered local target; public target URL pending |
+| Source, target and goal inputs | Delivered; F3 adds public Python source/optional-target URL/full SHA/root inspection and owner-scoped project IDs |
 | Pinned inventories and supported target baseline | Delivered, including exact target Git bytes and captured same-snapshot tests |
-| Bounded catalog with citations/coverage | One retry slice delivered; additional independent slices and broader discovery pending |
+| Bounded catalog with citations/coverage | Retry example plus F4 persistent public Python discovery; live general semantic exit checks pending |
 | Target architecture/capabilities/gaps/style | Delivered with same-run baseline and observed-gap provenance |
 | Scoring, gates, selection and rejections | Delivered; `top3` has at most three eligible IDs and currently at most one; original audit findings are repaired |
 | Trace bundle and adaptation proposal | Delivered with integration/scope/dependency evidence and typed retry-v1 behavior; no applied patch |
-| Missing-behavior red evidence | Delivered for the frozen GET/503 retry diagnostic; independent final adaptation-contract preparation still pending |
-| Production patch within five files / one new file / 400 changed lines / zero new runtime dependencies | Pending; current gates assess a proposed scope only |
-| Same frozen acceptance and regression green; at most three repair rounds | Pending; no Implementer or Verifier/Fixer workflow yet |
-| Meta call metadata and budgets | Delivered for smoke, tracing, profiling and matching; real repository planner pending |
+| Missing-behavior red evidence | Retry diagnostic plus F7 independently frozen function acceptance with meaningful assertion red |
+| Production patch within five files / one new file / 400 changed lines / zero new runtime dependencies | F7 enforces actual patches for the reviewed synchronous Python function/MIT profile; broader profiles remain unsupported |
+| Same frozen acceptance and regression green; at most three repair rounds | F7 controller implemented with real offline Docker evidence and controlled planning; live semantic release validation pending |
+| Meta call metadata and budgets | Delivered for smoke, tracing, profiling, matching, catalogs, relevance and F7 pinned-code planning |
 | Browser input/progress/evidence/ranking/tests/diff | Input, progress, evidence, ranking, tests and exports delivered; F8 adds lazy production diff review for F7 adaptations, with optional PR publishing disabled |
-| Reports, notices, logs and provenance exports | Delivered on disk and through owner-scoped downloads; verified patch exports remain pending |
+| Reports, notices, logs and provenance exports | Delivered on disk and through owner-scoped downloads, including F7 exact patches and F8 change review |
 | GitHub connection | F2 local lifecycle adds installation state, opt-in private pinned snapshots, credential broker, signed webhooks, provider revocation and current-access checks; real-account gate remains pending |
 
 ### Should-have — only after the complete workflow works

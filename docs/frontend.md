@@ -171,6 +171,27 @@ produces a sanitized terminal/API failure. See the [F0 audit closure](full-featu
 
 ## Verification
 
+F9's complete local check starts its own isolated API and serves a captured production
+build. Run from the repository root after installing frontend/backend dependencies:
+
+```powershell
+uv run --project backend --locked python scripts/validate_release.py --with-docker --with-audits
+```
+
+It runs the controlled browser suite at 390/768/1440 px and real API browsing against
+100/1,000/5,000/10,000 synthetic saved entries. It measures response sizes, warm loopback
+HTTP latency, heap/DOM growth and search/select long tasks; verifies keyboard focus and
+URL restoration; and asserts browsing issues no writes. Catalog search/category inputs
+buffer keystrokes locally and commit URL text after 300 ms, preserving fast typing and Back.
+With Docker enabled, a fresh controlled-planner offline red-to-green receipt is reopened
+through the real API; patch/evidence download digests must match on all viewports.
+
+This uses installed Chrome and `playwright.release.config.ts`. Existing real GitHub,
+live-model and historical-receipt integration files remain separate explicit checks;
+their absence cannot count as live release evidence. No development server is reused.
+The disposable server rejects writes, has no worker/model key and uses its own database.
+Optional dependency audits need network access. See [F9's scope and pending gates](full-feature-development.md#f9-local-release-validation).
+
 ```powershell
 cd frontend
 npm run build
