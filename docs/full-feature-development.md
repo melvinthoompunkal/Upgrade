@@ -1,6 +1,6 @@
 # Upgrade: project status, audits and development plan
 
-Updated October 29, 2026, America/New_York. Original foundation review at commit
+Updated October 30, 2026, America/New_York. Original foundation review at commit
 `b06d6d3` (`completed f0 and f1`).
 
 This is the single maintained record of completed work, audit findings, verification
@@ -35,6 +35,9 @@ catalog analysis; **verified adaptation** adds frozen tests, patching, capped re
 and change review. Neither full release gate is complete. Sections 4–14 retain the
 design and remaining requirements, with implemented parts identified explicitly.
 The broader roadmap supersedes the original MVP's account/private-access exclusions.
+F10–F13 organize the remaining work into local public-Python v1 validation, broader
+repository adaptation, multi-user hosting and optional PR publishing. These packages
+are planned; adding them does not change the recorded F0–F9 implementation or evidence.
 
 - [Current implementation and boundaries](#1-current-implementation)
 - [Consolidated audit findings and follow-ups](#2-consolidated-audit-findings)
@@ -1468,13 +1471,13 @@ Local validation always records these release states as pending.
 
 ## 13. Development sequence and deliverables
 
-Use these packages as the implementation checklist. F0/F1 and the local F2-F6 foundations
-are implemented; F8 local patch review is implemented with PR publishing disabled. Continue
-with outstanding live/hosted gates and broader F7 adapters. F9 local validation is implemented;
-full release certification still needs the fresh external workflows listed below. Update
-this document with reviewed behavior and machine evidence as each package lands. Work
-that does not depend on another package can proceed independently, but release gates
-still require the listed prerequisites.
+Use these packages as the implementation checklist. F0–F9 provide the implemented local
+workflow within their documented profiles; live and hosted release gates remain open.
+F10 validates the local public-Python v1, F11 broadens repository adaptation, F12 supplies
+the hosted product and F13 optionally adds PR publishing. Update this document with
+reviewed behavior and machine evidence as each package lands. Work that does not depend
+on another package can proceed independently, but release gates still require the
+listed prerequisites.
 
 | Package | Current state | Deliverable | Depends on | Exit evidence |
 |---|---|---|---|---|
@@ -1488,13 +1491,80 @@ still require the listed prerequisites.
 | F7: verified adaptation | Implemented locally for the reviewed synchronous Python function / standard MIT profile; live semantic and broader adapters pending | Real planner, behavior contract, frozen red acceptance, constrained exact patches, actual limits, regression green and capped repairs | F0, F3, F5; F6 for hosting | Controlled-provider Git/negative-path checks and real offline Docker red-to-green receipt; failed/exhausted cases retain evidence |
 | F8: change review and optional PR | Local patch review implemented; optional PR publishing disabled | Lazy bounded diff/review UI, exact patch download, frozen-test integrity and notice exports; optional publishing remains a separate extension | F7; GitHub write permission only for future PR | Hash-matching downloads, bounded paging, changed-receipt rejection and owner isolation; publishing rights/base/idempotency/live checks still required before enabling PR |
 | F9: release validation and docs | Local automation implemented; live/hosted release gates pending | Repeatable strict check runner, source/build/evidence integrity, optional package scans, synthetic real-API performance/accessibility and fresh offline adaptation review; reconciled setup/status docs | All packages needed by the chosen release | Retained dated local manifest/JUnit/measurements; full connected/live semantic and applicable hosted workflows still required |
+| F10: local public-Python v1 | Planned; core features present, live integration validation pending | Complete the real GitHub/Meta browser workflow within the existing supported public Python profiles and repair exposed integration defects | F0–F9 within the local release scope | Fresh real-account discovery/relevance and live-model adaptation receipts, unchanged frozen-test red-to-green/regression evidence, provider cancellation/recovery checks and applicable section 14 acceptance |
+| F11: broader repository adaptation | Planned; substantial adapter and private-analysis work | Expand reviewed execution/dependency and acceptance profiles, source-use policies, branch/tag selection and consent-bound private analysis | F3, F6, F7, F8; F10 for release | Independent projects for each added profile, exact pinned inputs, meaningful frozen red-to-green/regression, private-access/consent/revocation checks and an explicit support matrix |
+| F12: hosted product | Planned; major separate engineering phase | Hosted identity/storage/worker deployment, shared ownership and quotas, reviewed execution isolation, monitoring and operational recovery | F1, F2, F6, F9, F10; F11 for any expanded profiles offered | Chosen-deployment isolation/load/fairness, real hard-stop cleanup, backup/restore, key rotation and migration/rollback receipts |
+| F13: optional PR publishing | Planned; optional and disabled | Explicit publishing of a reviewed patch through authorized branches/commits/PRs with fresh rights/base checks and durable idempotency | F2, F7, F8, F10 and current GitHub write rights | Live rights-denial, moved-base, duplicate-request and provider-failure checks; exact published patch/notices and no merge or force push |
 
 Connected analysis requires F0–F6 and the applicable F9 checks. Verified adaptation
-requires F7/F8 patch review in addition. PR publishing may remain disabled until its
-permission and live integration checks pass; patch download remains useful independently.
-Multi-user hosting remains disabled until F6 is complete. Estimate calendar effort only
-after F3's initial adapter and hosting target are chosen; previous frontend-only estimates
-excluded this account/catalog/adaptation expansion.
+requires F7/F8 patch review in addition. F10 closes those live release gates for the
+existing local public-Python scope. F11 is a separate capability expansion; it is not
+required to release that supported local scope. Multi-user hosting remains disabled
+until F6's hosted requirements and F12 pass. F13 is optional: patch review/download
+already completes the local delivery path. Estimate calendar effort only after the
+additional adapter scope and hosting target are chosen; previous frontend-only
+estimates excluded this account/catalog/adaptation expansion.
+
+### F10: local public-Python v1 validation
+
+The planned core local features are present. Complete integration validation and fix
+the defects it exposes without claiming support beyond the existing public Python,
+synchronous function and standard MIT profiles.
+
+- Validate real GitHub App sign-in, granted/ungranted repository access, token lifecycle
+  and revocation against the F2 exit requirements.
+- Retain a fresh browser-driven live Meta catalog, both browsing modes and target/goal
+  assessment, followed by a supported live-model adaptation through review/download.
+- Independently verify pinned inputs, counts, usage, notices, patch/artifact hashes,
+  ordinary baseline green, frozen assertion red, unchanged acceptance/regression green
+  and original-target preservation. Include negative authorization/unsupported cases,
+  real provider cancellation and hard-process termination/recovery checks.
+- Repair exposed defects and rerun the applicable F9 and section 14 checks. Controlled
+  responses, seeded catalogs and older receipts do not replace fresh live evidence.
+
+### F11: broader repository adaptation
+
+Substantial work remains before the narrow local profile becomes a broadly useful
+repository-adaptation tool. Deliver explicit reviewed profiles rather than removing
+existing gates or promising arbitrary repository support.
+
+- Expand prepared runtime/dependency and native-test support through an isolated,
+  pinned preparation path. Add acceptance adapters for async/HTTP behavior, methods
+  and new integration APIs, with additional reviewed source-use/license profiles.
+- Add authorized branch/tag selection that resolves once to an immutable SHA.
+- Connect private snapshots to supported project/catalog/relevance/adaptation adapters
+  and browser actions through F6 disclosure/consent, fresh access checks, content
+  exclusions, revocation and retention/deletion. Validate applicable organization policy.
+- Publish a capability/support matrix and independent project evidence for each new
+  profile, including meaningful unchanged-test red-to-green, regression and rejection
+  cases. Unsupported profiles remain explicit; private analysis stays disabled until
+  its complete consent/access workflow passes live validation.
+
+### F12: hosted product
+
+Hosting is a major engineering phase beyond the local implementation. Choose the
+deployment target and implement the remaining F6 hosted requirements in section 11.
+
+- Establish hosted database/artifact storage and separate workers with shared leases,
+  atomic quotas, owner isolation and managed secrets; carry retention/deletion into
+  replicas, caches and backups.
+- Independently review the untrusted-execution boundary and validate provider
+  cancellation, hard process termination and orphan cleanup on that deployment.
+- Verify HTTPS/origin/proxy settings, monitoring, multi-user load/fairness, backup/restore,
+  key rotation and deployment migration/rollback. Release only the profiles with passing
+  hosted evidence; local Docker and synthetic scale receipts do not certify hosting.
+
+### F13: optional PR publishing
+
+PR publishing can remain optional because patch review/download already completes
+the local delivery path. Keep it disabled until the explicit publishing workflow passes.
+
+- Add an explicit action for a reviewed patch, recheck current user/App write rights
+  and the authorized repository's exact base SHA, then create a unique branch and PR.
+- Bind publishing to the exact patch/notices and use durable idempotency. Reject a moved
+  base and require revalidation rather than silently rebasing an old verified patch.
+- Retain live permission, stale-base, duplicate-request and provider-failure receipts.
+  Never merge or force-push existing branches as part of publishing.
 
 ## 14. Acceptance and release verification
 
@@ -1572,11 +1642,13 @@ F4 supplies persistent discovery and F5 supplies target/goal assessments and hon
 all/relevant browsing on pinned F3 public Python projects. Live discovery and relevance
 validation remain exit checks. F6 lifecycle hardening and F9 repeatable local validation
 are implemented locally; the next release work is the remaining real-account/live
-semantic/hosted gates and broader F7 adapters.
+semantic validation grouped under F10. F11 groups broader execution/acceptance adapters
+and private analysis; F12 owns the hosted product phase.
 F8 supplies local change review and exact downloads, with optional PR publishing disabled.
 F7 supplies local verified adaptation within
 its reviewed function/MIT profile; live semantic and broader adapter checks remain open.
-F6's hosted exit gates remain a release dependency for multi-user hosting.
+F6's hosted exit gates remain a release dependency for F12 multi-user hosting. F13 is the
+optional PR publishing extension and does not block local patch review/download delivery.
 Optional 4B remains a bounded comparison extension, not a substitute for these packages.
 
 Keep current status, resolved findings, remaining exit criteria and verification history
