@@ -128,6 +128,27 @@ def test_intact_receipt_rechecks_current_uncommitted_source_bytes(receipt):
         verify_receipt(path, root)
 
 
+def test_f10_rejects_stale_f9_evidence_even_with_a_successful_docker_step(receipt):
+    from scripts.validate_public_python import f9_check
+
+    root, path, data = receipt
+    (path.parent / "docker-junit.xml").write_text(PASSING)
+    data["artifacts"] = artifact_manifest(path.parent)
+    data["steps"].append(
+        {
+            "name": "docker",
+            "status": "passed",
+            "exit_code": 0,
+            "junit": "docker-junit.xml",
+            "tests": junit_result(path.parent / "docker-junit.xml"),
+        }
+    )
+    write_json(path, data)
+    assert f9_check(root, path)[0].status == "passed"
+    (root / "backend/app.py").write_text("# newer implementation\n")
+    assert f9_check(root, path)[0].status == "failed"
+
+
 @pytest.mark.parametrize(
     "change",
     ["log", "missing_artifact", "missing_step", "duplicate_step", "release_claim", "skipped_suite"],

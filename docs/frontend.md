@@ -4,6 +4,8 @@ The local browser application lives in `frontend/`. Optional GitHub sign-in and 
 indexing are available locally; F2 adds installation states and opt-in pinned private
 snapshots. See [GitHub setup](github-setup.md) for configuration and the pending live checks.
 Local mode remains the default and the full connected-analysis release is not complete.
+For the F10 local public-Python release check, use the
+[readiness command and live validation runbook](full-feature-development.md#f10-local-public-python-v1-validation).
 The UI uses React 19, TypeScript,
 Vite 7, Tailwind 4, Phosphor icons, locally packaged IBM Plex fonts, and Motion for
 the evidence drawer. Versions are pinned by `frontend/package-lock.json`.

@@ -75,6 +75,11 @@ adaptation review and real-API scale checks at 390/768/1440 pixels. It also fixe
 keystrokes in catalog search/category inputs. Real-account, live semantic and hosted
 release gates remain explicit; see [the F9 record](docs/full-feature-development.md#f9-local-release-validation).
 
+F10 adds a public-Python readiness command and a live integration validation runbook.
+Run `uv run --project backend --locked python scripts/validate_public_python.py` to
+identify local blockers without provider calls. Real-account and live semantic checks
+remain pending; see [the F10 workflow](docs/full-feature-development.md#f10-local-public-python-v1-validation).
+
 ## Setup
 
 Requires Python 3.12 and [uv](https://docs.astral.sh/uv/). From the repository root:

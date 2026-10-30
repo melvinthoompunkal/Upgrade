@@ -23,6 +23,8 @@ F8 adds owner-scoped lazy production diff review, frozen-test status, evidence/n
 and exact hash-bound patch downloads; optional PR publishing is explicitly disabled.
 F9 adds repeatable local validation, exact source/build/evidence receipts, synthetic
 real-API scale/browser checks and fresh offline adaptation-to-review verification.
+F10 adds a local readiness command and the live public-Python validation workflow;
+real-account and live semantic exit evidence remains pending.
 All fourteen findings from the three original audits have recorded repairs. GitHub
 authorization, repository indexing and opt-in private snapshots are implemented locally;
 real-account validation remains pending. Live general-discovery/relevance/adaptation
@@ -36,8 +38,9 @@ and change review. Neither full release gate is complete. Sections 4–14 retain
 design and remaining requirements, with implemented parts identified explicitly.
 The broader roadmap supersedes the original MVP's account/private-access exclusions.
 F10–F13 organize the remaining work into local public-Python v1 validation, broader
-repository adaptation, multi-user hosting and optional PR publishing. These packages
-are planned; adding them does not change the recorded F0–F9 implementation or evidence.
+repository adaptation, multi-user hosting and optional PR publishing. F10 readiness
+automation is implemented; its live release gates and F11–F13 remain planned. This does
+not change the recorded F0–F9 implementation or evidence.
 
 - [Current implementation and boundaries](#1-current-implementation)
 - [Consolidated audit findings and follow-ups](#2-consolidated-audit-findings)
@@ -68,6 +71,7 @@ are planned; adding them does not change the recorded F0–F9 implementation or 
 | F7 local adaptation | Pinned repository planner, versioned behavior contract, independently prepared frozen function acceptance, ordinary green/assertion red, cumulative constrained production patches, native regression and at most three repairs | Existing synchronous JSON-compatible Python functions and standard MIT source notices only; controlled-provider/real Docker verification; live semantic and broader adapter validation remain pending |
 | F8 change review | Owner-scoped file summaries and bounded lazy unified diffs, protected-test integrity, before/after hashes, evidence/notices and exact patch downloads | Optional PR publishing remains disabled pending permission and live integration checks |
 | F9 local validation | Repeatable backend/lint/build/browser gate, source/build/artifact hashes, optional dependency scans and fresh offline adaptation review; real-API scale and keyboard/timing/memory checks at three viewports | Full connected-analysis, live-model verified-adaptation and hosted release receipts are still required |
+| F10 public-Python readiness | Sanitized configuration, loopback origin, encryption keyring and exact prepared-image checks; current successful F9/Docker evidence required before live readiness | Readiness performs no model/GitHub calls or target execution; real-account, live semantic, cancellation/recovery and release review gates remain pending |
 
 Implementation anchors:
 
@@ -1491,7 +1495,7 @@ listed prerequisites.
 | F7: verified adaptation | Implemented locally for the reviewed synchronous Python function / standard MIT profile; live semantic and broader adapters pending | Real planner, behavior contract, frozen red acceptance, constrained exact patches, actual limits, regression green and capped repairs | F0, F3, F5; F6 for hosting | Controlled-provider Git/negative-path checks and real offline Docker red-to-green receipt; failed/exhausted cases retain evidence |
 | F8: change review and optional PR | Local patch review implemented; optional PR publishing disabled | Lazy bounded diff/review UI, exact patch download, frozen-test integrity and notice exports; optional publishing remains a separate extension | F7; GitHub write permission only for future PR | Hash-matching downloads, bounded paging, changed-receipt rejection and owner isolation; publishing rights/base/idempotency/live checks still required before enabling PR |
 | F9: release validation and docs | Local automation implemented; live/hosted release gates pending | Repeatable strict check runner, source/build/evidence integrity, optional package scans, synthetic real-API performance/accessibility and fresh offline adaptation review; reconciled setup/status docs | All packages needed by the chosen release | Retained dated local manifest/JUnit/measurements; full connected/live semantic and applicable hosted workflows still required |
-| F10: local public-Python v1 | Planned; core features present, live integration validation pending | Complete the real GitHub/Meta browser workflow within the existing supported public Python profiles and repair exposed integration defects | F0–F9 within the local release scope | Fresh real-account discovery/relevance and live-model adaptation receipts, unchanged frozen-test red-to-green/regression evidence, provider cancellation/recovery checks and applicable section 14 acceptance |
+| F10: local public-Python v1 validation | Readiness automation and runbook implemented; live integration validation pending | Check local prerequisites and current F9/Docker evidence, then complete the real GitHub/Meta browser workflow within existing supported public Python profiles and repair exposed defects | F0–F9 within the local release scope | Fresh real-account discovery/relevance and live-model adaptation receipts, unchanged frozen-test red-to-green/regression evidence, provider cancellation/recovery checks and applicable section 14 acceptance |
 | F11: broader repository adaptation | Planned; substantial adapter and private-analysis work | Expand reviewed execution/dependency and acceptance profiles, source-use policies, branch/tag selection and consent-bound private analysis | F3, F6, F7, F8; F10 for release | Independent projects for each added profile, exact pinned inputs, meaningful frozen red-to-green/regression, private-access/consent/revocation checks and an explicit support matrix |
 | F12: hosted product | Planned; major separate engineering phase | Hosted identity/storage/worker deployment, shared ownership and quotas, reviewed execution isolation, monitoring and operational recovery | F1, F2, F6, F9, F10; F11 for any expanded profiles offered | Chosen-deployment isolation/load/fairness, real hard-stop cleanup, backup/restore, key rotation and migration/rollback receipts |
 | F13: optional PR publishing | Planned; optional and disabled | Explicit publishing of a reviewed patch through authorized branches/commits/PRs with fresh rights/base checks and durable idempotency | F2, F7, F8, F10 and current GitHub write rights | Live rights-denial, moved-base, duplicate-request and provider-failure checks; exact published patch/notices and no merge or force push |
@@ -1505,22 +1509,68 @@ already completes the local delivery path. Estimate calendar effort only after t
 additional adapter scope and hosting target are chosen; previous frontend-only
 estimates excluded this account/catalog/adaptation expansion.
 
-### F10: local public-Python v1 validation
+### F10: Local public-Python v1 validation
 
-The planned core local features are present. Complete integration validation and fix
-the defects it exposes without claiming support beyond the existing public Python,
-synchronous function and standard MIT profiles.
+**Status:** local readiness automation and this validation runbook are implemented;
+the live release gate remains open. Existing public Python structural/native-test,
+synchronous JSON-compatible function and standard MIT reuse profiles define the scope.
+F10 validates those profiles and repairs integration defects. Added execution profiles,
+private model analysis, hosting and PR publishing belong to F11–F13.
 
-- Validate real GitHub App sign-in, granted/ungranted repository access, token lifecycle
-  and revocation against the F2 exit requirements.
-- Retain a fresh browser-driven live Meta catalog, both browsing modes and target/goal
-  assessment, followed by a supported live-model adaptation through review/download.
-- Independently verify pinned inputs, counts, usage, notices, patch/artifact hashes,
-  ordinary baseline green, frozen assertion red, unchanged acceptance/regression green
-  and original-target preservation. Include negative authorization/unsupported cases,
-  real provider cancellation and hard-process termination/recovery checks.
-- Repair exposed defects and rerun the applicable F9 and section 14 checks. Controlled
-  responses, seeded catalogs and older receipts do not replace fresh live evidence.
+Run the readiness command from the repository root:
+
+```powershell
+uv run --project backend --locked python scripts/validate_public_python.py
+```
+
+[validate_public_python.py](../scripts/validate_public_python.py) checks configuration
+presence, valid local encryption keys, a loopback origin, Python 3.12, installed
+Playwright dependencies and the runner's exact build inputs/image ID. It only inspects
+the local Docker image; it makes no GitHub/Meta requests and executes no target code.
+It does not change settings or enable private fetching. Missing GitHub configuration
+is a blocker, even when local mode and Meta are usable. Follow
+[GitHub setup](github-setup.md) to prepare the development App and matching callback.
+
+After final implementation/documentation edits, retain a fresh F9 run and supply its
+printed receipt path. Use `--with-audits` when performing the dependency review:
+
+```powershell
+uv run --project backend --locked python scripts/validate_release.py --with-docker --with-audits
+uv run --project backend --locked python scripts/validate_public_python.py --f9-receipt data/release-validation/<id>/receipt.json
+```
+
+Every readiness run writes a unique `data/public-python-validation/<id>/receipt.json`
+with timestamps, exact source hashes, sanitized checks and the accepted F9 receipt digest.
+F9 must pass for the current source bytes, with intact artifacts and successful Docker
+JUnit; a failed run with valid hashes or a run that omitted Docker is insufficient.
+Exit 0 means `ready_for_live_validation`, 2 means missing prerequisites, and 1 means
+invalid settings/evidence, source drift or a command failure. Even exit 0 leaves
+`f10_status: pending_live_validation` and every live gate pending. Configuration presence
+does not prove provider connectivity, registered callback correctness or live semantics.
+
+Execute the following workflow against a real development account and live Meta, using
+the browser actions in [frontend.md](frontend.md). Record the validation start time,
+tested source manifest and environment before submission. Run discovery, assessment
+and adaptation explicitly under their displayed budgets; saved browsing must stay free
+of inference. Do not automate provider account/grant changes against unrelated accounts.
+
+| Gate | Action and required evidence |
+|---|---|
+| GitHub lifecycle | Fresh App sign-in; installation and repository sync; granted/ungranted and foreign-owner rejection; actual refresh, credential rotation and revocation. Retain sanitized identity/access outcomes and confirm stale work cannot reopen/publish. The opt-in private snapshot checks in F2 remain a separate browse/index boundary and never authorize private model analysis. |
+| Public project support | Inspect independent source/target URLs, full SHAs and roots. Record immutable project IDs, resolved SHAs, inventory/manifest hashes, native adapter and complete notices. Explain unsupported roots/dependencies before model admission; keep their rejection evidence. |
+| Discovery and relevance | Create a fresh multi-feature live catalog and a target/goal assessment. Record catalog/revision/run IDs, assessment membership, partial/failed/unassessed counts, usage, returned model/response IDs and limits. Exclude cache-only results from fresh inference evidence. Open both All and Relevant modes, search/page/reload and inspect details; compare saved usage and confirm no new jobs/model calls. |
+| Verified adaptation | Select one supported code-backed assessed feature and submit Verify adaptation. Retain ordinary baseline green, meaningful frozen assertion red, unchanged acceptance green, native regression green, exact scope/dependency checks, actual repair history (including zero), complete notices and original-target preservation. Already-present, unsupported and exhausted outcomes remain distinct and do not establish a verified patch. |
+| Review and downloads | Open Changes, inspect the bounded diff and download the exact patch/evidence. Independently rehash inputs, frozen contracts/tests, captures and patch; match API/download digests to the controller receipt. Check owner isolation and changed/missing-artifact rejection. No publishing is required. |
+| Cancellation and recovery | Cancel an owned in-flight real provider job; record settlement, attempt/usage accounting and publication fencing. Separately terminate only a disposable owned worker while its registered container is active; restart/reconcile using the local operations guide. Record interrupted claims, exact orphan cleanup and no paid replay. An orderly shutdown or a controlled-provider test does not establish hard-stop recovery. |
+| Release review | Repair exposed defects and rerun F9 for the final source bytes. Retain applicable section 14 authorization, negative, dependency and keyboard/viewport checks alongside the live evidence. Record unsupported/untested combinations explicitly. |
+
+Keep runtime evidence under a unique validation directory. Add only sanitized machine
+receipts and hashes under `audit/full-feature-foundations/f10-*`; do not retain session
+cookies, CSRF values, authorization codes, tokens, key material or raw provider errors.
+Link the actual executed commands, counts, artifact locations and tested source hashes
+here when live checks complete. Keep a gate pending when its evidence is absent or
+failed. Controlled responses, seeded catalogs, old receipts and readiness success do
+not replace fresh live evidence or certify hosting.
 
 ### F11: broader repository adaptation
 
@@ -1642,7 +1692,8 @@ F4 supplies persistent discovery and F5 supplies target/goal assessments and hon
 all/relevant browsing on pinned F3 public Python projects. Live discovery and relevance
 validation remain exit checks. F6 lifecycle hardening and F9 repeatable local validation
 are implemented locally; the next release work is the remaining real-account/live
-semantic validation grouped under F10. F11 groups broader execution/acceptance adapters
+semantic validation grouped under F10. Its readiness command and runbook now identify
+local blockers while keeping live gates pending. F11 groups broader execution/acceptance adapters
 and private analysis; F12 owns the hosted product phase.
 F8 supplies local change review and exact downloads, with optional PR publishing disabled.
 F7 supplies local verified adaptation within
