@@ -1,0 +1,44 @@
+{
+  "schema_version": "text-comparison-preregistration-v1",
+  "source_catalog": "d836c94a638541cd930b58cfc7b0055c",
+  "source_revision": 1,
+  "feature_id": "61f42ec82f2cdb39bda52caac38f7d40",
+  "cases": [
+    {
+      "id": "already-present",
+      "existing_target_project": "5464823905aa4d7c9745ddd264d6974d",
+      "url": "https://github.com/pallets/itsdangerous",
+      "commit_sha": "672971d66a2ef9f85151e53283113f33d642dabd",
+      "project_root": "src/itsdangerous",
+      "goal": "Enforce a maximum age when verifying timestamped signed values, rejecting expired and future-dated signatures.",
+      "expected": "already_present"
+    },
+    {
+      "id": "unrelated-goal",
+      "existing_target_project": "edae43e6823d41f8893c957615b20940",
+      "url": "https://github.com/melvinthoompunkal/Graft",
+      "commit_sha": "a386620842c34f1f731bf6ffc91bdb1b101f31ba",
+      "project_root": "graft-frontend/src",
+      "goal": "Improve SVG trace-graph layout collision avoidance and viewport pan/zoom smoothness.",
+      "expected": "less_relevant"
+    },
+    {
+      "id": "conceptual-extension",
+      "existing_target_project": "edae43e6823d41f8893c957615b20940",
+      "url": "https://github.com/melvinthoompunkal/Graft",
+      "commit_sha": "a386620842c34f1f731bf6ffc91bdb1b101f31ba",
+      "project_root": "graft-frontend/src",
+      "goal": "Present expiry information and re-ingestion guidance for server-issued repository sessions when trace or bundle requests expire. Signing secrets and cryptographic verification must remain on the server; the selected frontend scope does not establish backend implementation.",
+      "expected": "potential_gap"
+    },
+    {
+      "id": "insufficient-evidence",
+      "existing_target_project": "482e301588a8439b8c747482fb0db74d",
+      "url": "https://github.com/pallets/itsdangerous",
+      "commit_sha": "672971d66a2ef9f85151e53283113f33d642dabd",
+      "project_root": "docs",
+      "goal": "Within this documentation scope, determine whether production expiry enforcement is established. Documentation advertises behavior but cannot establish a production implementation.",
+      "expected": "unknown"
+    }
+  ]
+}

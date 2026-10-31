@@ -123,6 +123,17 @@ def read_log(evidence: EvidenceSession, events: list[dict]) -> dict:
         "read_bytes": evidence.read_bytes,
         "windows": evidence.windows,
         "tool_events": events,
+        **(
+            {
+                "schema_version": "text-reads-v2",
+                "project_id": evidence.project_id,
+                "project_root": evidence.repo.prefix,
+                "searches": evidence.searches,
+                "coverage": evidence.coverage().model_dump(mode="json"),
+            }
+            if hasattr(evidence, "project_id")
+            else {}
+        ),
         "qualification": "Read windows and static AST indexes do not imply full semantic coverage.",
     }
 
@@ -134,4 +145,5 @@ def feature_refs(card) -> tuple:
         *card.source_tests,
         *card.license_refs,
         *(ref for dependency in card.dependencies for ref in dependency.refs),
+        *(anchor.ref for anchor in getattr(card, "symbol_anchors", ())),
     )

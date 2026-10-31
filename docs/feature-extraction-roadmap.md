@@ -2,11 +2,15 @@
 
 Researched October 30, 2026, America/New_York.
 
-**Status: proposed implementation plan.** This change documents the next architecture;
-it does not enable multilingual analysis in the application. Upgrade code was inspected
+**Status: FE0–FE4 implemented and checked as a local public opt-in preview; FE5 live quality gates remain incomplete.**
+Choose **All languages — text analysis preview** during source inspection. The generic
+default remains disabled until the live semantic gates below pass. Optional parsers
+(FE6) remain disabled. Upgrade code was originally inspected
 at `68294517c3547aa8ecd7e4c7af587a481b34e86b`. Implementation and verification status
 remain in [the development record](full-feature-development.md). This document owns the
 design and acceptance criteria for general feature extraction.
+The [October 31 validation record](full-feature-development.md#feature-extraction-implementation-and-validation)
+retains the regression results, live comparison outcomes and unmet discovery gates.
 
 ## 1. Product decision
 
@@ -314,8 +318,10 @@ feature extraction. The Scrapy example keeps its existing bounded retry contract
 
 ## 7. Implementation sequence
 
-All milestones below are pending. Each should leave a reviewable vertical slice with
-retained checks; FE6 is optional and does not block the text-based release.
+FE0–FE4 now have implementation and controlled checks; see the development record and
+[text-analysis guide](text-analysis.md) for the shipped boundaries. FE5 is not a release
+receipt until the live samples and semantic review pass. FE6 is optional and does not
+block the text-based release.
 
 | Milestone                                 | Deliverable and main code areas                                                                                                                                                          | Exit evidence                                                                                                                                                                         |
 | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

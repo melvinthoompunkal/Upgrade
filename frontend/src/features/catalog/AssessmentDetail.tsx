@@ -70,6 +70,7 @@ export function AssessmentDetail({
               Semantic usefulness is separate from readiness to apply a tested patch. Fit:{' '}
               {value.fit_status}.
             </p>
+            {value.adaptation_reason && <p className="field-help">{value.adaptation_reason}</p>}
             {value.fit && (
               <p>
                 Fit score: {value.fit.total}/100. A rating is a judgment, not a probability of

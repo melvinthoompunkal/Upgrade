@@ -7,7 +7,7 @@ from openai.types.chat import ChatCompletionMessageParam
 from pydantic import BaseModel, ValidationError
 
 from app.contracts import Contract, RepoPath
-from app.errors import EvidenceError, GraftError, ModelOutputError
+from app.errors import BudgetError, EvidenceError, GraftError, ModelOutputError
 from app.evidence_contracts import ReadRange, SearchSymbols
 from app.models.meta_client import MetaClient
 from app.models.schema import response_format, strict_schema
@@ -46,6 +46,10 @@ class EvidenceTools:
             }
             for name, (schema, description) in self.registry.items()
         ]
+
+    def input_reservation(self, messages, definitions, formatting) -> int:
+        """Legacy profiles retain their existing returned-usage accounting."""
+        return 0
 
     def dispatch(self, name: str, raw: str) -> dict:
         if name not in self.registry or len(raw.encode("utf-8")) > 4096:
@@ -106,9 +110,13 @@ class EvidenceTools:
             try:
                 result = self.dispatch(tool.function.name, tool.function.arguments)
                 event.update(status="passed", arguments=json.loads(tool.function.arguments))
+                if result.get("errors"):
+                    event.update(status="partial", errors=result["errors"])
             except GraftError as exc:
                 result = {"error_code": exc.code, "detail": str(exc)}
                 event["status"] = "rejected"
+                event["error_code"] = exc.code
+                event["detail"] = str(exc)[:600]
             self.events.append(event)
             responses.append(
                 {"role": "tool", "tool_call_id": tool.id, "content": json.dumps(result)}
@@ -128,7 +136,7 @@ async def collect_evidence[T: BaseModel](
 ) -> T:
     definitions, formatting = tools.schemas(), response_format(schema)
     for turn in range(1, turns + 1):
-        final = turn == turns
+        final = turn == turns or client.budget.requests >= client.budget.max_requests - 1
         if final:
             messages.append(
                 {
@@ -141,6 +149,12 @@ async def collect_evidence[T: BaseModel](
                     ),
                 }
             )
+        reservation = tools.input_reservation(messages, [] if final else definitions, formatting)
+        if (
+            reservation
+            and client.budget.input_tokens + reservation > client.budget.max_input_tokens
+        ):
+            raise BudgetError("Remaining input allowance cannot admit this bounded text request.")
         completion, call = await client.request(
             stage=f"{stage}.{turn}",
             messages=messages,

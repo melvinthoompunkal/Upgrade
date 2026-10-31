@@ -20,14 +20,18 @@ from app.relevance_contracts import (
     RelevanceJob,
 )
 from app.relevance_types import AssessmentSummary
+from app.text_contracts import TEXT_PROFILE, TEXT_RELEVANCE_VERSIONS, TEXT_VERSIONS
 
 TERMINAL = {"complete", "partial", "failed", "canceled"}
 VERSIONS = {"policy": "relevance-v2", "prompt": "expansion-v1", "fit": "fit-v1"}
 
 
 def assessment_identity(catalog, target, goal, model):
+    generic = catalog.identity.get("profile") == TEXT_PROFILE or (
+        target and target.support.profile_version == TEXT_PROFILE
+    )
     return {
-        **VERSIONS,
+        **(TEXT_RELEVANCE_VERSIONS if generic else VERSIONS),
         "catalog": catalog.id,
         "revision": catalog.revision,
         "source": catalog.identity,
@@ -45,7 +49,8 @@ def assessment_identity(catalog, target, goal, model):
         if target
         else None,
         "baseline": "not_run",
-        "profile_policy": "bounded-python-packet-v1",
+        "profile_policy": "text-comparison-v2" if generic else "bounded-python-packet-v1",
+        **({"text_versions": TEXT_VERSIONS} if generic else {}),
     }
 
 
@@ -171,6 +176,9 @@ class RelevanceStore:
                 target_origin=target.snapshot.origin if target else None,
                 goal=body.goal,
                 identity=identity,
+                schema_version="assessment-v2"
+                if identity["profile_policy"] == "text-comparison-v2"
+                else "assessment-v1",
                 options=body.options,
                 shortlist=shortlist,
                 base_assessment=base.id if base else None,

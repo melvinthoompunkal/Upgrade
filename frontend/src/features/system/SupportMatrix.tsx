@@ -30,6 +30,12 @@ export function SupportMatrix() {
         <div className="mt-4 grid gap-3 text-sm" aria-live="polite">
           <dl className="grid gap-3 break-words">
             <div>
+              <dt className="font-medium">Feature analysis</dt>
+              <dd>
+                {matrix.analysis_profiles?.join(', ')}. {matrix.text_analysis_release}
+              </dd>
+            </div>
+            <div>
               <dt className="font-medium">Prepared runtime</dt>
               <dd>
                 {matrix.runtime_profile}:{' '}

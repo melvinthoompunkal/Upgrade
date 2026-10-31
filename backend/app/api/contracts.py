@@ -12,6 +12,7 @@ from app.evidence_contracts import Coverage, FeatureCard
 from app.project_contracts import ProjectAnalysis, ProjectAnalysisRequest
 from app.relevance_contracts import RelevanceJob
 from app.selection_contracts import AssessmentBatch, FitResult, TargetProfile
+from app.text_contracts import CoverageV2, FeatureCardV2, TextRefV2
 
 RunKind = Literal[
     "fit_select",
@@ -133,7 +134,7 @@ class Artifact(BaseModel):
 
 class Reference(BaseModel):
     id: str
-    ref: Ref
+    ref: TextRefV2 | Ref
     category: str
     excerpt_available: bool = False
 
@@ -174,7 +175,8 @@ class RunDetail(RunSummary):
     target_path_prefix: str | None = None
     original_target_unchanged: bool | None = None
     retry_diagnostic_status: str | None = None
-    features: list[FeatureCard] = Field(default_factory=list)
+    features: list[FeatureCardV2 | FeatureCard] = Field(default_factory=list)
+    text_coverage: CoverageV2 | None = None
     fit: FitResult | None = None
     profile: TargetProfile | None = None
     assessment: AssessmentBatch | None = None
@@ -189,6 +191,8 @@ class RunDetail(RunSummary):
 
 
 class Capabilities(BaseModel):
+    analysis_profiles: list[str] = ["python-evidence-v1"]
+    text_analysis_release: str = "not_available"
     deployment_mode: Literal["local", "hosted"] = "local"
     target_execution_supported: bool = True
     schema_version: str = "1"

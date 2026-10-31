@@ -17,6 +17,11 @@ const entries: CatalogPage['items'] = Array.from({ length: 28 }, (_, index) => (
   assessment: null,
 }))
 const catalog: Catalog = {
+  schema_version: 'catalog-v1',
+  analysis_profile: 'python-evidence-v1',
+  coverage_v2: null,
+  seed_offsets: {},
+  merge_mappings: {},
   id,
   revision: 1,
   base_revision: null,
@@ -65,6 +70,7 @@ const catalog: Catalog = {
 function detail(featureId: string): CatalogFeature {
   return {
     ...entries.find((item) => item.feature_id === featureId)!,
+    schema_version: 'catalog-feature-v1',
     behavior_key: 'capability',
     discovery_refs: [],
     card: null,
@@ -245,9 +251,11 @@ test('failed discovery remains visible even with zero features', async ({ page }
 test('source discovery is an explicit action on a supported pin', async ({ page }) => {
   await mockCatalog(page)
   const project: ProjectSelection = {
+    inventory_policy: 'python-inventory-v1',
     private: false,
     id: 'b'.repeat(32),
     requested: {
+      analysis_profile: 'python-evidence-v1',
       url: 'https://github.com/team/sequence-tools',
       commit_sha: 'c'.repeat(40),
       role: 'source',

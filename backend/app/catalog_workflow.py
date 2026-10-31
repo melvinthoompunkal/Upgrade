@@ -10,13 +10,14 @@ from app.catalog_discovery import (
     merge_candidate,
 )
 from app.catalog_store import CATALOG_LIMIT, TERMINAL, source_identity
-from app.errors import BudgetError, EvidenceError, GraftError
+from app.errors import AnalysisVersionError, BudgetError, EvidenceError, GraftError
 from app.models.budget import ModelBudget
 from app.models.meta_client import MetaClient
-from app.project_adapters import python_facts
 from app.report_publication import publish_json_report
 from app.selection_artifacts import ArtifactStore, prepare_directory, read_log
-from app.tools.evidence import EvidenceSession
+from app.text_contracts import TEXT_PROFILE
+from app.text_evidence import evidence_session
+from app.text_support import require_analysis_profile
 
 
 class DiscoveryRun:
@@ -42,6 +43,13 @@ class DiscoveryRun:
         self.view.returned_model_ids = sorted({c.model_id for c in self.analyzer.client.calls})
         reads = {w["path"] for w in self.analyzer.evidence.windows}
         self.view.examined_paths = sorted(set(self.view.examined_paths) | reads)
+        if self.view.analysis_profile == TEXT_PROFILE:
+            self.view.coverage_v2 = self.analyzer.evidence.coverage(
+                sampled_modules=[
+                    str(Path(p).parent).replace("\\", "/") for p in self.view.processed_paths
+                ],
+                frontier=self.view.remaining_paths,
+            )
         self.catalogs.save(
             self.owner,
             self.view,
@@ -101,18 +109,7 @@ class DiscoveryRun:
                     except EvidenceError as error:
                         receipt.setdefault("rejected_hints", []).append(error.code)
                         self.view.limit_reasons.append("invalid_hint_evidence")
-                for hint, child in candidates:
-                    parents = identities.get(hint.parent_key, set())
-                    parent = next(iter(parents)) if len(parents) == 1 else None
-                    if child and parent and child != parent:
-                        # Reject cycles, including a two-way model-suggested relationship.
-                        ancestor = parent
-                        seen = {child}
-                        while ancestor and ancestor not in seen:
-                            seen.add(ancestor)
-                            ancestor = self.features[ancestor].parent_feature_id
-                        if ancestor is None:
-                            self.features[child].parent_feature_id = parent
+                self.link_parents(candidates, identities)
                 receipt.update(
                     state="completed", candidate_ids=sorted({item[1] for item in candidates})
                 )
@@ -133,6 +130,19 @@ class DiscoveryRun:
                 self.view.limit_reasons.append("job_candidate_limit")
                 break
 
+    def link_parents(self, candidates, identities):
+        """Only unambiguous within-batch parents may be attached; reject cycles."""
+        for hint, child in candidates:
+            parents = identities.get(hint.parent_key, set())
+            parent = next(iter(parents)) if len(parents) == 1 else None
+            if child and parent and child != parent:
+                ancestor, seen = parent, {child}
+                while ancestor and ancestor not in seen:
+                    seen.add(ancestor)
+                    ancestor = self.features[ancestor].parent_feature_id
+                if ancestor is None:
+                    self.features[child].parent_feature_id = parent
+
     async def corroborate(self, requested_ids, progress):
         if budget_exhausted(self.analyzer.client.budget):
             self.view.limit_reasons.append("model_budget")
@@ -143,10 +153,7 @@ class DiscoveryRun:
                 f.feature_id
                 for f in sorted(
                     self.features.values(),
-                    key=lambda f: (
-                        -any(r.path.endswith(".py") for r in f.discovery_refs),
-                        f.feature_id,
-                    ),
+                    key=self.analyzer.trace_priority,
                 )
                 if f.trace_state != "validated"
             ][: self.view.options.trace_limit]
@@ -183,6 +190,10 @@ class DiscoveryRun:
                     }
                 )
                 receipt.update(state="failed", failure_code=error.code, detail=str(error)[:600])
+                if isinstance(error, BudgetError):
+                    self.view.limit_reasons.append("model_budget")
+                    self.save()
+                    return
             self.save()
             if budget_exhausted(self.analyzer.client.budget):
                 self.view.limit_reasons.append("model_budget")
@@ -208,6 +219,7 @@ class DiscoveryRun:
             self.features[existing.feature_id] = merged
             del self.features[traced.feature_id]
             self.removed_ids.add(traced.feature_id)
+            self.view.merge_mappings[traced.feature_id] = existing.feature_id
             for feature in self.features.values():
                 if feature.parent_feature_id == traced.feature_id:
                     feature.parent_feature_id = (
@@ -264,26 +276,46 @@ async def record_catalog(
     evidence, run = None, None
     try:
         selected, repo = projects.open(owner, view.source_project)
+        require_analysis_profile(selected, settings)
         if selected.requested.role != "source" or selected.support.capability == "browse_index":
             raise EvidenceError("Source project no longer supports catalog analysis.")
         if source_identity(selected, view.scope, settings.meta_model_id) != view.identity:
-            raise EvidenceError("Catalog inputs or analyzer versions changed after admission.")
+            raise AnalysisVersionError(
+                "Catalog versions changed. Start a new catalog; no inference ran."
+            )
         report["source"] = repo.snapshot.model_dump(mode="json")
         paths = discovery_paths(repo, view.scope)
         if not paths:
             raise EvidenceError("No supported discovery files exist in the declared scope.")
+        generic = selected.support.profile_version == TEXT_PROFILE
+        view.analysis_profile = selected.support.profile_version
+        view.schema_version = "catalog-v2" if generic else "catalog-v1"
         view.remaining_paths = [path for path in paths if path not in view.processed_paths]
+        if generic:
+            view.remaining_paths = [
+                p
+                for p in paths
+                if view.seed_offsets.get(p, 1)
+                <= next(f.lines for f in repo.inventory.files if f.path == p)
+            ]
         view.excluded_paths = list(repo.inventory.excluded_paths)
-        indexes, errors = python_facts(repo)
-        if errors:
-            raise EvidenceError("Source no longer passes bounded Python analysis preflight.")
-        evidence = EvidenceSession(repo, indexes=indexes)
+        evidence = evidence_session(selected, repo)
+        if generic and view.coverage_v2:
+            evidence.previous_read_ranges = [
+                window.model_dump() for window in view.coverage_v2.read_ranges
+            ]
         if client is None:
             client = MetaClient(settings, budget=budget)
         else:
             client.budget = budget
-        analyzer = CatalogAnalyzer(client, evidence)
-        run = DiscoveryRun(catalogs, owner, view, analyzer, access_epoch=access_epoch)
+        if generic:
+            from app.text_discovery import TextCatalogAnalyzer, TextDiscoveryRun
+
+            analyzer = TextCatalogAnalyzer(client, evidence)
+            run = TextDiscoveryRun(catalogs, owner, view, analyzer, access_epoch=access_epoch)
+        else:
+            analyzer = CatalogAnalyzer(client, evidence)
+            run = DiscoveryRun(catalogs, owner, view, analyzer, access_epoch=access_epoch)
         view.state = "running"
         run.save()
         artifacts.json("source-inventory.json", repo.inventory.model_dump(mode="json"))
@@ -310,6 +342,11 @@ async def record_catalog(
         if len(run.features) >= CATALOG_LIMIT:
             view.limit_reasons.append("catalog_entry_limit")
         view.limit_reasons = sorted(set(view.limit_reasons) | set(repo.inventory.limits_reached))
+        if generic:
+            coverage = evidence.coverage(frontier=view.remaining_paths)
+            if coverage.partially_read_files:
+                view.limit_reasons.append("unread_file_ranges")
+            view.limit_reasons = sorted(set(view.limit_reasons) | evidence.limits)
         view.unexamined_areas = sorted(
             {f.path for f in repo.inventory.files} - set(view.examined_paths)
         )
@@ -329,7 +366,10 @@ async def record_catalog(
             error_code=view.failure_code, detail="Source discovery stopped; saved batches remain."
         )
         # Access loss must not publish any newly derived content.
-        catalogs.save(owner, view, access_epoch=access_epoch)
+        if run:
+            run.save()
+        else:
+            catalogs.save(owner, view, access_epoch=access_epoch)
     finally:
         if client is not None:
             report.update(
@@ -353,6 +393,16 @@ async def record_catalog(
         usage=view.usage,
         analyzed_feature_count=view.counts.deeply_traced,
     )
+    if run and view.analysis_profile == TEXT_PROFILE:
+        try:
+            artifacts.json(
+                "catalog-features.json",
+                [feature.model_dump(mode="json") for feature in run.features.values()],
+            )
+        except (GraftError, OSError, ValueError, TypeError):
+            report.setdefault("warnings", []).append(
+                "The saved feature export could not be published."
+            )
     try:
         artifacts.json("catalog-revision.json", view.model_dump(mode="json"))
     except (GraftError, OSError, ValueError, TypeError):

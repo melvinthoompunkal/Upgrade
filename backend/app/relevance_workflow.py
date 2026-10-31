@@ -2,16 +2,16 @@
 
 from app.api.storage import now
 from app.catalog_store import CatalogStore, source_identity
-from app.errors import EvidenceError, GraftError
+from app.errors import AnalysisVersionError, EvidenceError, GraftError
 from app.models.budget import ModelBudget
 from app.models.meta_client import MetaClient
-from app.project_adapters import python_facts
 from app.relevance_analysis import assess_feature, target_context
 from app.relevance_contracts import FeatureAssessment
 from app.relevance_store import TERMINAL, assessment_identity
 from app.report_publication import publish_json_report
 from app.selection_artifacts import ArtifactStore, prepare_directory, read_log
-from app.tools.evidence import EvidenceSession
+from app.text_evidence import TextEvidenceSession, evidence_session
+from app.text_support import require_analysis_profile
 
 
 async def record_relevance(
@@ -53,6 +53,11 @@ async def record_relevance(
         }
         view.cumulative_usage = {k: v + previous_usage.get(k, 0) for k, v in view.usage.items()}
         view.returned_model_ids = sorted({call.model_id for call in client.calls}) if client else []
+        view.coverage_v2 = {
+            role: session.coverage()
+            for role, session in sessions.items()
+            if isinstance(session, TextEvidenceSession)
+        }
         assessments.save(owner, view, feature, access_epoch=access_epoch)
 
     try:
@@ -63,7 +68,9 @@ async def record_relevance(
             source_identity(source_pin, catalog.scope, catalog.identity["requested_model"])
             != catalog.identity
         ):
-            raise EvidenceError("Source pin or catalog analyzer versions changed after discovery.")
+            raise AnalysisVersionError(
+                "Source versions changed. Start a new catalog and assessment."
+            )
         target_pin, target_repo = (
             projects.open(owner, view.target_project) if view.target_project else (None, None)
         )
@@ -71,19 +78,17 @@ async def record_relevance(
             assessment_identity(catalog, target_pin, view.goal, settings.meta_model_id)
             != view.identity
         ):
-            raise EvidenceError("Assessment inputs or policy versions changed after admission.")
+            raise AnalysisVersionError("Assessment versions changed. Start a new assessment.")
         for role, pin, repo in (
             ("source", source_pin, source_repo),
             ("target", target_pin, target_repo),
         ):
             if repo is None:
                 continue
+            require_analysis_profile(pin, settings)
             if pin.support.capability == "browse_index":
                 raise EvidenceError("Project no longer supports Python evidence analysis.")
-            indexes, errors = python_facts(repo)
-            if errors:
-                raise EvidenceError("Project failed current Python analysis preflight.")
-            sessions[role] = EvidenceSession(repo, indexes=indexes)
+            sessions[role] = evidence_session(pin, repo)
             report[role] = repo.snapshot.model_dump(mode="json")
             artifacts.json(f"{role}-inventory.json", repo.inventory.model_dump(mode="json"))
             artifacts.json(
@@ -104,7 +109,15 @@ async def record_relevance(
         view.state = "running"
         checkpoint()
         target = sessions.get("target")
-        context = target_context(target, view.goal)
+        generic = any(isinstance(s, TextEvidenceSession) for s in sessions.values())
+        if generic:
+            from app.text_relevance import assess_text_feature, text_target_context
+
+            context = text_target_context(target, view.goal)
+            assessor = assess_text_feature
+        else:
+            context = target_context(target, view.goal)
+            assessor = assess_feature
         for feature_id in view.shortlist:
             try:
                 budget.check()
@@ -112,7 +125,7 @@ async def record_relevance(
                 progress(
                     "selection", "Assessing a disclosed feature against the pinned goal and target."
                 )
-                result = await assess_feature(
+                result = await assessor(
                     client,
                     sessions["source"],
                     target,
@@ -123,6 +136,7 @@ async def record_relevance(
                 )
             except GraftError as error:
                 result = FeatureAssessment(
+                    schema_version="feature-assessment-v2" if generic else "feature-assessment-v1",
                     feature_id=feature_id,
                     relevance_status="assessment_failed",
                     failure_code=error.code,

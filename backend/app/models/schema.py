@@ -1,5 +1,6 @@
-"""Fail locally for schemas outside the object/array subset used by our Meta contracts."""
+"""Fail locally for invalid response names and unsupported Meta strict schema shapes."""
 
+import re
 from typing import Any
 
 from pydantic import BaseModel, ValidationError
@@ -61,6 +62,10 @@ def strict_schema(schema: type[BaseModel]) -> dict[str, Any]:
 
 
 def response_format(schema: type[BaseModel]) -> dict[str, Any]:
+    if not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", schema.__name__):
+        raise ConfigurationError(
+            "Meta response-format names require 1..64 letters, digits, underscores or dashes."
+        )
     return {
         "type": "json_schema",
         "json_schema": {"name": schema.__name__, "strict": True, "schema": strict_schema(schema)},

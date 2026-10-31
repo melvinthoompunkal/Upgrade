@@ -22,6 +22,8 @@ from app.errors import UnsupportedSourceError
 from app.hosting.release import released_profiles, require_job
 from app.jobs.policy import operator_allowed
 from app.projects import project_store
+from app.text_contracts import TEXT_PROFILE
+from app.text_support import analysis_profiles
 from app.tools.git import Git
 from app.tools.runner import PROJECT_ROOT
 from app.workflow_inputs import require_crawler_source
@@ -41,6 +43,10 @@ def capabilities(request: Request):
     settings = request.app.state.settings
     hosted = settings.deployment_mode == "hosted"
     return Capabilities(
+        analysis_profiles=analysis_profiles(settings),
+        text_analysis_release="opt_in_preview_live_gates_pending"
+        if TEXT_PROFILE in analysis_profiles(settings)
+        else "not_available",
         kinds=list(released_profiles(settings))
         if hosted
         else [
@@ -58,7 +64,7 @@ def capabilities(request: Request):
         publishing_enabled=settings.github_publishing_enabled and not hosted,
         scope="Public Python analysis only; target execution is unavailable."
         if hosted
-        else "Public Python project structure; optional native baseline and crawler example.",
+        else "Public text analysis preview; reviewed Python structure and execution profiles.",
         deployment_mode=settings.deployment_mode,
         target_execution_supported=not hosted,
         model_configured=settings.model_configured,

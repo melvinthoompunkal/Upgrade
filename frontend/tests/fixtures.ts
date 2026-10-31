@@ -142,6 +142,8 @@ export const fixtureRun: Run = {
   warnings: [],
 }
 export const capabilities: Capabilities = {
+  analysis_profiles: ['python-evidence-v1', 'repository-text-v1'],
+  text_analysis_release: 'opt_in_preview_live_gates_pending',
   deployment_mode: 'local',
   target_execution_supported: true,
   publishing_enabled: false,

@@ -1,0 +1,40 @@
+{
+  "schema_version": "feature-extraction-preregistration-v1",
+  "cases": [
+    {
+      "id": "openclaw-gateway",
+      "url": "https://github.com/openclaw/openclaw",
+      "commit_sha": "dda109cacbbefd3a6dfcc442ac97e2107b6c62c8",
+      "project_root": "src/gateway",
+      "expected": [
+        {"id": "gateway-startup", "behavior": "Load the gateway implementation lazily with bootstrap timing", "path": "src/gateway/server.ts", "start_line": 26, "end_line": 31},
+        {"id": "method-composition", "behavior": "Compose core and plugin method descriptors", "path": "src/gateway/server-methods.ts", "start_line": 85, "end_line": 126}
+      ]
+    },
+    {
+      "id": "graft-frontend",
+      "url": "https://github.com/melvinthoompunkal/Graft",
+      "commit_sha": "a386620842c34f1f731bf6ffc91bdb1b101f31ba",
+      "project_root": "graft-frontend/src",
+      "expected": [
+        {"id": "ingest-session", "behavior": "Submit repository ingestion and initialize feature/session state", "path": "graft-frontend/src/App.jsx", "start_line": 76, "end_line": 107},
+        {"id": "trace-selected-feature", "behavior": "Request and save a trace for the selected feature and query", "path": "graft-frontend/src/App.jsx", "start_line": 109, "end_line": 139},
+        {"id": "refresh-session", "behavior": "Refresh saved repository metadata and feature selection", "path": "graft-frontend/src/App.jsx", "start_line": 141, "end_line": 167},
+        {"id": "download-bundle", "behavior": "Download a feature bundle using its response filename", "path": "graft-frontend/src/App.jsx", "start_line": 169, "end_line": 206},
+        {"id": "reset-session", "behavior": "Delete the session and reset workspace state", "path": "graft-frontend/src/App.jsx", "start_line": 208, "end_line": 235},
+        {"id": "map-layout", "behavior": "Lay out trace nodes, consecutive-file groups and edges for a repository map", "path": "graft-frontend/src/components/RepoMapPage.jsx", "start_line": 46, "end_line": 108}
+      ]
+    },
+    {
+      "id": "itsdangerous-python",
+      "url": "https://github.com/pallets/itsdangerous",
+      "commit_sha": "672971d66a2ef9f85151e53283113f33d642dabd",
+      "project_root": "src/itsdangerous",
+      "expected": [
+        {"id": "signing", "behavior": "Sign and verify values with keyed digests", "path": "src/itsdangerous/signer.py", "start_line": 215, "end_line": 256},
+        {"id": "serialization", "behavior": "Serialize and deserialize signed payloads", "path": "src/itsdangerous/serializer.py", "start_line": 309, "end_line": 380},
+        {"id": "timestamp-signing", "behavior": "Attach and check timestamps for signed payloads", "path": "src/itsdangerous/timed.py", "start_line": 45, "end_line": 157}
+      ]
+    }
+  ]
+}

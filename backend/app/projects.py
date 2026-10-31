@@ -4,7 +4,7 @@ import hashlib
 import os
 import shutil
 import stat
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, Request
@@ -28,6 +28,15 @@ from app.project_refs import RefRequest, ResolvedRef, resolve_ref
 from app.project_support import inspect_project
 from app.selection_artifacts import prepare_directory
 from app.support_matrix import SupportMatrix
+from app.text_contracts import (
+    LEGACY_POLICY,
+    LEGACY_TEXT_POLICY,
+    TEXT_POLICY,
+    TEXT_PROFILE,
+    TextInventory,
+)
+from app.text_inventory import MANIFESTS
+from app.text_support import analysis_profiles
 from app.tools.repositories import RepositoryManager
 from app.tools.runner_artifacts import physical_root
 
@@ -35,7 +44,15 @@ router = APIRouter(prefix="/api/projects")
 
 
 def inventory_digest(repo) -> str:
-    return hashlib.sha256(repo.inventory.model_dump_json().encode()).hexdigest()
+    # v1 serialized text entries through InventoryFile and omitted subclass metadata.
+    # Preserve those historical identities while v2 binds the complete text contract.
+    exclude = (
+        {"files": {"__all__": {"role", "classification_basis", "blob_oid", "lines"}}}
+        if isinstance(repo.inventory, TextInventory)
+        and repo.inventory.policy_version == LEGACY_TEXT_POLICY
+        else None
+    )
+    return hashlib.sha256(repo.inventory.model_dump_json(exclude=exclude).encode()).hexdigest()
 
 
 class ProjectStore:
@@ -131,7 +148,8 @@ class ProjectStore:
             raise
 
     def _fetch(self, directory: Path, inputs: ProjectRequest) -> ProjectSelection:
-        manager = RepositoryManager(directory / "repositories")
+        policy = TEXT_POLICY if inputs.analysis_profile == TEXT_PROFILE else LEGACY_POLICY
+        manager = RepositoryManager(directory / "repositories", inventory_policy=policy)
         repo = manager.public_snapshot(
             inputs.url, inputs.commit_sha, role=inputs.role, prefix=inputs.project_root
         )
@@ -148,6 +166,7 @@ class ProjectStore:
             snapshot=repo.snapshot,
             support=inspect_project(repo),
             inventory_sha256=inventory_digest(repo),
+            inventory_policy=policy,
             root_choices=sorted(
                 {
                     (
@@ -160,13 +179,27 @@ class ProjectStore:
             ),
             created_at=now(),
         )
+        if isinstance(repo.inventory, TextInventory):
+            hints = {repo.prefix}
+            for entry in repo.inventory.files:
+                if PurePosixPath(entry.path).name in MANIFESTS:
+                    hints.add(str(PurePosixPath(entry.path).parent) if "/" in entry.path else "")
+                relative = entry.path[len(repo.prefix) + 1 :] if repo.prefix else entry.path
+                if entry.role == "source" and "/" in relative:
+                    module = relative.split("/", 1)[0]
+                    hints.add(f"{repo.prefix}/{module}" if repo.prefix else module)
+            selection.root_choices = [repo.prefix, *sorted(hints - {repo.prefix})[:39]]
         return selection
 
     def open(self, owner: str, project_id: str):
         selected = self.get(owner, project_id)
         require_project_analysis(selected)
         inputs = selected.requested
-        manager = RepositoryManager(self.root / selected.id / "repositories", existing=True)
+        manager = RepositoryManager(
+            self.root / selected.id / "repositories",
+            existing=True,
+            inventory_policy=selected.inventory_policy,
+        )
         repo = manager.reopen(
             role=inputs.role, url=inputs.url, sha=inputs.commit_sha, prefix=inputs.project_root
         )
@@ -190,6 +223,8 @@ class ProjectStore:
             require_project_analysis(selected)
             if selected.requested.role != role:
                 raise HTTPException(422, f"Select a project pinned for the {role} role.")
+            if selected.support.profile_version == TEXT_PROFILE:
+                raise HTTPException(409, "Structure only requires the Python evidence profile.")
             if selected.support.capability == "browse_index":
                 raise HTTPException(
                     409, "This project supports browsing only. Review its preflight."
@@ -229,6 +264,8 @@ def resolve_project_ref(body: RefRequest, request: Request):
 def support_matrix(request: Request):
     if request.app.state.settings.deployment_mode == "hosted":
         return SupportMatrix(
+            analysis_profiles=["python-evidence-v1"],
+            text_analysis_release="not_available",
             runtime_profile="public-python-analysis-only",
             runtime_packages={},
             native_adapters=[],
@@ -236,6 +273,10 @@ def support_matrix(request: Request):
             source_use_profiles={},
         )
     return SupportMatrix(
+        analysis_profiles=analysis_profiles(request.app.state.settings),
+        text_analysis_release="local-public-opt-in-preview; live semantic gates pending"
+        if TEXT_PROFILE in analysis_profiles(request.app.state.settings)
+        else "not_available",
         private_preflight_enabled=request.app.state.settings.github_private_fetch_enabled,
         publishing_enabled=request.app.state.settings.github_publishing_enabled,
     )
@@ -261,6 +302,8 @@ def inspect_snapshot(snapshot_id: str, request: Request):
 def pin_project(body: ProjectRequest, request: Request):
     require_local_origin(request)
     require_release(request.app.state.settings)
+    if body.analysis_profile not in analysis_profiles(request.app.state.settings):
+        raise HTTPException(409, "Text analysis preview is available for local public URLs only.")
     try:
         with ProcessLock(execution_lock_path(request.app.state.settings)):
             return project_store(request).create(request.state.principal.owner_id, body)

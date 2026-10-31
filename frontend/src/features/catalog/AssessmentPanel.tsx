@@ -182,7 +182,17 @@ export function AssessmentPanel({
                   Use the saved target snapshot
                 </label>
               )}
-              {!useSavedTarget && <ProjectPin role="target" onPin={setTarget} />}
+              {!useSavedTarget && (
+                <ProjectPin
+                  role="target"
+                  onPin={setTarget}
+                  initialProfile={
+                    catalog.analysis_profile === 'repository-text-v1'
+                      ? 'repository-text-v1'
+                      : 'python-evidence-v1'
+                  }
+                />
+              )}
             </>
           )}
           {assessment && !sameContext && (

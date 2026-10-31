@@ -8,6 +8,9 @@ from app.source_use import SOURCE_USE_PROFILES
 
 class SupportMatrix(BaseModel):
     schema_version: str = "repository-support-v2"
+    analysis_profiles: list[str] = ["python-evidence-v1", "repository-text-v1"]
+    text_analysis_release: str = "local-public-opt-in-preview; live semantic gates pending"
+    text_analysis_parsers: str = "disabled; exact text citations remain available"
     runtime_profile: str = PROFILE["id"]
     runtime_packages: dict[str, str] = PROFILE["runtime_packages"]
     native_adapters: list[str] = PROFILE["native_adapters"]

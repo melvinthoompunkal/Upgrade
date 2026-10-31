@@ -29,6 +29,14 @@ export function ProjectRun() {
     capabilities?.worker_available &&
     workflowEnabled(capabilities, 'project_analysis')
 
+  function changeMode(nextStructure: boolean) {
+    if (nextStructure === structureOnly) return
+    setSource(null)
+    setTarget(null)
+    setBaseline(false)
+    setParams(nextStructure ? { view: 'structure' } : {})
+  }
+
   async function submit(event: FormEvent) {
     event.preventDefault()
     if (!structureOnly || !source || !ready || pending.current) return
@@ -64,8 +72,8 @@ export function ProjectRun() {
       <div className="page-intro">
         <h1>Break a repository into features.</h1>
         <p>
-          Discover what a public Python repository does, how its capabilities work, and where they
-          live in the code. Add your own project later to explore useful extensions.
+          Discover what a public repository does, how its capabilities work, and where they live in
+          the code. Add your own project later to explore useful extensions.
         </p>
         <Link className="text-action" to="/example">
           Try the crawler example <ArrowRight size={16} />
@@ -77,7 +85,7 @@ export function ProjectRun() {
             type="button"
             className={!structureOnly ? 'button-primary' : 'button-secondary'}
             aria-pressed={!structureOnly}
-            onClick={() => setParams({})}
+            onClick={() => changeMode(false)}
           >
             Feature discovery
           </button>
@@ -85,7 +93,7 @@ export function ProjectRun() {
             type="button"
             className={structureOnly ? 'button-primary' : 'button-secondary'}
             aria-pressed={structureOnly}
-            onClick={() => setParams({ view: 'structure' })}
+            onClick={() => changeMode(true)}
           >
             Structure only
           </button>
@@ -93,13 +101,18 @@ export function ProjectRun() {
         <h2>{structureOnly ? 'Inspect project structure' : 'Choose a source repository'}</h2>
         <p className="mb-5 mt-2 text-sm text-muted">
           {structureOnly
-            ? 'Inspect definitions, imports and test locations without model calls. This does not discover semantic features.'
+            ? 'Inspect Python definitions, imports and test locations without model calls. Requires the reviewed Python profile; this does not discover semantic features.'
             : 'Enter a public repository URL to inspect its latest snapshot, then discover its code-backed capabilities. No target project is required.'}
         </p>
         {session?.mode === 'local' && (
           <p className="field-help mb-4">Local workspace. No GitHub App or sign-in needed.</p>
         )}
-        <ProjectPin role="source" onPin={setSource} />
+        <ProjectPin
+          key={String(structureOnly)}
+          role="source"
+          onPin={setSource}
+          structureOnly={structureOnly}
+        />
         {!structureOnly ? (
           <CatalogStart source={source} />
         ) : (
@@ -120,6 +133,7 @@ export function ProjectRun() {
             {includeTarget && (
               <ProjectPin
                 role="target"
+                structureOnly
                 onPin={(project) => {
                   setTarget(project)
                   setBaseline(false)

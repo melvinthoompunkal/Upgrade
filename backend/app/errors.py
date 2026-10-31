@@ -46,6 +46,10 @@ class EvidenceError(GraftError):
     code = "invalid_evidence"
 
 
+class AnalysisVersionError(EvidenceError):
+    code = "analysis_versions_changed_start_new"
+
+
 class UnsupportedTargetError(GraftError):
     code = "unsupported_target"
 

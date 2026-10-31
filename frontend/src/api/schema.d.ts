@@ -1069,6 +1069,16 @@ export interface components {
       identity: {
         [key: string]: unknown
       }
+      /**
+       * Schema Version
+       * @default assessment-v1
+       * @enum {string}
+       */
+      schema_version: 'assessment-v1' | 'assessment-v2'
+      /** Coverage V2 */
+      coverage_v2: {
+        [key: string]: components['schemas']['CoverageV2']
+      }
       options: components['schemas']['AssessmentOptions']
       /** Shortlist */
       shortlist: string[]
@@ -1127,6 +1137,18 @@ export interface components {
     }
     /** Capabilities */
     Capabilities: {
+      /**
+       * Analysis Profiles
+       * @default [
+       *       "python-evidence-v1"
+       *     ]
+       */
+      analysis_profiles: string[]
+      /**
+       * Text Analysis Release
+       * @default not_available
+       */
+      text_analysis_release: string
       /**
        * Deployment Mode
        * @default local
@@ -1278,6 +1300,27 @@ export interface components {
         [key: string]: unknown
       }
       /**
+       * Schema Version
+       * @default catalog-v1
+       * @enum {string}
+       */
+      schema_version: 'catalog-v1' | 'catalog-v2'
+      /**
+       * Analysis Profile
+       * @default python-evidence-v1
+       * @enum {string}
+       */
+      analysis_profile: 'python-evidence-v1' | 'repository-text-v1'
+      coverage_v2: components['schemas']['CoverageV2'] | null
+      /** Seed Offsets */
+      seed_offsets: {
+        [key: string]: number
+      }
+      /** Merge Mappings */
+      merge_mappings: {
+        [key: string]: string
+      }
+      /**
        * State
        * @default queued
        * @enum {string}
@@ -1424,6 +1467,27 @@ export interface components {
       unexamined_areas: components['schemas']['FrozenList_str_']
       limits_reached: components['schemas']['FrozenList_str_']
     }
+    /** CoverageV2 */
+    CoverageV2: {
+      /**
+       * Schema Version
+       * @default coverage-v2
+       * @constant
+       */
+      schema_version: 'coverage-v2'
+      /** Tree Enumeration Complete */
+      tree_enumeration_complete: boolean
+      admitted_paths: components['schemas']['FrozenList_str_']
+      deferred_paths: components['schemas']['FrozenList_str_']
+      excluded_paths: components['schemas']['FrozenList_str_']
+      sampled_modules: components['schemas']['FrozenList_str_']
+      examined_paths: components['schemas']['FrozenList_str_']
+      read_ranges: components['schemas']['FrozenList_ReadWindowV2_']
+      partially_read_files: components['schemas']['FrozenList_UnreadFile_']
+      unexamined_areas: components['schemas']['FrozenList_str_']
+      remaining_frontier: components['schemas']['FrozenList_str_']
+      limits_reached: components['schemas']['FrozenList_str_']
+    }
     /** Criterion */
     Criterion: {
       /** Rating */
@@ -1442,6 +1506,22 @@ export interface components {
        */
       kind: 'stdlib' | 'runtime' | 'test'
       refs: components['schemas']['FrozenList_Ref__MinLen_min_length_1_']
+    }
+    /** DependencyObservationV2 */
+    DependencyObservationV2: {
+      /** Name */
+      name: string
+      /**
+       * Kind
+       * @enum {string}
+       */
+      kind: 'import_text' | 'manifest_declaration' | 'inferred_relationship'
+      /**
+       * Resolution
+       * @enum {string}
+       */
+      resolution: 'observed' | 'unresolved'
+      refs: components['schemas']['FrozenList_TextRefV2__MinLen_min_length_1_']
     }
     /** DiffLine */
     DiffLine: {
@@ -1567,7 +1647,8 @@ export interface components {
     }
     /** EvidenceExcerpt */
     EvidenceExcerpt: {
-      ref: components['schemas']['Ref']
+      /** Ref */
+      ref: components['schemas']['TextRefV2'] | components['schemas']['Ref']
       /** Text */
       text: string
       /** Sha256 */
@@ -1588,6 +1669,27 @@ export interface components {
       uncertainties: components['schemas']['FrozenList_Annotated_str__FieldInfo_annotation_NoneType__required_True__metadata__MinLen_min_length_1___MaxLen_max_length_600______MinLen_min_length_1_']
       source_refs: components['schemas']['FrozenList_Ref__MinLen_min_length_1_']
       target_refs: components['schemas']['FrozenList_Ref__MinLen_min_length_1_']
+    }
+    /** ExpansionRecommendationV2 */
+    ExpansionRecommendationV2: {
+      /** Source Capability */
+      source_capability: string
+      /** Existing Target Behavior */
+      existing_target_behavior: string
+      /** Proposed Extension */
+      proposed_extension: string
+      /** Benefit */
+      benefit: string
+      integration_points: components['schemas']['FrozenList_IntegrationPointV2__MinLen_min_length_1_']
+      constraints: components['schemas']['FrozenList_Annotated_str__FieldInfo_annotation_NoneType__required_True__metadata__MinLen_min_length_1___MaxLen_max_length_600______MaxLen_max_length_8_']
+      uncertainties: components['schemas']['FrozenList_Annotated_str__FieldInfo_annotation_NoneType__required_True__metadata__MinLen_min_length_1___MaxLen_max_length_600______MinLen_min_length_1_']
+      source_refs: components['schemas']['FrozenList_Union_TextRefV2__Ref___MinLen_min_length_1_']
+      target_refs: components['schemas']['FrozenList_Union_TextRefV2__Ref___MinLen_min_length_1_']
+      /**
+       * Transfer Mode
+       * @enum {string}
+       */
+      transfer_mode: 'conceptual_cross_language' | 'same_language_idea'
     }
     /** ExpansionSummary */
     ExpansionSummary: {
@@ -1625,6 +1727,14 @@ export interface components {
        * @enum {string}
        */
       fit_status: 'unassessed' | 'ineligible' | 'eligible'
+      /**
+       * Schema Version
+       * @default feature-assessment-v1
+       * @enum {string}
+       */
+      schema_version: 'feature-assessment-v1' | 'feature-assessment-v2'
+      /** Adaptation Reason */
+      adaptation_reason: string | null
       /** Feature Id */
       feature_id: string
       fit: components['schemas']['CandidateScore'] | null
@@ -1632,8 +1742,16 @@ export interface components {
       gates: components['schemas']['GateEvidence'][]
       /** Rejections */
       rejections: string[]
-      judgment: components['schemas']['RelevanceJudgment'] | null
-      expansion: components['schemas']['ExpansionRecommendation'] | null
+      /** Judgment */
+      judgment:
+        | components['schemas']['SemanticJudgmentV2']
+        | components['schemas']['RelevanceJudgment']
+        | null
+      /** Expansion */
+      expansion:
+        | components['schemas']['ExpansionRecommendationV2']
+        | components['schemas']['ExpansionRecommendation']
+        | null
       /** Failure Code */
       failure_code: string | null
       /** Evidence */
@@ -1669,6 +1787,53 @@ export interface components {
        */
       evidence_status: 'supported' | 'partial' | 'unsupported'
     }
+    /** FeatureCardV2 */
+    FeatureCardV2: {
+      /**
+       * Schema Version
+       * @constant
+       */
+      schema_version: 'feature-card-v2'
+      /**
+       * Analysis Profile
+       * @constant
+       */
+      analysis_profile: 'repository-text-v1'
+      /** Feature Id */
+      feature_id: string
+      /** Name */
+      name: string
+      /** Behavior */
+      behavior: string
+      entry_points: components['schemas']['FrozenList_TextRefV2__MaxLen_max_length_8_']
+      implementation: components['schemas']['FrozenList_TextRefV2__MaxLen_max_length_12_']
+      dependencies: components['schemas']['FrozenList_DependencyObservationV2__MaxLen_max_length_8_']
+      source_tests: components['schemas']['FrozenList_TextRefV2__MaxLen_max_length_8_']
+      acceptance_behaviors: components['schemas']['FrozenList_str__MinLen_min_length_1_']
+      /** Transferable Slice */
+      transferable_slice: string
+      excluded_behaviors: components['schemas']['FrozenList_str__MaxLen_max_length_8_']
+      /** License Spdx */
+      license_spdx: string | null
+      license_refs: components['schemas']['FrozenList_TextRefV2__MaxLen_max_length_4_']
+      /**
+       * Evidence Status
+       * @enum {string}
+       */
+      evidence_status: 'supported' | 'partial' | 'unsupported'
+      /**
+       * Structural Validation
+       * @enum {string}
+       */
+      structural_validation: 'text_only' | 'parser_validated' | 'mixed'
+      symbol_anchors: components['schemas']['FrozenList_SymbolAnchorV2__MaxLen_max_length_8_']
+      /**
+       * Execution Verification
+       * @constant
+       */
+      execution_verification: 'not_run'
+      missing_evidence: components['schemas']['FrozenList_str__MaxLen_max_length_12_']
+    }
     /** FeatureDetail */
     FeatureDetail: {
       /** Feature Id */
@@ -1698,11 +1863,18 @@ export interface components {
        */
       trace_state: 'untraced' | 'validated' | 'failed'
       assessment: components['schemas']['AssessmentSummary'] | null
+      /**
+       * Schema Version
+       * @default catalog-feature-v1
+       * @enum {string}
+       */
+      schema_version: 'catalog-feature-v1' | 'catalog-feature-v2'
       /** Behavior Key */
       behavior_key: string
       /** Discovery Refs */
-      discovery_refs: components['schemas']['Ref'][]
-      card: components['schemas']['FeatureCard'] | null
+      discovery_refs: (components['schemas']['TextRefV2'] | components['schemas']['Ref'])[]
+      /** Card */
+      card: components['schemas']['FeatureCardV2'] | components['schemas']['FeatureCard'] | null
       /** Evidence */
       evidence: components['schemas']['EvidenceExcerpt'][]
       /** Examined Paths */
@@ -1810,19 +1982,38 @@ export interface components {
     'FrozenList_Annotated_str__FieldInfo_annotation_NoneType__required_True__metadata___PydanticGeneralMetadata_pattern____a-z__a-z0-9_-__0_63_________MaxLen_max_length_3_': string[]
     FrozenList_CandidateAssessment__MinLen_min_length_1_: components['schemas']['CandidateAssessment'][]
     FrozenList_CandidateScore__MinLen_min_length_1_: components['schemas']['CandidateScore'][]
+    FrozenList_DependencyObservationV2__MaxLen_max_length_8_: components['schemas']['DependencyObservationV2'][]
     FrozenList_Dependency_: components['schemas']['Dependency'][]
     FrozenList_GateResult__MinLen_min_length_10_: components['schemas']['GateResult'][]
+    FrozenList_IntegrationPointV2__MinLen_min_length_1_: components['schemas']['IntegrationPointV2'][]
     FrozenList_IntegrationPoint__MinLen_min_length_1_: components['schemas']['IntegrationPoint'][]
+    FrozenList_LineInterval_: components['schemas']['LineInterval'][]
     FrozenList_ObservedCase__MinLen_min_length_1_: components['schemas']['ObservedCase'][]
     FrozenList_ObservedGapEvidence_: components['schemas']['ObservedGapEvidence'][]
+    FrozenList_ReadWindowV2_: components['schemas']['ReadWindowV2'][]
     FrozenList_Ref_: components['schemas']['Ref'][]
     FrozenList_Ref__MaxLen_max_length_12_: components['schemas']['Ref'][]
     FrozenList_Ref__MinLen_min_length_1_: components['schemas']['Ref'][]
     FrozenList_RejectedCandidate_: components['schemas']['RejectedCandidate'][]
+    FrozenList_SymbolAnchorV2__MaxLen_max_length_8_: components['schemas']['SymbolAnchorV2'][]
     FrozenList_TargetCapability_: components['schemas']['TargetCapability'][]
     FrozenList_TargetGap_: components['schemas']['TargetGap'][]
     FrozenList_TargetModule__MinLen_min_length_1_: components['schemas']['TargetModule'][]
+    FrozenList_TextRefV2__MaxLen_max_length_12_: components['schemas']['TextRefV2'][]
+    FrozenList_TextRefV2__MaxLen_max_length_4_: components['schemas']['TextRefV2'][]
+    FrozenList_TextRefV2__MaxLen_max_length_8_: components['schemas']['TextRefV2'][]
+    FrozenList_TextRefV2__MinLen_min_length_1_: components['schemas']['TextRefV2'][]
+    FrozenList_Union_TextRefV2__Ref___MaxLen_max_length_12_: (
+      components['schemas']['TextRefV2'] | components['schemas']['Ref']
+    )[]
+    FrozenList_Union_TextRefV2__Ref___MinLen_min_length_1_: (
+      components['schemas']['TextRefV2'] | components['schemas']['Ref']
+    )[]
+    FrozenList_UnreadFile_: components['schemas']['UnreadFile'][]
     FrozenList_str_: string[]
+    FrozenList_str__MaxLen_max_length_12_: string[]
+    FrozenList_str__MaxLen_max_length_8_: string[]
+    FrozenList_str__MinLen_min_length_1_: string[]
     /**
      * GateEvidence
      * @description Controller evaluation; unknown evidence never passes a selection gate.
@@ -1922,6 +2113,20 @@ export interface components {
       /** Change */
       change: string
     }
+    /** IntegrationPointV2 */
+    IntegrationPointV2: {
+      /** Target Ref */
+      target_ref: components['schemas']['TextRefV2'] | components['schemas']['Ref']
+      /** Change */
+      change: string
+    }
+    /** LineInterval */
+    LineInterval: {
+      /** Start Line */
+      start_line: number
+      /** End Line */
+      end_line: number
+    }
     /** ModelCall */
     ModelCall: {
       /**
@@ -1983,6 +2188,12 @@ export interface components {
        * @default
        */
       project_root: string
+      /**
+       * Analysis Profile
+       * @default python-evidence-v1
+       * @enum {string}
+       */
+      analysis_profile: 'python-evidence-v1' | 'repository-text-v1'
     }
     /** Problem */
     Problem: {
@@ -2081,6 +2292,12 @@ export interface components {
        * @default
        */
       project_root: string
+      /**
+       * Analysis Profile
+       * @default python-evidence-v1
+       * @enum {string}
+       */
+      analysis_profile: 'python-evidence-v1' | 'repository-text-v1'
     }
     /** ProjectSelection */
     ProjectSelection: {
@@ -2088,7 +2305,13 @@ export interface components {
       id: string
       requested: components['schemas']['PinnedProjectRequest']
       snapshot: components['schemas']['RepoSnapshot']
-      support: components['schemas']['ProjectSupport']
+      /** Support */
+      support: components['schemas']['ProjectSupportV2'] | components['schemas']['ProjectSupport']
+      /**
+       * Inventory Policy
+       * @default python-inventory-v1
+       */
+      inventory_policy: string
       /** Inventory Sha256 */
       inventory_sha256: string
       /** Root Choices */
@@ -2175,6 +2398,97 @@ export interface components {
        */
       adaptation_reason: string
     }
+    /** ProjectSupportV2 */
+    ProjectSupportV2: {
+      /**
+       * Profile Version
+       * @default repository-text-v1
+       * @constant
+       */
+      profile_version: 'repository-text-v1'
+      /**
+       * Schema Version
+       * @default project-support-v2
+       * @constant
+       */
+      schema_version: 'project-support-v2'
+      /** Repo Id */
+      repo_id: string
+      /** Commit Sha */
+      commit_sha: string
+      /** Project Root */
+      project_root: string
+      /**
+       * Capability
+       * @enum {string}
+       */
+      capability: 'browse_index' | 'evidence_analysis'
+      /** Analysis Available */
+      analysis_available: boolean
+      /** Detected Languages */
+      detected_languages: {
+        [key: string]: number
+      }
+      /** Readable Source Files */
+      readable_source_files: number
+      /** Readable Files */
+      readable_files: number
+      /** Python Files */
+      python_files: number
+      /** Manifest Sha256 */
+      manifest_sha256: string | null
+      /** Manifest Paths */
+      manifest_paths: string[]
+      /**
+       * Structural Coverage
+       * @default text_only; optional parsers disabled
+       */
+      structural_coverage: string
+      /**
+       * Execution Supported
+       * @default false
+       * @constant
+       */
+      execution_supported: false
+      /**
+       * Adaptation Supported
+       * @default false
+       * @constant
+       */
+      adaptation_supported: false
+      /** Name */
+      name: string
+      /** Reasons */
+      reasons?: string[]
+      /** Analysis Reasons */
+      analysis_reasons?: string[]
+      /**
+       * Execution Reasons
+       * @default [
+       *       "Text analysis has no admitted execution profile."
+       *     ]
+       */
+      execution_reasons: string[]
+      /**
+       * Adaptation Reason
+       * @default Generic text cards require an independently reviewed adaptation profile; a Python file does not admit this repository to patch execution.
+       */
+      adaptation_reason: string
+      /** Adapter Version */
+      adapter_version?: null
+      /**
+       * Notice Policy
+       * @default analysis-only-v1
+       * @constant
+       */
+      notice_policy: 'analysis-only-v1'
+      /** Notice Paths */
+      notice_paths: string[]
+      /** Inventory Partial */
+      inventory_partial: boolean
+      /** Inventory Limits */
+      inventory_limits: string[]
+    }
     /** Publication */
     Publication: {
       /** Repository Id */
@@ -2246,6 +2560,17 @@ export interface components {
       base_branch?: string | null
       publication?: components['schemas']['Publication'] | null
     }
+    /** ReadWindowV2 */
+    ReadWindowV2: {
+      /** Path */
+      path: string
+      /** Start Line */
+      start_line: number
+      /** End Line */
+      end_line: number
+      /** Sha256 */
+      sha256: string
+    }
     /** Ref */
     Ref: {
       /** Repo Id */
@@ -2279,7 +2604,8 @@ export interface components {
     Reference: {
       /** Id */
       id: string
-      ref: components['schemas']['Ref']
+      /** Ref */
+      ref: components['schemas']['TextRefV2'] | components['schemas']['Ref']
       /** Category */
       category: string
       /**
@@ -2292,7 +2618,8 @@ export interface components {
     ReferenceDetail: {
       /** Id */
       id: string
-      ref: components['schemas']['Ref']
+      /** Ref */
+      ref: components['schemas']['TextRefV2'] | components['schemas']['Ref']
       /** Category */
       category: string
       /**
@@ -2531,7 +2858,8 @@ export interface components {
       /** Retry Diagnostic Status */
       retry_diagnostic_status?: string | null
       /** Features */
-      features?: components['schemas']['FeatureCard'][]
+      features?: (components['schemas']['FeatureCardV2'] | components['schemas']['FeatureCard'])[]
+      text_coverage?: components['schemas']['CoverageV2'] | null
       fit?: components['schemas']['FitResult'] | null
       profile?: components['schemas']['TargetProfile'] | null
       assessment?: components['schemas']['AssessmentBatch'] | null
@@ -2639,6 +2967,28 @@ export interface components {
        */
       kind: 'fit_select'
     }
+    /** SemanticJudgmentV2 */
+    SemanticJudgmentV2: {
+      /**
+       * Schema Version
+       * @constant
+       */
+      schema_version: 'semantic-judgment-v2'
+      /** Feature Id */
+      feature_id: string
+      /** Relevance */
+      relevance: number
+      /** Reason */
+      reason: string
+      source_refs: components['schemas']['FrozenList_Union_TextRefV2__Ref___MinLen_min_length_1_']
+      target_refs: components['schemas']['FrozenList_Union_TextRefV2__Ref___MaxLen_max_length_12_']
+      /**
+       * Target Status
+       * @enum {string}
+       */
+      target_status: 'already_present' | 'potential_gap' | 'unknown' | 'no_target'
+      expansion: components['schemas']['ExpansionRecommendationV2'] | null
+    }
     /** SessionUser */
     SessionUser: {
       /** Id */
@@ -2736,6 +3086,24 @@ export interface components {
        */
       schema_version: string
       /**
+       * Analysis Profiles
+       * @default [
+       *       "python-evidence-v1",
+       *       "repository-text-v1"
+       *     ]
+       */
+      analysis_profiles: string[]
+      /**
+       * Text Analysis Release
+       * @default local-public-opt-in-preview; live semantic gates pending
+       */
+      text_analysis_release: string
+      /**
+       * Text Analysis Parsers
+       * @default disabled; exact text citations remain available
+       */
+      text_analysis_parsers: string
+      /**
        * Runtime Profile
        * @default python312-http-v2
        */
@@ -2828,6 +3196,23 @@ export interface components {
        *     ]
        */
       unsupported: string[]
+    }
+    /** SymbolAnchorV2 */
+    SymbolAnchorV2: {
+      ref: components['schemas']['TextRefV2']
+      /** Qualified Name */
+      qualified_name: string
+      /** Parser Version */
+      parser_version: string | null
+      /** Grammar Version */
+      grammar_version: string | null
+      /** Query Version */
+      query_version: string | null
+      /**
+       * Validation
+       * @enum {string}
+       */
+      validation: 'unvalidated' | 'parser_validated'
     }
     /** SymbolEvidence */
     SymbolEvidence: {
@@ -2978,6 +3363,42 @@ export interface components {
        */
       expected_diagnostic: boolean
     }
+    /**
+     * TextRefV2
+     * @description Paths are original repository paths, including the selected project root.
+     */
+    TextRefV2: {
+      /** Repo Id */
+      repo_id: string
+      /** Commit Sha */
+      commit_sha: string
+      /** Path */
+      path: string
+      /** Start Line */
+      start_line: number
+      /** End Line */
+      end_line: number
+      /** Symbol */
+      symbol: string | null
+      /**
+       * Schema Version
+       * @constant
+       */
+      schema_version: 'text-ref-v2'
+      /** Project Id */
+      project_id: string
+      /** Project Root */
+      project_root: string
+      /**
+       * Role
+       * @enum {string}
+       */
+      role: 'source' | 'target'
+      /** Blob Sha256 */
+      blob_sha256: string | null
+      /** Excerpt Sha256 */
+      excerpt_sha256: string | null
+    }
     /** TokenUsage */
     TokenUsage: {
       /** Prompt Tokens */
@@ -3009,6 +3430,12 @@ export interface components {
        * @enum {string}
        */
       kind: 'source_trace'
+    }
+    /** UnreadFile */
+    UnreadFile: {
+      /** Path */
+      path: string
+      unread_ranges: components['schemas']['FrozenList_LineInterval_']
     }
     /** UsageView */
     UsageView: {

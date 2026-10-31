@@ -6,6 +6,9 @@ export function ExpansionDetail({ value }: { value: FeatureAssessment }) {
   return (
     <section className="space-y-4" aria-label="Expansion recommendation">
       <h3>Expansion idea</h3>
+      {'transfer_mode' in idea && idea.transfer_mode === 'conceptual_cross_language' && (
+        <p className="badge">Conceptual cross-language transfer · implementation unassessed</p>
+      )}
       <dl className="space-y-4 text-sm">
         <div>
           <dt className="font-semibold">Source capability</dt>

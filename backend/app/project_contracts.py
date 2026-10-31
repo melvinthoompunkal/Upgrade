@@ -7,6 +7,8 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from app.contracts import CommitSHA, Ref, RepoSnapshot, validate_repo_path
 from app.evidence_contracts import Coverage
 from app.project_support import ProjectSupport
+from app.text_contracts import LEGACY_POLICY
+from app.text_support import ProjectSupportV2
 
 
 class ProjectRequest(BaseModel):
@@ -20,6 +22,7 @@ class ProjectRequest(BaseModel):
     )
     role: Literal["source", "target"]
     project_root: str = Field(default="", max_length=300)
+    analysis_profile: Literal["python-evidence-v1", "repository-text-v1"] = "python-evidence-v1"
 
     @field_validator("commit_sha", mode="before")
     @classmethod
@@ -44,7 +47,8 @@ class ProjectSelection(BaseModel):
     id: str
     requested: PinnedProjectRequest
     snapshot: RepoSnapshot
-    support: ProjectSupport
+    support: ProjectSupportV2 | ProjectSupport
+    inventory_policy: str = LEGACY_POLICY
     inventory_sha256: str
     root_choices: list[str]
     created_at: str

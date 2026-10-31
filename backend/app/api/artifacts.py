@@ -18,13 +18,14 @@ from app.api.contracts import (
     TestSuite,
 )
 from app.api.storage import RunStore, now
-from app.catalog_contracts import CatalogJob
+from app.catalog_contracts import CatalogJob, FeatureDetail
 from app.contracts import Ref, RepoSnapshot
 from app.errors import GraftError
 from app.evidence_contracts import Coverage, FeatureCard
 from app.project_contracts import ProjectAnalysis
 from app.relevance_contracts import RelevanceJob
 from app.selection_contracts import AssessmentBatch, FitResult, TargetProfile
+from app.text_contracts import CoverageV2, TextRefV2
 from app.tools.runner_artifacts import read_regular_file
 
 PREFIXES = {
@@ -258,6 +259,13 @@ class RunArtifacts:
                             }
                         )
         excerpts = []
+        saved_features = (
+            self.load("catalog-features.json") if "catalog-features.json" in self.hashes else []
+        )
+        if isinstance(saved_features, list):
+            for feature in saved_features:
+                if isinstance(feature, dict):
+                    excerpts.extend(feature.get("evidence", []))
         for name in self.hashes:
             if name.startswith("trace-bundles/") or name == "trace-bundle.json":
                 bundle = self.load(name)
@@ -271,7 +279,9 @@ class RunArtifacts:
             elif isinstance(value, dict):
                 if {"repo_id", "commit_sha", "path", "start_line", "end_line"} <= value.keys():
                     try:
-                        ref = Ref.model_validate(value)
+                        ref = (
+                            TextRefV2 if value.get("schema_version") == "text-ref-v2" else Ref
+                        ).model_validate(value)
                     except ValidationError:
                         return
                     ref_id = digest(ref.model_dump_json().encode())[:24]
@@ -293,6 +303,16 @@ class RunArtifacts:
                                     and window.get("end_line", 0) >= ref.end_line
                                     and isinstance(window.get("text"), str)
                                     and digest(window["text"].encode()) == window.get("sha256")
+                                    and (
+                                        not isinstance(ref, TextRefV2)
+                                        or (
+                                            window.get("ref", {}).get("project_id")
+                                            == ref.project_id
+                                            and window.get("ref", {}).get("project_root")
+                                            == ref.project_root
+                                            and window.get("ref", {}).get("role") == ref.role
+                                        )
+                                    )
                                 ):
                                     lines = window["text"].splitlines(keepends=True)
                                     text = "".join(
@@ -336,6 +356,7 @@ class RunArtifacts:
             "matcher-assessment.json",
             "source-project-analysis.json",
             "target-project-analysis.json",
+            "catalog-features.json",
             *(name for name in self.hashes if name.startswith("assessments/")),
         ):
             data = self.load(name)
@@ -424,6 +445,18 @@ class RunArtifacts:
                     values["coverage"] = Coverage.model_validate(trace["coverage"])
             except (ValidationError, TypeError):
                 self.warnings.append("The source trace could not be fully validated.")
+        if "catalog-features.json" in self.hashes:
+            try:
+                features = [
+                    FeatureDetail.model_validate(item)
+                    for item in self.load("catalog-features.json") or []
+                ]
+                values["features"] = [feature.card for feature in features if feature.card]
+                coverage = report.get("catalog", {}).get("coverage_v2")
+                if coverage:
+                    values["text_coverage"] = CoverageV2.model_validate(coverage)
+            except (ValidationError, TypeError):
+                self.warnings.append("The text feature export could not be fully validated.")
         captures = report.get("captures", [])
         baseline = self.load("baseline-report.json")
         if baseline:

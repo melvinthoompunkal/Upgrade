@@ -18,6 +18,7 @@ from app.catalog_contracts import (
 )
 from app.errors import EvidenceError
 from app.jobs.control import fence_in
+from app.text_contracts import TEXT_PROFILE, TEXT_VERSIONS
 
 VERSIONS = {"analyzer": "python-catalog-v1", "prompt": "discovery-v2", "schema": "catalog-v1"}
 TERMINAL = {"complete_for_scope", "partial", "failed", "canceled"}
@@ -34,7 +35,12 @@ def fingerprint(value) -> str:
 
 def source_identity(selected, scope: str, model: str) -> dict:
     return {
-        **VERSIONS,
+        **(TEXT_VERSIONS if selected.support.profile_version == TEXT_PROFILE else VERSIONS),
+        **(
+            {"inventory_policy": selected.inventory_policy}
+            if selected.support.profile_version == TEXT_PROFILE
+            else {}
+        ),
         "origin": selected.snapshot.origin,
         "repo_id": selected.snapshot.repo_id,
         "sha": selected.snapshot.commit_sha,
@@ -170,6 +176,10 @@ class CatalogStore:
                 project_root=selected.requested.project_root,
                 scope=scope,
                 identity=identity,
+                schema_version="catalog-v2"
+                if selected.support.profile_version == TEXT_PROFILE
+                else "catalog-v1",
+                analysis_profile=selected.support.profile_version,
                 options=body.options,
                 created_at=now(),
             )
@@ -183,6 +193,9 @@ class CatalogStore:
                     "unexamined_areas",
                     "batches",
                     "cumulative_usage",
+                    "seed_offsets",
+                    "merge_mappings",
+                    "coverage_v2",
                 ):
                     setattr(view, field, getattr(base, field))
                 db.execute(

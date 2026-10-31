@@ -17,6 +17,22 @@ MAX_WINDOW_LINES = 200
 MAX_WINDOW_BYTES = 24_000
 
 
+def text_window(path: str, lines: list[str], start_line: int, end_line: int) -> dict:
+    """Prepare a bounded excerpt from already verified Git text, without recording a read."""
+    if not 1 <= start_line <= end_line <= len(lines) or end_line - start_line >= MAX_WINDOW_LINES:
+        raise EvidenceError("Requested line range is outside file bounds or exceeds 200 lines.")
+    text = "\n".join(lines[start_line - 1 : end_line]) + "\n"
+    if len(text.encode("utf-8")) > MAX_WINDOW_BYTES:
+        raise EvidenceError("Evidence window or cumulative read-byte budget exceeded.")
+    return {
+        "path": path,
+        "start_line": start_line,
+        "end_line": end_line,
+        "text": text,
+        "sha256": hashlib.sha256(text.encode()).hexdigest(),
+    }
+
+
 def python_index(path: str, text: str) -> PythonEvidence:
     symbols, imports = [], set()
     try:
@@ -91,23 +107,15 @@ class EvidenceSession:
 
     def read_range(self, path: str, start_line: int, end_line: int) -> dict:
         lines = self.repo.read(path).splitlines()
-        if (
-            not 1 <= start_line <= end_line <= len(lines)
-            or end_line - start_line >= MAX_WINDOW_LINES
-        ):
-            raise EvidenceError("Requested line range is outside file bounds or exceeds 200 lines.")
-        text = "\n".join(lines[start_line - 1 : end_line]) + "\n"
-        size = len(text.encode("utf-8"))
-        if size > MAX_WINDOW_BYTES or self.read_bytes + size > self.max_read_bytes:
+        return self._record_range(path, lines, start_line, end_line)
+
+    def _record_range(self, path: str, lines: list[str], start_line: int, end_line: int) -> dict:
+        """Record only lines obtained from verified pinned bytes by controller-owned readers."""
+        excerpt = text_window(path, lines, start_line, end_line)
+        size = len(excerpt["text"].encode("utf-8"))
+        if self.read_bytes + size > self.max_read_bytes:
             raise EvidenceError("Evidence window or cumulative read-byte budget exceeded.")
         self.read_bytes += size
-        excerpt = {
-            "path": path,
-            "start_line": start_line,
-            "end_line": end_line,
-            "text": text,
-            "sha256": hashlib.sha256(text.encode()).hexdigest(),
-        }
         self.windows.append(excerpt)
         return excerpt
 

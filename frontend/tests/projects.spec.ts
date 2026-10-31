@@ -4,9 +4,11 @@ import type { ProjectSelection } from '../src/api/client'
 
 function project(role: 'source' | 'target', supported = true): ProjectSelection {
   return {
+    inventory_policy: 'python-inventory-v1',
     private: false,
     id: (role === 'source' ? 'a' : 'b').repeat(32),
     requested: {
+      analysis_profile: 'python-evidence-v1',
       url: 'https://github.com/team/sequence-tools',
       commit_sha: 'c'.repeat(40),
       role,
@@ -182,7 +184,7 @@ test('discovery is the default and structure inspection works without a model ke
     '/example',
   )
   await fillPin(page, 'Source')
-  await expect(page.getByText('Evidence analysis', { exact: true })).toBeVisible()
+  await expect(page.getByText('Ready for feature discovery', { exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Analyze projects' })).toBeEnabled()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
     true,
@@ -210,7 +212,7 @@ test('editing a pinned project invalidates its selection', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Analyze projects' })).toBeEnabled()
   await page.getByLabel('Source project root', { exact: true }).fill('another-library')
   await expect(page.getByRole('button', { name: 'Analyze projects' })).toBeDisabled()
-  await expect(page.getByText('Evidence analysis', { exact: true })).toHaveCount(0)
+  await expect(page.getByText('Ready for feature discovery', { exact: true })).toHaveCount(0)
 })
 
 test('unsupported projects show their blocker and cannot queue analysis', async ({ page }) => {
@@ -220,7 +222,7 @@ test('unsupported projects show their blocker and cannot queue analysis', async 
   await fillPin(page, 'Source')
   await expect(page.getByText('No Python project manifest at the selected root.')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Analyze projects' })).toBeDisabled()
-  await expect(page.getByText('Browse only', { exact: true })).toBeVisible()
+  await expect(page.getByText('No analysis available', { exact: true })).toBeVisible()
 })
 
 test('native baseline uses the explicitly selected target ID', async ({ page }) => {

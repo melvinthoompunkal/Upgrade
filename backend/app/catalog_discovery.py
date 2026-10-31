@@ -55,6 +55,11 @@ def is_test(path: str) -> bool:
 
 def discovery_paths(repo, scope: str) -> list[str]:
     """Deterministic module/document scope, not one feature per static symbol."""
+    from app.text_contracts import TextInventory
+    from app.text_discovery import text_discovery_paths
+
+    if isinstance(repo.inventory, TextInventory):
+        return text_discovery_paths(repo, scope)
     return sorted(
         f.path
         for f in repo.inventory.files
@@ -93,6 +98,10 @@ class CatalogAnalyzer:
         self.tools = EvidenceTools(
             evidence, tuple(f.path for f in evidence.repo.inventory.files if f.path.endswith(".py"))
         )
+
+    @staticmethod
+    def trace_priority(feature):
+        return (-any(r.path.endswith(".py") for r in feature.discovery_refs), feature.feature_id)
 
     async def discover(self, paths: list[str]) -> CandidateBatch:
         repo = self.evidence.repo
@@ -233,6 +242,12 @@ def matching_candidate(left: FeatureDetail, right: FeatureDetail) -> bool:
 
     def anchors(item):
         refs = item.card.entry_points if item.card else item.discovery_refs
+        if item.schema_version == "catalog-feature-v2":
+            return {
+                (r.path, f"line:{line}")
+                for r in refs
+                for line in range(r.start_line, r.end_line + 1)
+            }
         return {(r.path, r.symbol) for r in refs if r.symbol and production_ref(r)}
 
     return left.feature_id == right.feature_id or (

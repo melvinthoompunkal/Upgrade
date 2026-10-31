@@ -3,6 +3,7 @@ import json
 
 import httpx
 import pytest
+from pydantic import create_model
 
 from app.config import Settings
 from app.contracts import RunPlan
@@ -65,6 +66,27 @@ async def structured_with(handler) -> object:
         return await client.structured(
             stage="test", messages=[{"role": "user", "content": "Make a plan."}], schema=RunPlan
         )
+
+
+@pytest.mark.parametrize("name", ["Comparison[Ref, Ref]", "x" * 65, ""])
+def test_invalid_response_name_stops_before_provider_attempt(name):
+    schema = create_model(name, __base__=RunPlan)
+    requests = []
+
+    def handler(request):
+        requests.append(request)
+        return httpx.Response(200, json=completion())
+
+    async def run():
+        async with MetaClient(
+            settings(), http_client=httpx.AsyncClient(transport=httpx.MockTransport(handler))
+        ) as client:
+            with pytest.raises(ConfigurationError, match="response-format names"):
+                await client.structured(stage="invalid-name", messages=[], schema=schema)
+            assert client.budget.requests == 0 and not client.calls
+
+    asyncio.run(run())
+    assert not requests
 
 
 def test_schema_and_actual_tool_message_round_trip() -> None:

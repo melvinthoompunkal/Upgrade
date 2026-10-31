@@ -37,6 +37,11 @@ const entries: CatalogPage['items'] = Array.from({ length: 10000 }, (_, index) =
   },
 }))
 const catalog: Catalog = {
+  schema_version: 'catalog-v1',
+  analysis_profile: 'python-evidence-v1',
+  coverage_v2: null,
+  seed_offsets: {},
+  merge_mappings: {},
   id: catalogId,
   revision: 1,
   base_revision: null,
@@ -74,6 +79,8 @@ const catalog: Catalog = {
   qualification: 'Bounded catalog scope.',
 }
 const assessment: Assessment = {
+  schema_version: 'assessment-v1',
+  coverage_v2: {},
   id: assessmentId,
   catalog_id: catalogId,
   catalog_revision: 1,
@@ -129,6 +136,8 @@ async function setup(page: Page) {
     if (url.pathname.includes('/features/')) {
       const featureId = url.pathname.split('/').at(-1)!
       const saved: FeatureAssessment = {
+        schema_version: 'feature-assessment-v1',
+        adaptation_reason: null,
         feature_id: featureId,
         relevance_status: 'relevant',
         relevance_score: 5,
@@ -160,6 +169,7 @@ async function setup(page: Page) {
     if (url.pathname.includes('/features/')) {
       const item = entries.find((item) => item.feature_id === url.pathname.split('/').at(-1))!
       const detail: CatalogFeature = {
+        schema_version: 'catalog-feature-v1',
         ...item,
         behavior_key: 'capability',
         discovery_refs: [],

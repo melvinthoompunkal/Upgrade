@@ -1,6 +1,6 @@
 # Upgrade: project status, audits and development plan
 
-Updated October 30, 2026, America/New_York. Original foundation review at commit
+Updated October 31, 2026, America/New_York. Original foundation review at commit
 `b06d6d3` (`completed f0 and f1`).
 
 This is the single maintained record of completed work, audit findings, verification
@@ -38,8 +38,10 @@ patching, PR creation, account/private-repository integration and production hos
 deferred extensions. The next analysis design is a shared source-text workflow with
 validated file/line evidence and optional language parsers, described in the
 [feature extraction roadmap](feature-extraction-roadmap.md). It does not require an
-execution runner or mandatory parser for every language. This is planned work; the
-current implementation still admits only the supported Python analysis profile.
+execution runner or mandatory parser for every language. The local public text-analysis
+preview is now implemented alongside the reviewed Python profile; see
+[the implementation guide](text-analysis.md). It is explicitly opt-in while the live
+semantic quality gate remains incomplete. Generic cards cannot enter adaptation.
 
 The [current priorities](#post-f13-code-review-and-prioritized-work) supersede the earlier
 GitHub-App-first release order for this milestone. Historical results and broader release
@@ -2110,19 +2112,21 @@ for the active semantic milestone. No credential values were printed or changed.
 | Next: broader live semantic quality | One bounded ItsDangerous/HTTPX comparison and real saved-result browser check passed locally. Broaden checks for existing behavior, unrelated goals, uncertain evidence and additional supported public project pairs. | `catalog_workflow.py`, `relevance_workflow.py`; exact pinned inputs, citations, coverage and spend retained in the local sample above. No patch, Docker suite or GitHub write is required. |
 | Current analysis operations | Validate real model cancellation, failure handling and saved-result reopening for the local semantic workflow. | `backend/app/jobs/`; no silent paid replay and no new inference merely from browsing a saved result. |
 | As needed: project inputs | Add local-folder/ZIP ingestion if the user's project should be supplied from disk. Start from the existing public-URL project adapter when URLs are sufficient. | `projects.py`, `project_contracts.py`, `ProjectPin.tsx`; snapshot the selected input without changing the original project. This is separate from GitHub login/private-account integration. |
-| Next: general feature extraction | Implement the [feature extraction roadmap](feature-extraction-roadmap.md): shared readable-source inventory, bounded discovery/retrieval, validated text citations and optional parsers. | Version project/catalog/assessment evidence and saved-data readers; preserve Python execution/adaptation admission. OpenClaw remains outside the current profile until the roadmap's resource, semantic and browser acceptance checks pass. No per-language runner or mandatory parser is required for discovery. |
+| Implemented locally: general feature extraction preview | FE0–FE4 of the [feature extraction roadmap](feature-extraction-roadmap.md) provide a shared readable-source inventory, bounded retrieval, validated text citations, cross-language comparison and saved exports. Complete FE5 quality evaluation before changing the default. | The opt-in local public profile uses versioned project/catalog/assessment contracts and preserves Python adaptation admission. Existing live samples are below the required 20 reviewed supported cards; OpenClaw coverage and semantic acceptance remain incomplete. Optional parsers remain deferred. |
 | Deferred: verified implementation | Validate or expand automatic patch generation only when the user chooses to implement an idea. | Existing F7/F8/F11 workflows retain baseline, frozen acceptance, native regression, scope/dependency and notice requirements. A recommendation alone must not claim a verified patch. |
 | Deferred: GitHub account/publishing | Configure and certify the existing App-based account, private snapshot and PR workflows only if those integrations become a milestone. | `backend/app/auth/`, `backend/app/publishing/`, `docs/github-setup.md`; no App setup is needed for current local public analysis. Private analysis still needs its own admitted workflow. |
 | Deferred: hosting/execution | Certify hosted analysis or implement hosted target execution when the product needs those deployment modes. | `backend/app/hosting/` and `docs/hosting.md`; deployment and execution-isolation gates remain applicable to those offerings, not prerequisites for local semantic comparison. |
 
 For the next milestone, validate semantic quality and applicable local analysis operations
-using the implemented journey and existing public-Python analysis profile. Add an input or
-language adapter when the intended projects require it. Automatic patching, GitHub App
+using the implemented journey, the reviewed Python profile and the opt-in public text
+profile. Language parsers can improve text navigation without becoming admission requirements.
+Automatic patching, GitHub App
 setup, PR publishing and hosted execution are not part of the immediate milestone.
 
 Select the live source/target pair against the analysis profile before starting inference:
-currently this requires inspectable pinned Python projects and bounded, code-backed
-evidence. A supported native suite, JSON-call acceptance and reviewed execution
+the reviewed profile requires inspectable pinned Python projects, while the text preview
+accepts bounded readable source without a manifest. Both require code-backed evidence.
+A supported native suite, JSON-call acceptance and reviewed execution
 dependencies apply when verifying an implementation, not merely assessing an expansion
 idea. Broader analysis and broader execution are separate support decisions.
 
@@ -2168,3 +2172,100 @@ folders were removed after verification; the fresh JUnit and F13 evidence remain
 This review did not rerun Docker, execute the browser/live-public-fetch scenarios, make
 live GitHub/Meta calls, rescan dependency databases or exercise a deployment. It does not
 close any pending live release gate.
+
+### Feature extraction implementation and validation
+
+October 31, 2026, America/New_York. Resumed the interrupted FE0–FE5 work from its
+working changes and retained local receipts. FE0–FE4 are implemented as a local public
+opt-in text-analysis preview. The default remains the reviewed Python profile, and FE6
+optional parsers remain disabled. This validation does not certify a generic default.
+
+The completion review fixed these issues:
+
+- Text inventories serialized their entries as the older base type, dropping roles,
+  classification bases, blob IDs and line counts. New inspections use inventory v2;
+  historical text v1 and Python pins keep their original classifications and digests.
+- Test-helper filenames are test evidence under v2. Citations starting inside a multiline
+  import are rejected as implementation evidence, including when the opening import line
+  is outside the cited range.
+- Comparison context repeated saved card data and source ranges. It now supplies a compact
+  behavior description, distinct source ranges and four initial target files, with further
+  retrieval inside the existing shared budgets. Final answers omit unused tool schemas
+  from input admission.
+- A live extension assessment exposed an output-schema ambiguity: even text-only sessions
+  could return legacy references. Model output now specializes source, target and nested
+  expansion references by the pinned profiles. Historical saved readers retain compatibility.
+  A subsequent verification request exposed invalid generated schema names. Specialized
+  models now use API-compatible names, and response-format preflight rejects invalid
+  names before any provider attempt. This follow-up passed 67 transport/text checks.
+- The comparison validator can reuse exact declared public target pins and settle finished
+  artifact reservations between cases. It records actual storage limits, returned model IDs,
+  usage, exact citation checks and declared-budget results. `--case` selects a new explicit
+  job without replaying a frozen failed assessment.
+
+Verification:
+
+- Backend regression: **789 passed, one explicitly gated Docker case skipped**, zero failures
+  or errors, in 21 minutes 25 seconds. Subsequent citation/schema fixes passed their focused
+  suites: 43 text/evidence tests, 59 text/comparison/relevance tests, nine validator tests,
+  and the final nested/mixed-profile schema check. The dedicated browser-seed test was
+  intentionally excluded from supplemental runs and was exercised in the earlier focused run.
+- Browser: **46 desktop/mobile workflow checks passed**, followed by eight additional checks
+  for the current inventory-v2 seed and actual saved live Python/JavaScript catalogs.
+  Reopening and JSON downloads preserved usage and issued zero inference writes.
+- TypeScript/production build, regenerated API types, Ruff lint/format, changed frontend
+  Prettier checks and local documentation links passed. The specialized model-output
+  contracts leave the public OpenAPI schema unchanged.
+
+The four approved live comparison jobs used **18 requests, 388,538 input tokens and
+23,054 output tokens**, returning `muse-spark-1.3`, in 116 seconds total. All stayed within
+their declared request/token budgets. Their artifacts were 89,658–135,050 bytes under
+the reduced 4 MiB per-job cap; account/global quotas were retained. Existing pin reuse
+resolved an initial storage-admission failure without deleting saved results.
+
+| Preregistered case | Live result |
+|---|---|
+| Existing expiry enforcement | Correctly `already_present`, with exact source/target code references. |
+| Unrelated graph-layout goal | Correctly `less_relevant`; no expansion invented. |
+| Documentation-only target evidence | Correctly `unknown`; documentation was not promoted to production code. |
+| Conceptual cross-language extension | The fresh live run validates the schema/name/citation fixes, but returns relevance 2 (`less_relevant`), target `unknown` and no expansion. This misses the preregistered `potential_gap` expectation; the comparison quality gate remains 3/4. |
+
+The separately approved seven-request verification completed on October 31 using **six
+requests, 139,908 input tokens and 9,597 output tokens**, returning `muse-spark-1.3`, in
+44 seconds. All four exported references passed exact source/target provenance checks.
+Its 144,238-byte artifact stayed under the 4 MiB cap, with no unknown-usage attempts.
+The fixed specialized schema and response-format name were accepted live. The saved
+assessment is partial because other catalog features remain unassessed; the selected
+feature has no failure code and implementation fit remains unassessed.
+
+The model judged the server-side signing/expiry mechanism only indirectly useful to the
+frontend goal and found insufficient evidence of an expiry-specific target contract in
+the selected frontend scope. This is a semantic expectation miss, not a controller or
+citation failure. The preregistered expectation was retained and no unsupported expansion
+was promoted. Broader semantic evaluation remains necessary before changing the default.
+
+FE5 discovery gates remain incomplete. All **61** retained discovery/trace references
+revalidated against their original pins, ranges, hashes and read coverage. Static review
+covered only **four supported cards** against the required minimum of 20. Supported
+matches recovered **two of eleven preregistered behaviors (18.2%)**, below the 80% gate;
+unverified hints and incidental helper mentions do not count. The historical OpenClaw run
+had incomplete tree enumeration, no supported cards and exceeded its declared returned
+input allowance. It is retained as a failed release sample, not current support evidence.
+
+The initial sampler/input-admission fixes predated this completion pass. The current v2
+inventory and stricter comparison schema still need broader live discovery evaluation;
+passing controller/browser checks does not establish semantic precision or whole-repository
+recall. No target program, package installer, Docker suite or GitHub publishing workflow
+was run for this milestone.
+
+Local evidence is under `data/feature-extraction/`: `completion-backend.xml`, focused
+and browser JUnit files, `completion-semantic-review.json`, the live comparison receipts
+and `completion-receipt.json`. The receipt binds source/build and evidence hashes and
+distinguishes the full-regression snapshot from the focused follow-up fixes.
+The rejected follow-up is retained in
+`comparison/f66cc1a43c344d43a750fbd44154d0c9/receipt.json`; its token usage/cost is unknown,
+not established as zero. `completion-provider-name.xml` records the 67 passing follow-up
+checks and one deliberately skipped browser-seed setup. No failed job was replayed.
+The completed fresh verification is retained in
+`comparison/fb5ae75e20cd4f1d9001d4b8f66c1442/receipt.json`. The earlier failed assessments
+remain frozen; the fresh result is a distinct, explicitly approved job.

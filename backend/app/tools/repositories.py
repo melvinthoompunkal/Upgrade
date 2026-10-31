@@ -8,6 +8,7 @@ from pathlib import Path, PurePosixPath
 from app.contracts import Ref, RepoSnapshot, validate_repo_path
 from app.errors import EvidenceError, RepositoryError
 from app.evidence_contracts import Inventory, InventoryFile
+from app.text_contracts import LEGACY_POLICY, TEXT_POLICIES, TextInventory
 from app.tools.git import Git
 from app.tools.runner_artifacts import MAX_ARTIFACT_BYTES, physical_root
 from app.tools.targets import CRAWLER_FILES, CRAWLER_PREFIX
@@ -59,17 +60,22 @@ class PinnedRepository:
     git: Git
     storage: Path
     snapshot: RepoSnapshot
-    inventory: Inventory
+    inventory: Inventory | TextInventory
     objects: dict[str, str]
     prefix: str = ""
 
-    def read(self, path: str) -> str:
+    def read(self, path: str, *, timeout: float = 120) -> str:
         validate_repo_path(path)
         entries = {entry.path: entry for entry in self.inventory.files}
         if path not in entries or path not in self.objects:
             raise EvidenceError("Path is absent from the approved text inventory.")
         data = self.git.run(
-            "cat-file", "blob", self.objects[path], cwd=self.storage, max_bytes=MAX_ARTIFACT_BYTES
+            "cat-file",
+            "blob",
+            self.objects[path],
+            cwd=self.storage,
+            max_bytes=MAX_ARTIFACT_BYTES,
+            timeout=timeout,
         )
         if (
             len(data) != entries[path].bytes
@@ -98,7 +104,10 @@ class PinnedRepository:
 
 
 class RepositoryManager:
-    def __init__(self, directory: Path, *, existing: bool = False):
+    def __init__(self, directory: Path, *, existing: bool = False, inventory_policy=LEGACY_POLICY):
+        if inventory_policy not in {LEGACY_POLICY, *TEXT_POLICIES}:
+            raise RepositoryError("Unknown inventory policy. Start a new project inspection.")
+        self.inventory_policy = inventory_policy
         if not existing:
             directory.mkdir(parents=True, exist_ok=False)
         self.directory = physical_root(directory)
@@ -271,6 +280,21 @@ class RepositoryManager:
     ) -> PinnedRepository:
         if prefix:
             validate_repo_path(prefix)
+        if self.inventory_policy in TEXT_POLICIES:
+            if allowed is not None:
+                raise RepositoryError("Text analysis cannot use an execution registration.")
+            from app.text_inventory import text_inventory
+
+            return text_inventory(
+                self,
+                storage,
+                repo_id,
+                origin,
+                sha,
+                prefix,
+                max_entries=max_entries,
+                max_text_bytes=max_text_bytes,
+            )
         raw = self.git.run("ls-tree", "-r", "-l", "-z", "--full-tree", sha, cwd=storage)
         candidates = []
         excluded, limits = [], []

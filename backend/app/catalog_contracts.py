@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from app.contracts import Contract, FrozenList, Ref, validate_repo_path
 from app.evidence_contracts import FeatureCard
 from app.relevance_types import AssessmentSummary
+from app.text_contracts import CoverageV2, FeatureCardV2, TextRefV2
 
 Id = Annotated[str, Field(pattern=r"^[a-f0-9]{32}$")]
 EvidenceStatus = Literal["unverified", "supported", "partial", "unsupported"]
@@ -79,15 +80,16 @@ class FeatureSummary(BaseModel):
 
 
 class EvidenceExcerpt(BaseModel):
-    ref: Ref
+    ref: TextRefV2 | Ref
     text: str
     sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
 
 
 class FeatureDetail(FeatureSummary):
+    schema_version: Literal["catalog-feature-v1", "catalog-feature-v2"] = "catalog-feature-v1"
     behavior_key: str
-    discovery_refs: list[Ref]
-    card: FeatureCard | None = None
+    discovery_refs: list[TextRefV2 | Ref]
+    card: FeatureCardV2 | FeatureCard | None = None
     evidence: list[EvidenceExcerpt] = Field(default_factory=list)
     examined_paths: list[str] = Field(default_factory=list)
     missing_evidence: list[str] = Field(default_factory=list)
@@ -119,6 +121,11 @@ class CatalogView(BaseModel):
     project_root: str
     scope: str
     identity: dict
+    schema_version: Literal["catalog-v1", "catalog-v2"] = "catalog-v1"
+    analysis_profile: Literal["python-evidence-v1", "repository-text-v1"] = "python-evidence-v1"
+    coverage_v2: CoverageV2 | None = None
+    seed_offsets: dict[str, int] = Field(default_factory=dict)
+    merge_mappings: dict[str, str] = Field(default_factory=dict)
     state: ScanState = "queued"
     created_at: str
     counts: CatalogCounts = Field(default_factory=CatalogCounts)

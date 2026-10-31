@@ -7,7 +7,7 @@ is in [tech_breakdown.md](tech_breakdown.md).
 
 The current milestone is local semantic discovery and comparison. Use `AUTH_MODE=local`
 with supported public source/target repository URLs; no GitHub App registration is
-required. The browser starts with **Feature discovery**: inspect a public Python snapshot,
+required. The browser starts with **Feature discovery**: inspect a public snapshot,
 then choose **Discover features** to save its capabilities and code references. No target
 is required. Open a feature and use **Download feature JSON** to keep its explanation,
 evidence and pinned source identity. Optionally compare the catalog with your project to save expansion ideas,
@@ -15,6 +15,12 @@ including existing behavior, benefits, integration points, constraints and uncer
 **Structure only** inspects definitions/imports without a model key. Live semantic quality
 validation remains separate from controlled regression checks. Automatic implementation, PR publishing, account integration and
 hosted execution are later extensions. See [the active scope and priorities](docs/full-feature-development.md#active-milestone-local-semantic-discovery-and-expansion).
+
+For repositories without a Python manifest, select **All languages — text analysis preview**
+before inspection. This local public preview supports bounded text discovery, deep traces,
+cross-language comparisons and saved JSON exports without parsers or project execution.
+The reviewed Python profile remains the default until live semantic acceptance passes.
+See [text analysis and evaluation](docs/text-analysis.md) for scope, limits and release gates.
 
 Start with [project status, audits and the development plan](docs/full-feature-development.md)
 for completed work, resolved findings, verification history and the remaining backlog.

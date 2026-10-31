@@ -6,6 +6,7 @@ from app.catalog_store import CatalogStore, source_identity
 from app.project_privacy import require_project_analysis
 from app.relevance_store import RelevanceStore, assessment_identity
 from app.source_use import SOURCE_USE_PROFILES
+from app.text_contracts import FeatureCardV2
 
 
 def adaptation_inputs(request, projects, owner, model):
@@ -17,6 +18,12 @@ def adaptation_inputs(request, projects, owner, model):
     feature = CatalogStore(projects.runs).feature(
         owner, catalog.id, catalog.revision, request.feature_id
     )
+    if isinstance(feature.card, FeatureCardV2) or catalog.analysis_profile == "repository-text-v1":
+        raise HTTPException(
+            409,
+            "Generic text analysis is unsupported for adaptation. "
+            "Use a separately reviewed Python analysis profile.",
+        )
     assessment = assessments.feature(
         owner, view.id, catalog.id, catalog.revision, feature.feature_id
     )

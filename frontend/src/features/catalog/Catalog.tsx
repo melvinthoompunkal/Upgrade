@@ -240,6 +240,34 @@ export function Catalog() {
           scan. {catalog.excluded_paths.length} excluded paths. Unread bodies and unsupported areas
           remain outside the proof.
         </p>
+        {catalog.coverage_v2 && (
+          <details>
+            <summary>Exact text coverage · tests not run</summary>
+            <div className="field-help mt-3 space-y-2">
+              <p>
+                {catalog.coverage_v2.examined_paths.length} files retrieved;{' '}
+                {catalog.coverage_v2.partially_read_files.length} partially read. Tree enumeration:{' '}
+                {catalog.coverage_v2.tree_enumeration_complete
+                  ? 'complete within the selected root'
+                  : 'incomplete; inspect a smaller root'}
+                .
+              </p>
+              <p>
+                Unsampled paths:{' '}
+                {catalog.coverage_v2.unexamined_areas.join(', ') ||
+                  'None; line coverage still applies.'}
+              </p>
+              {catalog.coverage_v2.partially_read_files.map((file) => (
+                <p key={file.path}>
+                  <code>{file.path}</code> — unread lines{' '}
+                  {file.unread_ranges
+                    .map((range) => `${range.start_line}–${range.end_line}`)
+                    .join(', ')}
+                </p>
+              ))}
+            </div>
+          </details>
+        )}
         {catalog.limit_reasons.length > 0 && (
           <Notice>{catalog.limit_reasons.join(', ').replaceAll('_', ' ')}</Notice>
         )}
@@ -604,7 +632,39 @@ export function Catalog() {
                 </h2>
                 <FeatureDownload catalog={catalog} feature={feature} />
                 <p>{feature.card?.behavior ?? feature.summary}</p>
+                {feature.card && 'structural_validation' in feature.card && (
+                  <p className="field-help">
+                    {feature.evidence_status === 'supported'
+                      ? 'Code cited'
+                      : feature.evidence_status}{' '}
+                    · Text only · Tests not run
+                  </p>
+                )}
                 <p className="field-help">{feature.qualification}</p>
+                {feature.card && (
+                  <details>
+                    <summary>Included behavior and limitations</summary>
+                    <div className="space-y-3 mt-3 text-sm">
+                      <ul className="list-disc pl-5 space-y-1">
+                        {feature.card.acceptance_behaviors.map((behavior, index) => (
+                          <li key={index}>{behavior}</li>
+                        ))}
+                      </ul>
+                      {!!feature.card.excluded_behaviors.length && (
+                        <p>Excluded: {feature.card.excluded_behaviors.join('; ')}</p>
+                      )}
+                      <p>{feature.card.transferable_slice}</p>
+                      <p>Source tests are citations only. Tests not run.</p>
+                      {feature.card.source_tests.map((ref, index) => (
+                        <p key={index}>
+                          <code>
+                            {ref.path}:{ref.start_line}–{ref.end_line}
+                          </code>
+                        </p>
+                      ))}
+                    </div>
+                  </details>
+                )}
                 {feature.card && (
                   <details>
                     <summary>Source dependencies and notices</summary>
@@ -650,7 +710,8 @@ export function Catalog() {
                 {feature.failure_code && (
                   <Notice tone="error">Trace failed: {feature.failure_code}</Notice>
                 )}
-                {feature.trace_state !== 'validated' && (
+                {(feature.trace_state !== 'validated' ||
+                  feature.evidence_status !== 'supported') && (
                   <>
                     <p className="field-help">
                       Deep trace uses an additional job: up to 32 attempts, 400,000 input / 40,000

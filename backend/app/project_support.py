@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from app.project_adapters import ADAPTER_VERSION, execution_reasons, manifest_data, python_facts
 from app.runtime_profiles import PROFILE
+from app.text_support import ProjectSupportV2
 from app.tools.repositories import PinnedRepository
 
 
@@ -42,7 +43,12 @@ class ProjectSupport(BaseModel):
     adaptation_reason: str = "Feature-specific acceptance and allowed-use review are required."
 
 
-def inspect_project(repo: PinnedRepository) -> ProjectSupport:
+def inspect_project(repo: PinnedRepository) -> ProjectSupport | ProjectSupportV2:
+    from app.text_contracts import TextInventory
+    from app.text_support import inspect_text_project
+
+    if isinstance(repo.inventory, TextInventory):
+        return inspect_text_project(repo)
     files = {entry.path: entry for entry in repo.inventory.files}
     result = ProjectSupport(
         repo_id=repo.snapshot.repo_id,

@@ -263,7 +263,13 @@ class RunStore:
                     (run_id,),
                 )
 
-    def claim(self, *, mode: str = "local", worker: str = "local-worker"):
+    def claim(
+        self,
+        *,
+        mode: str = "local",
+        worker: str = "local-worker",
+        expected_run_id: str | None = None,
+    ):
         with self.connect() as db:
             db.execute("BEGIN IMMEDIATE")
             owner_filter = (
@@ -283,6 +289,8 @@ class RunStore:
                 (LOCAL_OWNER,),
             ).fetchall()
             for row in rows:
+                if expected_run_id is not None and row["id"] != expected_run_id:
+                    return None  # Explicit executors must not take another queued job.
                 summary = RunSummary.model_validate_json(row["summary"])
                 if summary.status != "queued":
                     continue

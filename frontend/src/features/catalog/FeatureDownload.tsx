@@ -9,7 +9,12 @@ export function FeatureDownload({
 }) {
   function download() {
     const data = {
-      schema_version: 'source-feature-export-v1',
+      schema_version:
+        feature.schema_version === 'catalog-feature-v2'
+          ? 'source-feature-export-v2'
+          : 'source-feature-export-v1',
+      analysis_identity: catalog.identity,
+      coverage: catalog.coverage_v2,
       catalog_id: catalog.id,
       catalog_revision: catalog.revision,
       source_project: catalog.source_project,
