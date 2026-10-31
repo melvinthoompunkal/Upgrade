@@ -17,6 +17,12 @@ services. GitHub App setup, private-account integration, automatic patching and 
 execution are not prerequisites for this milestone. Analysis support for another
 language is a separate task from implementing an execution/adaptation runner for it.
 
+The [feature extraction roadmap](docs/feature-extraction-roadmap.md) now specifies the
+planned shared source-text discovery and comparison path, with exact citations and
+optional parsers. It supersedes mandatory per-language parser/admission work for that
+analysis milestone. The application still uses the Python analysis profile today;
+execution and verified adaptation keep their separate reviewed profiles.
+
 The implemented demo pair is Scrapy → `examples/crawler-target` (`crawler-demo`).
 Selection is delivered; it still produces a proposal without patching the crawler.
 F3 adds public Python structural analysis with optional reviewed native offline tests;

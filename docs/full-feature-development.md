@@ -35,8 +35,11 @@ provider-lifecycle checks remain separate validation work.
 Semantic usefulness and readiness to apply a tested patch remain separate judgments.
 An idea can be useful while automatic adaptation is unsupported. Native test execution,
 patching, PR creation, account/private-repository integration and production hosting are
-deferred extensions. New-language semantic analysis needs its own inventory/parser and
-evidence support; it does not first require an execution runner for that language.
+deferred extensions. The next analysis design is a shared source-text workflow with
+validated file/line evidence and optional language parsers, described in the
+[feature extraction roadmap](feature-extraction-roadmap.md). It does not require an
+execution runner or mandatory parser for every language. This is planned work; the
+current implementation still admits only the supported Python analysis profile.
 
 The [current priorities](#post-f13-code-review-and-prioritized-work) supersede the earlier
 GitHub-App-first release order for this milestone. Historical results and broader release
@@ -2107,7 +2110,7 @@ for the active semantic milestone. No credential values were printed or changed.
 | Next: broader live semantic quality | One bounded ItsDangerous/HTTPX comparison and real saved-result browser check passed locally. Broaden checks for existing behavior, unrelated goals, uncertain evidence and additional supported public project pairs. | `catalog_workflow.py`, `relevance_workflow.py`; exact pinned inputs, citations, coverage and spend retained in the local sample above. No patch, Docker suite or GitHub write is required. |
 | Current analysis operations | Validate real model cancellation, failure handling and saved-result reopening for the local semantic workflow. | `backend/app/jobs/`; no silent paid replay and no new inference merely from browsing a saved result. |
 | As needed: project inputs | Add local-folder/ZIP ingestion if the user's project should be supplied from disk. Start from the existing public-URL project adapter when URLs are sufficient. | `projects.py`, `project_contracts.py`, `ProjectPin.tsx`; snapshot the selected input without changing the original project. This is separate from GitHub login/private-account integration. |
-| As needed: analysis languages | Add Node/TypeScript or other static/semantic analysis adapters when those repositories are required. | `project_support.py`, `project_adapters.py` and evidence extraction need language-aware inventory, parsing, bounded reads and validated citations. OpenClaw is outside the current Python analysis profile. Do not require executable adaptation support merely to compare ideas. |
+| Next: general feature extraction | Implement the [feature extraction roadmap](feature-extraction-roadmap.md): shared readable-source inventory, bounded discovery/retrieval, validated text citations and optional parsers. | Version project/catalog/assessment evidence and saved-data readers; preserve Python execution/adaptation admission. OpenClaw remains outside the current profile until the roadmap's resource, semantic and browser acceptance checks pass. No per-language runner or mandatory parser is required for discovery. |
 | Deferred: verified implementation | Validate or expand automatic patch generation only when the user chooses to implement an idea. | Existing F7/F8/F11 workflows retain baseline, frozen acceptance, native regression, scope/dependency and notice requirements. A recommendation alone must not claim a verified patch. |
 | Deferred: GitHub account/publishing | Configure and certify the existing App-based account, private snapshot and PR workflows only if those integrations become a milestone. | `backend/app/auth/`, `backend/app/publishing/`, `docs/github-setup.md`; no App setup is needed for current local public analysis. Private analysis still needs its own admitted workflow. |
 | Deferred: hosting/execution | Certify hosted analysis or implement hosted target execution when the product needs those deployment modes. | `backend/app/hosting/` and `docs/hosting.md`; deployment and execution-isolation gates remain applicable to those offerings, not prerequisites for local semantic comparison. |
