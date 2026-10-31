@@ -6,7 +6,16 @@ America/New_York.
 Use [project status, audits and the development plan](docs/full-feature-development.md)
 for completed milestones, resolved findings, historical verification and the remaining
 package checklist. This document retains architecture, contracts, scoring and the
-original MVP design; its account/private-access exclusions are superseded by that roadmap.
+original MVP design. The active milestone is local semantic discovery and source-to-target
+comparison, as recorded in [the current scope](docs/full-feature-development.md#active-milestone-local-semantic-discovery-and-expansion).
+The account/private-access roadmap remains a deferred extension.
+
+Current product direction, October 30, 2026: break a repository into meaningful
+capabilities, compare them with the user's project, and explain useful expansions with
+source/target code evidence. Use the existing local public-URL workflow and F4/F5
+services. GitHub App setup, private-account integration, automatic patching and hosted
+execution are not prerequisites for this milestone. Analysis support for another
+language is a separate task from implementing an execution/adaptation runner for it.
 
 The implemented demo pair is Scrapy → `examples/crawler-target` (`crawler-demo`).
 Selection is delivered; it still produces a proposal without patching the crawler.

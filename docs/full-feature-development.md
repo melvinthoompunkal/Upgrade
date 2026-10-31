@@ -9,6 +9,38 @@ frontend verification receipt. Setup and command guides remain separate; their
 status references point here. The technical breakdown and frontend integration plan
 retain design detail, while this document owns the current backlog.
 
+### Active milestone: local semantic discovery and expansion
+
+Scope clarified October 30, 2026: understand another repository's capabilities, compare
+them with the user's own project, and recommend useful ways to expand that project.
+Use `AUTH_MODE=local`; GitHub App registration is not required. The current input path
+supports public repository URLs and pinned snapshots. Local-folder/ZIP ingestion for
+the user's project would be an additional input adapter; it is not implemented today.
+
+The intended journey is:
+
+1. Break the source repository into code-backed capabilities and explain how they work.
+2. Understand the target project's purpose, structure and existing capabilities.
+3. Compare behavior and architectural roles, identifying overlap and useful extensions.
+4. Present ranked expansion ideas with the benefit, existing target behavior, proposed
+   addition, likely integration points, supporting source/target references and uncertainty.
+
+F4 discovery and F5 relevance already implement the foundation. A complete expansion
+recommendation is further work: today's saved relevance judgment has a short reason,
+target status, fit criteria and evidence, rather than a dedicated expansion-plan contract.
+The current UI also separates structural inspection, discovery and target assessment;
+making that journey clear is part of the next milestone.
+
+Semantic usefulness and readiness to apply a tested patch remain separate judgments.
+An idea can be useful while automatic adaptation is unsupported. Native test execution,
+patching, PR creation, account/private-repository integration and production hosting are
+deferred extensions. New-language semantic analysis needs its own inventory/parser and
+evidence support; it does not first require an execution runner for that language.
+
+The [current priorities](#post-f13-code-review-and-prioritized-work) supersede the earlier
+GitHub-App-first release order for this milestone. Historical results and broader release
+requirements below retain their original scope.
+
 **Current delivery:** the local CLI and browser can trace one Scrapy retry feature,
 profile the bundled Python/HTTPX crawler and select or reject a proposed adaptation.
 Phases 1–3, Stage 4A, F0 remediation and F1 local identity boundaries are implemented.
@@ -40,13 +72,14 @@ authorization, repository indexing and opt-in private snapshots are implemented 
 real-account validation remains pending. Live general-discovery/relevance/adaptation
 validation and the full release workflows remain pending.
 
-The planned product connects GitHub accounts, pins authorized source/target projects,
+The broader, deferred product roadmap connects GitHub accounts, pins authorized source/target projects,
 offers a code-backed feature catalog with all/relevant browsing, and produces one
 reviewable verified change. **Connected analysis** delivers supported repository and
 catalog analysis; **verified adaptation** adds frozen tests, patching, capped repairs
 and change review. Neither full release gate is complete. Sections 4–14 retain the
 design and remaining requirements, with implemented parts identified explicitly.
-The broader roadmap supersedes the original MVP's account/private-access exclusions.
+Those account/private-access extensions are not prerequisites for the active local
+semantic milestone.
 F10–F13 organize the remaining work into local public-Python v1 validation, broader
 repository adaptation, multi-user hosting and optional PR publishing. F10 readiness
 automation and F11's local profiles/preflight are implemented; live release gates,
@@ -61,6 +94,7 @@ not change the recorded F0–F9 implementation or evidence.
 - [Package status and next work](#13-development-sequence-and-deliverables)
 - [Release acceptance](#14-acceptance-and-release-verification)
 - [Post-F13 priorities and cleanup](#post-f13-code-review-and-prioritized-work)
+- [Active semantic milestone](#active-milestone-local-semantic-discovery-and-expansion)
 
 ## 1. Current implementation
 
@@ -447,6 +481,10 @@ Preserve [Graft's MIT notice](../.research/Graft/LICENSE.md) if source code is r
 ## 5. GitHub login, credentials and repository access
 
 ### Decision: GitHub App plus a backend-owned browser session
+
+This decision applies to the deferred account-connected integration. The active local
+semantic workflow uses public URLs without GitHub App credentials; its current scope is
+defined [above](#active-milestone-local-semantic-discovery-and-expansion).
 
 Use one GitHub App for user authorization and repository installation. Users sign in
 on GitHub; Upgrade never collects GitHub passwords or asks ordinary users to generate
@@ -1893,6 +1931,10 @@ Mark remaining unsupported profiles and untested provider/deployment combination
 
 ## 15. Next implementation and documentation policy
 
+The active next milestone is [local semantic discovery and expansion](#active-milestone-local-semantic-discovery-and-expansion).
+The implemented account, publishing and hosted modules remain available as deferred
+extensions; their live release gates do not block the current semantic-only milestone.
+
 The **F2 private-access lifecycle is implemented locally**. Its remaining exit work is
 real development-account sign-in, granted/ungranted private-fetch checks and provider
 rotation/revocation validation. Private retrieval remains off by default while local mode
@@ -1904,9 +1946,10 @@ controlled-provider receipts as live private-access or hosting evidence.
 F4 supplies persistent discovery and F5 supplies target/goal assessments and honest
 all/relevant browsing on pinned F3 public Python projects. Live discovery and relevance
 validation remain exit checks. F6 lifecycle hardening and F9 repeatable local validation
-are implemented locally; the next release work is the remaining real-account/live
-semantic validation grouped under F10. Its readiness command and runbook now identify
-local blockers while keeping live gates pending. F11 supplies reviewed broader public
+are implemented locally. The current priority is useful local public-source discovery,
+target comparison and expansion recommendations, followed by live semantic validation.
+F10's readiness command targets the broader connected/adaptation release; its GitHub
+configuration blocker does not block local semantic discovery. F11 supplies reviewed broader public
 execution/acceptance profiles and private snapshot preflight/disclosure actions; private
 analysis remains fenced pending live validation. F12 owns the hosted product phase.
 F8 supplies local change review and exact downloads. F13 supplies opt-in draft PR publishing,
@@ -1940,33 +1983,34 @@ This review did not reproduce a new application defect in the inspected paths or
 backend regression suite. Controlled tests alone cannot establish that the pending external
 workflows work.
 
-A sanitized settings check confirms the current local blocker: `AUTH_MODE=local`,
+A sanitized settings check confirms the intended local configuration: `AUTH_MODE=local`,
 `DEPLOYMENT_MODE=local`, no GitHub client ID/secret or App ID/private-key path, and
 private fetch/publishing disabled. A model key is present, which does not establish
-live connectivity or semantic correctness. No credential values were printed or changed.
+live connectivity or semantic correctness. Missing App credentials are not a blocker
+for the active semantic milestone. No credential values were printed or changed.
 
 | Priority / scope | Next concrete work | Code and acceptance anchor |
 |---|---|---|
-| First: local public-Python release | Configure a development GitHub App and selected test repositories, then exercise real login, grants/denials, refresh, disconnect/revocation and repository changes. | `backend/app/auth/`, `docs/github-setup.md`; real-account lifecycle receipts. A separately connected GitHub account does not configure the app's own credentials. |
-| First: live feature workflow | Run public multi-feature discovery, both relevance modes and one supported live-model adaptation through browser review/download. Fix any defects exposed by the run. | `catalog_workflow.py`, `relevance_workflow.py`, `adaptation_inputs.py`, `adaptation_workflow.py`; pinned inputs, usage/counts, ordinary green, meaningful frozen assertion red, unchanged acceptance/regression green, scope/notices and target preservation. |
-| First: lifecycle exit checks | Exercise real provider cancellation and hard-stop/container recovery, including usage accounting and absence of automatic paid replay. | `backend/app/jobs/` and `backend/app/hosting/`; actual provider/process evidence. Local controlled coverage already exists. |
-| Optional publishing release | Use a writable public development repository to validate real user/App rights, stale bases, concurrent/duplicate attempts, interrupted responses and exact remote bytes/notices. | `backend/app/publishing/`; unique branch/draft PR evidence and unchanged default branch. `GITHUB_PUBLISHING_ENABLED` remains opt-in; download/review can ship without publishing. |
-| Private analysis feature | Complete live snapshot consent/access/revocation and applicable organization-policy checks, then implement a reviewed admission path that enforces those checks for analysis jobs. | `backend/app/project_privacy.py` currently rejects every private/snapshot analysis. Consent storage or enabling private fetch does not enable analysis; there is no private-analysis switch today. |
-| Hosted analysis release | Validate the actual Linux host, TLS/proxy/origin, tenant isolation, quotas/load, cancellation, recovery, retention/restore, key rotation, migration/rollback and monitoring. | `backend/app/hosting/release.py`, `scripts/validate_hosted.py`, `docs/hosting.md`; current build-bound deployment evidence and independent operator review. Local deployment templates are already implemented. |
-| Hosted adaptation feature | Design and implement an execution service with reviewed isolation, resources, filesystem/network controls and cleanup before admitting target tests or adaptation on the host. | Hosted admission currently allows only project analysis, discovery and relevance, and rejects native baselines/adaptation. This needs implementation beyond deployment configuration. |
-| Broader repository support | Add Node/TypeScript or other runtime profiles only with matching static inventory/evidence, dependency policy, frozen acceptance, isolated native regression, patch policy and support reporting. | `project_adapters.py`, `runtime_profiles.py`, `adaptation_acceptance.py`, `support_matrix.py`; independent fixtures and actual isolated red-to-green evidence. OpenClaw's root remains outside the Python profile. |
-| Later extensions | Add async fixtures/Trio, streaming/ASGI/live-network acceptance, broader entry-point shapes, non-JSON values or additional licenses only when those profiles are a product requirement. Optional Stage 4B comparison is separate. | Explicit current limits in `backend/app/support_matrix.py`; each extension needs its own acceptance criteria. The unchanged crawler retry fixture is an intentional red control. |
+| First: semantic user journey | Make source breakdown, target comparison and expansion recommendations one clear journey using local mode and public URLs. Explain the distinction between structural inspection and AI discovery. | `ProjectRun.tsx`, `CatalogStart.tsx`, `AssessmentPanel.tsx`; no login/App prerequisite and no native baseline requirement for comparison. |
+| First: useful expansion output | Add a dedicated saved recommendation contract and detail view: source capability, existing target counterpart, useful extension, benefit, suggested integration locations, constraints, uncertainty and code references. | Extend `relevance_contracts.py`, `relevance_analysis.py` and `AssessmentDetail.tsx`. The current judgment provides a short reason/status/criteria/evidence, not this full plan. Keep semantic relevance separate from verified-patch eligibility. |
+| First: live semantic quality | Run a real supported public source/target comparison with Meta. Check that capabilities are code-backed, existing target behavior is recognized, suggestions are specific and useful, and unrelated/uncertain ideas stay visible as such. | `catalog_workflow.py`, `relevance_workflow.py`; exact pinned inputs, source/target citations, disclosed coverage, usage and saved all/relevant browsing. No patch, Docker suite or GitHub write is required. |
+| Current analysis operations | Validate real model cancellation, failure handling and saved-result reopening for the local semantic workflow. | `backend/app/jobs/`; no silent paid replay and no new inference merely from browsing a saved result. |
+| As needed: project inputs | Add local-folder/ZIP ingestion if the user's project should be supplied from disk. Start from the existing public-URL project adapter when URLs are sufficient. | `projects.py`, `project_contracts.py`, `ProjectPin.tsx`; snapshot the selected input without changing the original project. This is separate from GitHub login/private-account integration. |
+| As needed: analysis languages | Add Node/TypeScript or other static/semantic analysis adapters when those repositories are required. | `project_support.py`, `project_adapters.py` and evidence extraction need language-aware inventory, parsing, bounded reads and validated citations. OpenClaw is outside the current Python analysis profile. Do not require executable adaptation support merely to compare ideas. |
+| Deferred: verified implementation | Validate or expand automatic patch generation only when the user chooses to implement an idea. | Existing F7/F8/F11 workflows retain baseline, frozen acceptance, native regression, scope/dependency and notice requirements. A recommendation alone must not claim a verified patch. |
+| Deferred: GitHub account/publishing | Configure and certify the existing App-based account, private snapshot and PR workflows only if those integrations become a milestone. | `backend/app/auth/`, `backend/app/publishing/`, `docs/github-setup.md`; no App setup is needed for current local public analysis. Private analysis still needs its own admitted workflow. |
+| Deferred: hosting/execution | Certify hosted analysis or implement hosted target execution when the product needs those deployment modes. | `backend/app/hosting/` and `docs/hosting.md`; deployment and execution-isolation gates remain applicable to those offerings, not prerequisites for local semantic comparison. |
 
-For the next milestone, complete the first three rows for the existing public-Python
-scope, then optional publishing. Private analysis, hosted execution and additional
-languages should be separate implementation packages with explicit acceptance criteria.
+For the next milestone, complete the first three rows using the existing public-Python
+analysis profile and validate the applicable local analysis operations. Add an input or
+language adapter when the intended projects require it. Automatic patching, GitHub App
+setup, PR publishing and hosted execution are not part of the immediate milestone.
 
-Select the live source/target pair against the actual profile before starting inference:
-static Python project metadata, a supported native suite, JSON-compatible callable
-acceptance, reviewed dependencies and an exact supported source-use profile. Public
-Python analysis does not imply that every Python repository can run tests or accept an
-adaptation. Broader dependency/build support is another runtime-profile implementation
-task, not something that a GitHub permission change will unlock.
+Select the live source/target pair against the analysis profile before starting inference:
+currently this requires inspectable pinned Python projects and bounded, code-backed
+evidence. A supported native suite, JSON-call acceptance and reviewed execution
+dependencies apply when verifying an implementation, not merely assessing an expansion
+idea. Broader analysis and broader execution are separate support decisions.
 
 ### Cleanup and verification of this review
 
@@ -1984,8 +2028,9 @@ new stage scratch output from being added accidentally.
 
 The original F13 receipt remains a dated historical record. This cleanup changes files
 covered by its source manifest, so it must not be presented as a current full-source pass.
-All application source bytes still match the original F13 source manifest; the differences
-are `.gitignore`, this plan and the browser test's receipt output location.
+At cleanup verification time, all application source bytes still matched the original F13
+source manifest; the differences were `.gitignore`, this plan and the browser test's
+receipt output location. Subsequent scope documentation is not a new test execution.
 
 Fresh checks for this review on October 30, 2026:
 

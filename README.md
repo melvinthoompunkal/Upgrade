@@ -1,6 +1,16 @@
 # Graft Meta
 
-Adapt one small feature from a source repository into a target project, with Muse Spark planning and code-backed red-to-green evidence. The technical design is in [tech_breakdown.md](tech_breakdown.md).
+Understand a source repository, compare its capabilities with your own project, and find
+useful ways to expand that project. Muse Spark uses code references to explain the
+matches, existing behavior, possible gaps and suggested extensions. The technical design
+is in [tech_breakdown.md](tech_breakdown.md).
+
+The current milestone is local semantic discovery and comparison. Use `AUTH_MODE=local`
+with supported public source/target repository URLs; no GitHub App registration is
+required. F4 feature catalogs and F5 target/goal assessments provide the existing
+foundation. More detailed expansion recommendations and live semantic quality checks
+are the next work. Automatic implementation, PR publishing, account integration and
+hosted execution are later extensions. See [the active scope and priorities](docs/full-feature-development.md#active-milestone-local-semantic-discovery-and-expansion).
 
 Start with [project status, audits and the development plan](docs/full-feature-development.md)
 for completed work, resolved findings, verification history and the remaining backlog.

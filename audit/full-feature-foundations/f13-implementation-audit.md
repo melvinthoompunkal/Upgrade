@@ -2,6 +2,13 @@
 
 Date: October 30, 2026, America/New_York.
 
+Current scope update: the next milestone is **local semantic repository discovery,
+comparison with the user's project, and useful expansion recommendations**. It uses
+the public-URL/local-mode workflow and does not require a GitHub App. The broader
+account, private-access, publishing and deployment gates below describe the historical
+full-product roadmap; they are deferred for this milestone. See
+[the active scope and priorities](../../docs/full-feature-development.md#active-milestone-local-semantic-discovery-and-expansion).
+
 Review and cleanup note, October 30, 2026: the current implementation boundaries were
 checked against configuration, project admission, runtime support, hosted admission and
 publishing code. The actionable follow-up is now recorded in
