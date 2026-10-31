@@ -35,7 +35,7 @@ from app.tools.repositories import (
 from app.tools.runner import PROJECT_ROOT
 from app.tools.runner_artifacts import file_hashes
 from app.tracer import SourceTracer
-from app.workflow_inputs import SelectionInputs, WorkflowContext
+from app.workflow_inputs import SelectionInputs, WorkflowContext, require_crawler_source
 
 REQUIRED_OUTPUTS = (
     "source-trace.json",
@@ -182,7 +182,14 @@ async def record_fit_selection(
             ),
         )
         async with client:
+            require_crawler_source(args.source_url)
             manager = await asyncio.to_thread(RepositoryManager, directory / "repositories")
+            source = await asyncio.to_thread(
+                manager.public_source, args.source_url, args.source_sha
+            )
+            report["source"] = source.snapshot.model_dump(mode="json")
+            source_evidence = EvidenceSession(source)
+            SourceTracer.validate_source(source_evidence)
             target, original = await asyncio.to_thread(
                 manager.local_target, registered_target(PROJECT_ROOT, args.target)
             )
@@ -220,10 +227,6 @@ async def record_fit_selection(
                 stage="baseline_passed",
                 retry_diagnostic_status=baseline_report["retry_diagnostic_status"],
             )
-            source = await asyncio.to_thread(
-                manager.public_source, args.source_url, args.source_sha
-            )
-            report["source"] = source.snapshot.model_dump(mode="json")
             store.binding.update(
                 source_sha=source.snapshot.commit_sha,
                 target_sha=target.snapshot.commit_sha,
@@ -232,7 +235,6 @@ async def record_fit_selection(
             )
             for repo in (source, target):
                 store.adopt("repositories/" + repo.snapshot.inventory_artifact_id)
-            source_evidence = EvidenceSession(source)
             progress("analysis", "Tracing source behavior using pinned code and test references.")
             tracer = SourceTracer(
                 client, source_evidence, output_tokens=settings.meta_trace_max_completion_tokens

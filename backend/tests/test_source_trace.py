@@ -3,6 +3,7 @@ import asyncio
 import hashlib
 import json
 from dataclasses import replace
+from importlib import import_module
 from pathlib import Path
 
 import httpx
@@ -17,12 +18,17 @@ from app.evidence_contracts import Coverage, SourceTrace
 from app.models.meta_client import MetaClient
 from app.tools.git import Git
 from app.tools.repositories import Registration
+from app.tracer import SourceTracer
 from app.workflow_inputs import TraceInputs, WorkflowContext
 
 
 @pytest.fixture
 def trace_workflow(session, committed_repo, tmp_path, monkeypatch):
-    class Tracer:
+    monkeypatch.setattr(
+        "app.tracer.FOCUS_PATHS", ("src/retry.py", "pyproject.toml", "tests/test_retry.py")
+    )
+
+    class Tracer(SourceTracer):
         events = []
 
         def __init__(self, client, evidence, **kwargs):
@@ -56,7 +62,7 @@ def trace_workflow(session, committed_repo, tmp_path, monkeypatch):
         return git_run(
             git,
             *(
-                str(committed_repo[0]) if a == "https://github.com/example/source" else a
+                str(committed_repo[0]) if a == "https://github.com/scrapy/scrapy" else a
                 for a in args
             ),
             **kwargs,
@@ -75,7 +81,7 @@ def trace_workflow(session, committed_repo, tmp_path, monkeypatch):
             ),
         ),
     )
-    inputs = TraceInputs("https://github.com/example/source", trace.source_sha, "target", "retry")
+    inputs = TraceInputs("https://github.com/scrapy/scrapy", trace.source_sha, "target", "retry")
     return inputs, WorkflowContext(tmp_path / "artifacts", settings())
 
 
@@ -173,6 +179,43 @@ def test_missing_key_saves_sanitized_failure_receipt_before_git_or_inference(tmp
     assert report["error_code"] == "missing_configuration"
     assert json.loads(path.read_text()) == report
     assert not (path.parent / "repositories").exists()
+
+
+@pytest.mark.parametrize("module_name", ["source_trace", "fit_select"])
+def test_other_source_rejected_by_service_before_git_docker_or_inference(
+    tmp_path, monkeypatch, module_name
+):
+    module = import_module(f"app.{module_name}")
+
+    def reject_work(*args, **kwargs):
+        pytest.fail("An unsupported crawler source must stop before repository or Docker work.")
+
+    monkeypatch.setattr(module, "RepositoryManager", reject_work)
+    if module_name == "fit_select":
+        monkeypatch.setattr(module, "record_pinned_baseline", reject_work)
+    inputs = TraceInputs(
+        "https://github.com/openclaw/openclaw", None, "crawler-demo", "Improve web scraping."
+    )
+    context = WorkflowContext(tmp_path / "artifacts", settings())
+    record = getattr(
+        module, f"record_{'fit_selection' if module_name == 'fit_select' else module_name}"
+    )
+    report, path = asyncio.run(record(inputs, context=context))
+    assert report["error_code"] == "unsupported_source"
+    assert "crawler example supports only" in report["detail"]
+    assert report["usage"]["requests"] == 0
+    assert not (path.parent / "repositories").exists()
+    assert json.loads(path.read_bytes()) == report
+
+
+def test_missing_retry_files_stop_trace_before_target_retrieval(trace_workflow, monkeypatch):
+    inputs, context = trace_workflow
+    monkeypatch.setattr("app.tracer.FOCUS_PATHS", ("missing-retry.py",))
+    report, path = asyncio.run(source_trace.record_source_trace(inputs, context=context))
+    assert report["error_code"] == "unsupported_source"
+    assert report["usage"]["requests"] == 0
+    assert not (path.parent / "repositories/target.git").exists()
+    assert json.loads(path.read_bytes()) == report
 
 
 def test_unwritable_trace_receipt_has_sanitized_cli_diagnostic(tmp_path, monkeypatch, capsys):

@@ -48,3 +48,7 @@ class EvidenceError(GraftError):
 
 class UnsupportedTargetError(GraftError):
     code = "unsupported_target"
+
+
+class UnsupportedSourceError(GraftError):
+    code = "unsupported_source"

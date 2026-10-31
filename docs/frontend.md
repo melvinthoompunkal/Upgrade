@@ -63,6 +63,11 @@ do not bind it to a public interface. No hosted Site was created.
   original native suite offline. No target or model key is needed for source-only analysis.
   **Try the crawler example** opens `/example`, retaining the reviewed Scrapy retry
   trace/fit workflow and its model/runner requirements.
+  Both crawler modes support only `https://github.com/scrapy/scrapy`; other source URLs
+  are rejected before queuing, repository retrieval, model calls or Docker tests. The
+  pinned source must contain the retry implementation, settings and tests. For other
+  supported Python repositories, use **Feature discovery**. Node/TypeScript roots such
+  as OpenClaw are not supported by the current discovery profile.
   In this trace/fit form, **Source commit SHA** is optional: a blank value uses the latest
   default-branch commit when the worker starts and pins it for the entire run. Supplying
   a full SHA selects that exact version. Feature selection still requires the reviewed

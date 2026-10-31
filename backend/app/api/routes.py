@@ -18,11 +18,13 @@ from app.api.contracts import (
     Target,
 )
 from app.api.storage import now
+from app.errors import UnsupportedSourceError
 from app.hosting.release import released_profiles, require_job
 from app.jobs.policy import operator_allowed
 from app.projects import project_store
 from app.tools.git import Git
 from app.tools.runner import PROJECT_ROOT
+from app.workflow_inputs import require_crawler_source
 
 router = APIRouter(prefix="/api")
 
@@ -100,6 +102,11 @@ def create_run(
     idempotency_key: str = Header(min_length=16, max_length=100, pattern=r"^[A-Za-z0-9_-]+$"),
 ):
     require_job(request.app.state.settings, body)
+    if body.kind in {"fit_select", "source_trace"}:
+        try:
+            require_crawler_source(body.source_url)
+        except UnsupportedSourceError as exc:
+            raise HTTPException(422, str(exc)) from None
     if body.kind in {"catalog_discovery", "relevance_assessment"}:
         raise HTTPException(422, "Use the catalog or relevance endpoints to create these jobs.")
     if body.kind == "meta_smoke" and not operator_allowed(

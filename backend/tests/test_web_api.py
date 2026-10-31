@@ -129,6 +129,25 @@ def test_invalid_inputs_do_not_enqueue(client, changes):
     assert client.get("/api/runs").json()["items"] == []
 
 
+@pytest.mark.parametrize("kind", ["fit_select", "source_trace"])
+@pytest.mark.parametrize(
+    "url", ["https://github.com/openclaw/openclaw", "https://github.com/pallets/itsdangerous"]
+)
+def test_crawler_example_rejects_other_sources_before_queueing(client, kind, url):
+    response = post(client, {**REQUEST, "kind": kind, "source_url": url})
+    assert response.status_code == 422
+    assert "crawler example supports only" in response.json()["detail"]
+    assert "Feature discovery" in response.json()["detail"]
+    assert client.get("/api/runs").json()["items"] == []
+    with client.app.state.runs.connect() as db:
+        assert db.execute("SELECT count(*) FROM owned_resources").fetchone()[0] == 0
+
+
+def test_crawler_example_accepts_scrapy_git_url(client):
+    response = post(client, {**REQUEST, "source_url": REQUEST["source_url"] + ".git"})
+    assert response.status_code == 202
+
+
 def test_queue_is_bounded_and_browser_origin_is_checked(client):
     assert post(client, Origin="https://unrelated.example").status_code == 403
     for index in range(4):

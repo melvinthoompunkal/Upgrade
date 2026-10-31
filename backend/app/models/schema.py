@@ -2,9 +2,33 @@
 
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from app.errors import ConfigurationError
+
+
+def validation_summary(schema: type[BaseModel], error: ValidationError) -> str:
+    """Report schema-owned field names and error types, never provider text or values."""
+    fields: set[str] = set()
+
+    def collect(node: Any) -> None:
+        if isinstance(node, dict):
+            fields.update(node.get("properties", {}))
+            for value in node.values():
+                collect(value)
+        elif isinstance(node, list):
+            for value in node:
+                collect(value)
+
+    collect(schema.model_json_schema())
+    issues = []
+    for issue in error.errors(include_input=False, include_context=False, include_url=False)[:5]:
+        location = ".".join(
+            str(part) if isinstance(part, int) else part if part in fields else "<field>"
+            for part in issue["loc"]
+        )
+        issues.append(f"{location or '<root>'} ({issue['type']})")
+    return "; ".join(issues)
 
 
 def strict_schema(schema: type[BaseModel]) -> dict[str, Any]:

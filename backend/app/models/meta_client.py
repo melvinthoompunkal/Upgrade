@@ -15,7 +15,7 @@ from app.errors import ConfigurationError, GraftError, MetaRequestError, ModelOu
 from app.jobs.privacy import check_transmission
 from app.jobs.quotas import charge, metric
 from app.models.budget import ModelBudget
-from app.models.schema import response_format
+from app.models.schema import response_format, validation_summary
 
 
 class MetaClient:
@@ -183,7 +183,9 @@ class MetaClient:
             raise ModelOutputError("Expected a structured response, not a tool call.", call=call)
         try:
             return schema.model_validate_json(message.content)
-        except ValidationError:
+        except ValidationError as exc:
             raise ModelOutputError(
-                "Meta output failed schema or contract validation.", call=call
+                f"Meta output failed schema or contract validation for {schema.__name__} "
+                f"at {call.stage}: {validation_summary(schema, exc)}.",
+                call=call,
             ) from None

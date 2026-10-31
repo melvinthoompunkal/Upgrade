@@ -152,6 +152,45 @@ def test_invalid_or_unfinished_outputs_never_count_as_success(failure: str) -> N
         asyncio.run(structured_with(lambda _: httpx.Response(200, json=payload)))
 
 
+def test_validation_failure_identifies_schema_stage_and_field_without_provider_content():
+    payload = {**PLAN, "rationale": 123, TEST_KEY: "private repository content"}
+    with pytest.raises(ModelOutputError) as error:
+        asyncio.run(structured_with(lambda _: httpx.Response(200, json=completion(payload))))
+    detail = str(error.value)
+    assert "RunPlan at test" in detail
+    assert "rationale (string_type)" in detail
+    assert "<field> (extra_forbidden)" in detail
+    assert TEST_KEY not in detail and "private repository content" not in detail
+    assert error.value.call is not None
+
+
+def test_contract_failure_diagnostics_omit_custom_validator_messages():
+    from pydantic import model_validator
+
+    from app.contracts import Contract
+
+    class Rejected(Contract):
+        value: str
+
+        @model_validator(mode="after")
+        def reject(self):
+            raise ValueError(f"private provider data: {self.value}")
+
+    async def run():
+        transport = httpx.AsyncClient(
+            transport=httpx.MockTransport(
+                lambda _: httpx.Response(200, json=completion({"value": TEST_KEY}))
+            )
+        )
+        async with MetaClient(settings(), http_client=transport) as client:
+            return await client.structured(stage="contract", messages=[], schema=Rejected)
+
+    with pytest.raises(ModelOutputError) as error:
+        asyncio.run(run())
+    assert "Rejected at contract: <root> (value_error)" in str(error.value)
+    assert TEST_KEY not in str(error.value) and "private provider data" not in str(error.value)
+
+
 @pytest.mark.parametrize("status", [400, 401, 429, 500])
 def test_provider_errors_do_not_expose_response_bodies_or_credentials(status: int) -> None:
     def handler(_: httpx.Request) -> httpx.Response:

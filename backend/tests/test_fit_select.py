@@ -4,6 +4,7 @@ import argparse
 import asyncio
 import hashlib
 import json
+from dataclasses import replace
 from pathlib import Path
 
 import httpx
@@ -222,6 +223,35 @@ def test_budget_exhaustion_between_stages_retains_attempts(workflow, monkeypatch
     assert report["usage"]["requests"] == len(report["attempts"]) == 2
     assert "source-trace.json" in report["artifact_hashes"]
     assert "target-profile.json" in report["unavailable_artifacts"]
+
+
+def test_missing_retry_files_stop_selection_before_docker_or_inference(workflow, monkeypatch):
+    args, state = workflow
+    retrieve = RepositoryManager.public_source
+
+    def missing_retry_files(manager, url, sha):
+        repo = retrieve(manager, url, sha)
+        inventory = repo.inventory.model_copy(
+            update={
+                "files": tuple(
+                    entry
+                    for entry in repo.inventory.files
+                    if entry.path != "scrapy/downloadermiddlewares/retry.py"
+                )
+            }
+        )
+        return replace(repo, inventory=inventory)
+
+    def reject_runner(*args, **kwargs):
+        pytest.fail("Missing retry files must be rejected before Docker runs.")
+
+    monkeypatch.setattr(RepositoryManager, "public_source", missing_retry_files)
+    monkeypatch.setattr(fit_select, "record_pinned_baseline", reject_runner)
+    report, path = asyncio.run(fit_select.record_fit_selection(args))
+    assert report["error_code"] == "unsupported_source"
+    assert report["usage"]["requests"] == 0 and state["requests"] == []
+    assert report["source_unchanged"] is True
+    assert json.loads(path.read_bytes()) == report
 
 
 def test_mid_artifact_failure_retains_sanitized_receipt(workflow, monkeypatch):

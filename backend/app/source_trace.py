@@ -27,7 +27,7 @@ from app.tools.repositories import (
 from app.tools.runner import PROJECT_ROOT
 from app.tools.runner_artifacts import file_hashes
 from app.tracer import SourceTracer
-from app.workflow_inputs import TraceInputs, WorkflowContext
+from app.workflow_inputs import TraceInputs, WorkflowContext, require_crawler_source
 
 REQUIRED_OUTPUTS = (
     "source-trace.json",
@@ -66,8 +66,11 @@ async def record_source_trace(
         # Check configuration before retrieval; no secrets enter Git or target processes.
         client = MetaClient(settings)
         async with client:
+            require_crawler_source(args.source_url)
             manager = RepositoryManager(directory / "repositories")
             source = manager.public_source(args.source_url, args.source_sha)
+            evidence = EvidenceSession(source)
+            SourceTracer.validate_source(evidence)
             target, original = manager.local_target(registered_target(PROJECT_ROOT, args.target))
             worktree = manager.worktree(target, run_id)
             report.update(
@@ -80,7 +83,6 @@ async def record_source_trace(
             )
             for repo in (source, target):
                 store.adopt("repositories/" + repo.snapshot.inventory_artifact_id)
-            evidence = EvidenceSession(source)
             # Make physical path denial and missing inventory checks part of each live receipt.
             rejected = []
             for path in ("../outside", "/etc/passwd", "backend/.env", "missing-file.py"):

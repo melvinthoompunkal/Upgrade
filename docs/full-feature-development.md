@@ -144,6 +144,17 @@ The default browser form and `project_analysis` API submit server-owned public p
 with an optional target. Source-only structural analysis needs no target or model key.
 The explicit `/example` workflow retains the reviewed `crawler-demo` fit contracts and
 retry-specific tracer/profiler/gates. Public project analysis does not select a feature.
+The crawler trace/fit form accepts only the Scrapy source URL; other repositories are
+rejected before job admission, and service entry points also stop before retrieval,
+inference or Docker execution. The pinned source's required retry files are checked
+before target setup or tests. This addresses the OpenClaw-to-crawler run that reached
+Meta with a Scrapy-specific prompt and failed output validation. General discovery
+still requires a supported Python project; OpenClaw's Node/TypeScript root is unsupported.
+New schema failures identify the contract, model stage and schema-owned field/error
+types while omitting provider values, unknown property names and validator messages.
+Validation for this repair: 141 focused backend checks and 32 desktop/mobile browser
+checks passed, along with the production build, documented Ruff check and changed-file
+formatting checks. These are controlled regressions; no fresh live Meta run was performed.
 F4 uses a separate persistent catalog contract; each discovery response contains at most
 eight hints and each deep trace returns one validated card. The legacy eight-card trace
 bound is unchanged. Run history links to catalogs and their immutable revisions.

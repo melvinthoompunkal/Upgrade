@@ -19,9 +19,10 @@ test('example pins source and editing the repository clears its SHA', async ({ p
 test('blank source SHA starts a trace using the latest snapshot', async ({ page }) => {
   await mockApi(page)
   await page.goto('/example')
-  await page.getByLabel('Source repository').fill('https://github.com/example/source')
+  await page.getByLabel('Source repository').fill('https://github.com/scrapy/scrapy')
   await page.getByLabel('What would you like to improve?').fill('Understand the retry behavior.')
   await page.getByRole('button', { name: /Analysis options/ }).click()
+  await page.getByLabel('Source commit SHA').clear()
   await expect(page.getByLabel('Source commit SHA')).toHaveValue('')
   await expect(page.getByText(/latest default-branch commit when the run starts/)).toBeVisible()
   await page.getByLabel('Trace source only').check()
@@ -32,7 +33,7 @@ test('blank source SHA starts a trace using the latest snapshot', async ({ page 
   const body = (await submission).postDataJSON()
   expect(body).toMatchObject({
     kind: 'source_trace',
-    source_url: 'https://github.com/example/source',
+    source_url: 'https://github.com/scrapy/scrapy',
   })
   expect(body).not.toHaveProperty('source_sha')
   await expect(page).toHaveURL(/runs\/fixture-run\/overview/)
@@ -45,7 +46,7 @@ test('invalid source SHA blocks submission and retains the form', async ({ page 
     if (request.method() === 'POST') submissions.push(request.url())
   })
   await page.goto('/example')
-  await page.getByLabel('Source repository').fill('https://github.com/example/source')
+  await page.getByLabel('Source repository').fill('https://github.com/scrapy/scrapy')
   await page.getByLabel('What would you like to improve?').fill('Understand retries.')
   await page.getByRole('button', { name: /Analysis options/ }).click()
   await page.getByLabel('Source commit SHA').fill('main')
@@ -74,6 +75,45 @@ test('invalid URL preserves the form and never queues work', async ({ page }) =>
   )
   expect(submissions).toBe(0)
 })
+
+for (const mode of ['fit_select', 'source_trace']) {
+  test(`crawler example blocks OpenClaw before submission in ${mode}`, async ({ page }) => {
+    await mockApi(page)
+    let submissions = 0
+    page.on('request', (request) => {
+      if (request.method() === 'POST') submissions++
+    })
+    await page.goto('/example')
+    await expect(page.getByLabel('Source repository')).toHaveValue(
+      'https://github.com/scrapy/scrapy',
+    )
+    await page.getByRole('button', { name: /Analysis options/ }).click()
+    await expect(page.getByLabel('Source commit SHA')).toHaveValue(
+      '5c7886a3f27dbf8b66f557cc9945dbc4a6aceaac',
+    )
+    await expect(page.getByText(/Node\/TypeScript projects such as OpenClaw/)).toBeVisible()
+    await expect(
+      page.getByRole('link', { name: 'Feature discovery', exact: true }),
+    ).toHaveAttribute('href', '/')
+    await page.getByLabel('Source repository').fill('https://github.com/openclaw/openclaw')
+    await page
+      .getByLabel('What would you like to improve?')
+      .fill('Increase web scraping capabilities.')
+    if (mode === 'source_trace') {
+      await page.getByLabel('Trace source only').check()
+    }
+    await page
+      .getByRole('button', {
+        name: mode === 'source_trace' ? 'Trace source' : 'Find a suitable feature',
+        exact: true,
+      })
+      .click()
+    await expect(page.getByText(/The crawler example supports only Scrapy\./)).toBeVisible()
+    await expect(page.getByLabel('Source repository')).toBeFocused()
+    await expect(page).toHaveURL(/\/example$/)
+    expect(submissions).toBe(0)
+  })
+}
 
 test('run creation is idempotent and opens a stable workspace URL', async ({ page }) => {
   await mockApi(page)

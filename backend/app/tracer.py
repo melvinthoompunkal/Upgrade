@@ -4,7 +4,7 @@ import json
 
 from openai.types.chat import ChatCompletionMessageParam
 
-from app.errors import EvidenceError, GraftError
+from app.errors import EvidenceError, GraftError, UnsupportedSourceError
 from app.evidence_contracts import SourceTrace
 from app.evidence_tools import EvidenceTools, collect_evidence
 from app.models.meta_client import MetaClient
@@ -42,7 +42,18 @@ class SourceTracer:
     def dispatch(self, name: str, raw: str) -> dict:
         return self.tools.dispatch(name, raw)
 
+    @staticmethod
+    def validate_source(evidence: EvidenceSession) -> None:
+        paths = {entry.path for entry in evidence.repo.inventory.files}
+        if not set(FOCUS_PATHS[:3]) <= paths:
+            raise UnsupportedSourceError(
+                "This snapshot lacks the Scrapy retry implementation, settings or tests "
+                "required by the crawler example. Use the reviewed Scrapy example, or "
+                "Feature discovery for other supported Python repositories."
+            )
+
     async def trace(self, goal: str) -> SourceTrace:
+        self.validate_source(self.evidence)
         repo = self.evidence.repo
         paths = {f.path for f in repo.inventory.files}
         focus = [p for p in FOCUS_PATHS if p in paths]

@@ -8,10 +8,25 @@ from test_meta_client import completion, settings
 
 from app.catalog_contracts import CandidateBatch
 from app.contracts import Ref
-from app.errors import EvidenceError
+from app.errors import EvidenceError, UnsupportedSourceError
 from app.evidence_tools import EvidenceTools, collect_evidence
 from app.models.meta_client import MetaClient
 from app.tracer import SourceTracer
+
+
+def test_unsupported_source_stops_before_any_model_request(session):
+    async def run():
+        def reject_request(_):
+            pytest.fail("Unsupported sources must not consume model requests.")
+
+        transport = httpx.AsyncClient(transport=httpx.MockTransport(reject_request))
+        async with MetaClient(settings(), http_client=transport) as client:
+            with pytest.raises(UnsupportedSourceError, match="lacks the Scrapy retry"):
+                await SourceTracer(client, session).trace("Increase web scraping capabilities.")
+            assert client.calls == [] and client.budget.requests == 0
+            assert session.windows == []
+
+    asyncio.run(run())
 
 
 def test_real_tool_protocol_builds_validated_trace_from_pinned_reads(session, monkeypatch):

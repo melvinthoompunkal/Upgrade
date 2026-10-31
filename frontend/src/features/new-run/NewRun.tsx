@@ -33,8 +33,8 @@ export function NewRun() {
       return {}
     }
   })
-  const [source, setSource] = useState(typeof draft.source === 'string' ? draft.source : '')
-  const [sha, setSha] = useState(typeof draft.sha === 'string' ? draft.sha : '')
+  const [source, setSource] = useState(typeof draft.source === 'string' ? draft.source : SCRAPY_URL)
+  const [sha, setSha] = useState(typeof draft.sha === 'string' ? draft.sha : SCRAPY_SHA)
   const [goal, setGoal] = useState(typeof draft.goal === 'string' ? draft.goal : '')
   const [targetId, setTargetId] = useState('crawler-demo')
   const [kind, setKind] = useState<'fit_select' | 'source_trace'>('fit_select')
@@ -79,6 +79,14 @@ export function NewRun() {
     const next: Record<string, string> = {}
     if (!/^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+(?:\.git)?$/.test(source.trim()))
       next.source = 'Enter a public GitHub repository URL, without credentials or query parameters.'
+    else if (
+      source
+        .trim()
+        .replace(/\.git$/, '')
+        .toLowerCase() !== SCRAPY_URL
+    )
+      next.source =
+        'The crawler example supports only Scrapy. Use Feature discovery for other supported Python repositories.'
     if (sha.trim() && !/^[a-f0-9]{40}(?:[a-f0-9]{24})?$/.test(sha.trim()))
       next.sha = 'Enter the full commit SHA, or leave it blank to use the latest snapshot.'
     if (!goal.trim() || goal.trim().length > 2000)
@@ -124,17 +132,22 @@ export function NewRun() {
     <div className="page new-run-page">
       <div className="page-intro">
         <div className="intro-kicker">
-          <span className="mini-rule" />A better starting point
+          <span className="mini-rule" />
+          Scrapy to HTTPX
         </div>
         <h1>
-          Great ideas deserve
-          <br />a place in your code.
+          Explore retries.
+          <br />
+          Follow the evidence.
         </h1>
-        <p>
-          Find a useful feature in another repository.
-          <br className="hidden sm:block" /> Understand why it fits yours, with evidence at every
-          step.
-        </p>
+        <p>Trace Scrapy's retry behavior and compare it with the bundled HTTPX crawler.</p>
+      </div>
+      <div className="mb-6">
+        <Notice>
+          This example supports Scrapy only. Choose Use Scrapy example for the reviewed snapshot.
+          For other supported Python repositories, open <Link to="/">Feature discovery</Link>.
+          Node/TypeScript projects such as OpenClaw are not supported yet.
+        </Notice>
       </div>
       {error && (
         <div className="mb-6">
@@ -145,8 +158,8 @@ export function NewRun() {
         <form className="run-form surface" onSubmit={submit} noValidate>
           <div className="form-heading">
             <div>
-              <h2>Start a new analysis</h2>
-              <p>A source, a target, and something to improve.</p>
+              <h2>Scrapy crawler example</h2>
+              <p>Explore bounded HTTP retries in the bundled crawler.</p>
             </div>
             <span className="badge">Analysis only</span>
           </div>
@@ -161,7 +174,7 @@ export function NewRun() {
                   <input
                     id="field-source"
                     type="url"
-                    placeholder="https://github.com/owner/repo"
+                    placeholder={SCRAPY_URL}
                     value={source}
                     onChange={(event) => changeSource(event.target.value)}
                     aria-invalid={!!errors.source}
@@ -171,7 +184,7 @@ export function NewRun() {
                   />
                 </div>
                 <div id="source-help" className="field-help">
-                  A public repository to learn from.
+                  This example traces Scrapy's Python retry implementation.
                 </div>
                 {errors.source && (
                   <p id="source-error" className="field-error">
@@ -314,8 +327,8 @@ export function NewRun() {
                     </div>
                   </fieldset>
                   <p className="field-help">
-                    Current scope: one bounded retry slice. Custom source inputs can be traced;
-                    selection requires the reviewed source policy.
+                    Both modes trace one bounded Scrapy retry slice. Selection requires the reviewed
+                    source policy. Use Feature discovery for other supported Python repositories.
                   </p>
                 </div>
               )}
