@@ -71,7 +71,6 @@ export function NewRun() {
     setSource(value)
     if (value.trim() !== source.trim()) {
       setSha('')
-      if (value.trim()) setOptionsOpen(true)
     }
   }
   async function submit(event: FormEvent) {
@@ -80,8 +79,8 @@ export function NewRun() {
     const next: Record<string, string> = {}
     if (!/^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+(?:\.git)?$/.test(source.trim()))
       next.source = 'Enter a public GitHub repository URL, without credentials or query parameters.'
-    if (!/^[a-f0-9]{40}(?:[a-f0-9]{24})?$/.test(sha.trim()))
-      next.sha = 'Enter the full commit SHA for this repository, or use the Scrapy example.'
+    if (sha.trim() && !/^[a-f0-9]{40}(?:[a-f0-9]{24})?$/.test(sha.trim()))
+      next.sha = 'Enter the full commit SHA, or leave it blank to use the latest snapshot.'
     if (!goal.trim() || goal.trim().length > 2000)
       next.goal = 'Describe your goal in 1–2,000 characters.'
     if (!targets.some((item) => item.id === targetId))
@@ -95,7 +94,7 @@ export function NewRun() {
     const request: RunRequest = {
       kind,
       source_url: source.trim(),
-      source_sha: sha.trim(),
+      source_sha: sha.trim() || undefined,
       target: 'crawler-demo',
       goal: goal.trim(),
     }
@@ -259,25 +258,29 @@ export function NewRun() {
                 onClick={() => setOptionsOpen(!optionsOpen)}
               >
                 <CaretDown size={15} className={optionsOpen ? 'rotate-180' : ''} />
-                Analysis options<span>{sha ? 'Source pinned' : 'Pin a source commit'}</span>
+                Analysis options
+                <span>{sha.trim() ? 'Source pinned' : 'Latest source snapshot'}</span>
               </button>
               {optionsOpen && (
                 <div id="analysis-options" className="options-content">
                   <div className="field-group">
-                    <label htmlFor="field-sha">Source commit SHA</label>
+                    <label htmlFor="field-sha">
+                      Source commit SHA <span className="text-muted">(optional)</span>
+                    </label>
                     <input
                       id="field-sha"
                       className="font-mono text-xs"
                       value={sha}
                       onChange={(event) => setSha(event.target.value)}
-                      placeholder="Full immutable commit SHA"
+                      placeholder="Leave blank for the latest snapshot"
                       aria-invalid={!!errors.sha}
                       aria-describedby="sha-help"
                       spellCheck={false}
                     />
                     <p id="sha-help" className="field-help">
-                      Changing the repository clears this commit. The Scrapy example fills its
-                      reviewed URL and SHA together.
+                      Leave blank to use the latest default-branch commit when the run starts. That
+                      snapshot stays pinned for the run. Changing the repository clears this commit;
+                      the Scrapy example fills its reviewed URL and SHA together.
                     </p>
                     {errors.sha && <p className="field-error">{errors.sha}</p>}
                   </div>

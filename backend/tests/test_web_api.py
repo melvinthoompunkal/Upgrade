@@ -93,12 +93,30 @@ def test_duplicate_submission_conflict_and_event_cursor(client):
     )
 
 
+@pytest.mark.parametrize("kind", ["source_trace", "fit_select"])
+def test_optional_source_sha_normalizes_blank_and_preserves_idempotency(client, kind):
+    body = {name: value for name, value in REQUEST.items() if name != "source_sha"}
+    body["kind"] = kind
+    first = post(client, body)
+    assert first.status_code == 202
+    run_id = first.json()["id"]
+    assert json.loads(client.app.state.runs.row(run_id)["request"])["source_sha"] is None
+    for sha in (None, "", "   "):
+        repeated = post(client, {**body, "source_sha": sha})
+        assert repeated.status_code == 202
+        assert repeated.json()["id"] == run_id
+    assert len(client.get("/api/runs").json()["items"]) == 1
+    assert post(client, {**body, "source_sha": "b" * 40}).status_code == 409
+
+
 @pytest.mark.parametrize(
     "changes",
     [
         {"source_url": "https://key@github.com/owner/repo"},
         {"source_url": "https://example.com/owner/repo"},
         {"source_sha": "main"},
+        {"source_sha": "abcd123"},
+        {"source_sha": "A" * 40},
         {"goal": " "},
         {"goal": "x" * 2001},
         {"target": "C:/private"},

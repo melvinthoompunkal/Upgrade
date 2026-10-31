@@ -2,6 +2,7 @@ import argparse
 import asyncio
 import hashlib
 import json
+from dataclasses import replace
 from pathlib import Path
 
 import httpx
@@ -14,7 +15,8 @@ from app.config import Settings
 from app.errors import EvidenceError
 from app.evidence_contracts import Coverage, SourceTrace
 from app.models.meta_client import MetaClient
-from app.tools.repositories import Registration, RepositoryManager
+from app.tools.git import Git
+from app.tools.repositories import Registration
 from app.workflow_inputs import TraceInputs, WorkflowContext
 
 
@@ -48,11 +50,19 @@ def trace_workflow(session, committed_repo, tmp_path, monkeypatch):
         "registered_target",
         lambda *_: Registration("target", committed_repo[0]),
     )
-    monkeypatch.setattr(
-        RepositoryManager,
-        "public_source",
-        lambda manager, url, sha: manager._inventory(session.repo.storage, "source", url, sha),
-    )
+    git_run = Git.run
+
+    def local_transport(git, *args, **kwargs):
+        return git_run(
+            git,
+            *(
+                str(committed_repo[0]) if a == "https://github.com/example/source" else a
+                for a in args
+            ),
+            **kwargs,
+        )
+
+    monkeypatch.setattr(Git, "run", local_transport)
     monkeypatch.setattr(
         source_trace,
         "MetaClient",
@@ -69,13 +79,20 @@ def trace_workflow(session, committed_repo, tmp_path, monkeypatch):
     return inputs, WorkflowContext(tmp_path / "artifacts", settings())
 
 
-def test_trace_publishes_complete_hash_checked_artifacts(trace_workflow):
+@pytest.mark.parametrize("latest", [False, True])
+def test_trace_publishes_complete_hash_checked_artifacts(trace_workflow, latest):
     inputs, context = trace_workflow
+    expected_sha = inputs.source_sha
+    if latest:
+        inputs = replace(inputs, source_sha=None)
     report, path = asyncio.run(source_trace.record_source_trace(inputs, context=context))
     assert report["status"] == "passed"
     assert report["analyzed_feature_count"] == 1
     assert report["usage"]["requests"] == 1
     assert json.loads(path.read_bytes()) == report
+    assert report["source"]["commit_sha"] == expected_sha
+    bundle = json.loads((path.parent / "trace-bundle.json").read_bytes())
+    assert bundle["source"]["commit_sha"] == expected_sha
     for name, expected in report["artifact_hashes"].items():
         assert hashlib.sha256((path.parent / name).read_bytes()).hexdigest() == expected
 

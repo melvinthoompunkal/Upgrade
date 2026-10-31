@@ -2597,8 +2597,11 @@ export interface components {
     SelectionRequest: {
       /** Source Url */
       source_url: string
-      /** Source Sha */
-      source_sha: string
+      /**
+       * Source Sha
+       * @description Full commit SHA; omitted or blank uses the latest default-branch commit at run start.
+       */
+      source_sha?: string | null
       /**
        * Target
        * @default crawler-demo
@@ -2965,8 +2968,11 @@ export interface components {
     TraceRequest: {
       /** Source Url */
       source_url: string
-      /** Source Sha */
-      source_sha: string
+      /**
+       * Source Sha
+       * @description Full commit SHA; omitted or blank uses the latest default-branch commit at run start.
+       */
+      source_sha?: string | null
       /**
        * Target
        * @default crawler-demo

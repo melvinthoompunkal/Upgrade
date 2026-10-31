@@ -63,6 +63,10 @@ do not bind it to a public interface. No hosted Site was created.
   original native suite offline. No target or model key is needed for source-only analysis.
   **Try the crawler example** opens `/example`, retaining the reviewed Scrapy retry
   trace/fit workflow and its model/runner requirements.
+  In this trace/fit form, **Source commit SHA** is optional: a blank value uses the latest
+  default-branch commit when the worker starts and pins it for the entire run. Supplying
+  a full SHA selects that exact version. Feature selection still requires the reviewed
+  source policy; **Use Scrapy example** fills its reviewed URL and commit together.
 - **Source catalog:** after inspecting a supported public source, **Discover features**
   explicitly sends bounded source excerpts to Meta under the displayed allowance.
   `/catalogs/{id}?revision=N` shows all discovered entries, truthful evidence status,

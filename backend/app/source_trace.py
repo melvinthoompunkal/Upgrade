@@ -19,7 +19,6 @@ from app.report_publication import publish_json_report
 from app.selection_artifacts import ArtifactStore, prepare_directory
 from app.tools.evidence import EvidenceSession
 from app.tools.repositories import (
-    SCRAPY_SHA,
     SCRAPY_URL,
     RepositoryManager,
     registered_target,
@@ -212,7 +211,10 @@ async def record_source_trace(
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source-url", default=SCRAPY_URL)
-    parser.add_argument("--source-sha", default=SCRAPY_SHA)
+    parser.add_argument(
+        "--source-sha",
+        help="Full commit SHA; omit to pin the latest default-branch commit when the trace starts.",
+    )
     parser.add_argument("--target", default="crawler-demo")
     parser.add_argument(
         "--goal",

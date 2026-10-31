@@ -117,7 +117,18 @@ class RepositoryManager:
             raise EvidenceError("Stored project HEAD no longer matches its selection.")
         return self._inventory(storage, role, url, sha, prefix)
 
-    def public_source(self, url: str, sha: str) -> PinnedRepository:
+    def public_source(self, url: str, sha: str | None = None) -> PinnedRepository:
+        """Resolve an omitted source revision once, then fetch only that immutable commit."""
+        if sha is None:
+            if not re.fullmatch(
+                r"https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(?:\.git)?", url
+            ):
+                raise RepositoryError("Only public HTTPS GitHub repository URLs are supported.")
+            head = self.git.run("ls-remote", "--exit-code", url, "HEAD", max_bytes=200)
+            match = re.fullmatch(rb"([0-9a-f]{40}(?:[0-9a-f]{24})?)\tHEAD\n?", head)
+            if match is None:
+                raise RepositoryError("The source default branch has no supported commit snapshot.")
+            sha = match[1].decode("ascii")
         return self.public_snapshot(url, sha, role="source")
 
     def public_snapshot(

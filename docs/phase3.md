@@ -13,10 +13,14 @@ and the existing `MODEL_API_KEY` configuration:
 uv run --project backend --locked graft-source-trace
 ```
 
-Defaults are public Scrapy at `5c7886a3f27dbf8b66f557cc9945dbc4a6aceaac` and the reviewed
+Defaults are public Scrapy at its latest default-branch commit and the reviewed
 `crawler-demo` registration. `--source-url`, `--source-sha`, `--target`, and `--goal` are explicit
 CLI arguments. Source URLs must be public HTTPS GitHub repository URLs without credentials;
-revisions must be full commit SHAs. The tracer is intentionally focused on Scrapy retry code,
+`--source-sha` is optional: omitting it resolves the default branch's HEAD once when the
+trace starts, then fetches and records that exact commit. Explicit revisions must be full
+commit SHAs. To reproduce the original reviewed snapshot, pass
+`--source-sha 5c7886a3f27dbf8b66f557cc9945dbc4a6aceaac`.
+The tracer is intentionally focused on Scrapy retry code,
 settings, and source tests. Other stacks and arbitrary local target paths are unsupported.
 
 The crawler is a subdirectory of this monorepo, so target provenance records both the actual

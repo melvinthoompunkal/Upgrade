@@ -12,11 +12,50 @@ test('example pins source and editing the repository clears its SHA', async ({ p
   )
   await page.getByLabel('Source repository').fill('https://github.com/example/another')
   await expect(page.getByLabel('Source commit SHA')).toHaveValue('')
-  await page.getByRole('button', { name: 'Find a suitable feature', exact: true }).click()
-  await expect(
-    page.getByText('Enter the full commit SHA for this repository, or use the Scrapy example.'),
-  ).toBeVisible()
+  await expect(page.getByText('Latest source snapshot', { exact: true })).toBeVisible()
   await expect(page.getByLabel('What would you like to improve?')).not.toHaveValue('')
+})
+
+test('blank source SHA starts a trace using the latest snapshot', async ({ page }) => {
+  await mockApi(page)
+  await page.goto('/example')
+  await page.getByLabel('Source repository').fill('https://github.com/example/source')
+  await page.getByLabel('What would you like to improve?').fill('Understand the retry behavior.')
+  await page.getByRole('button', { name: /Analysis options/ }).click()
+  await expect(page.getByLabel('Source commit SHA')).toHaveValue('')
+  await expect(page.getByText(/latest default-branch commit when the run starts/)).toBeVisible()
+  await page.getByLabel('Trace source only').check()
+  const submission = page.waitForRequest(
+    (request) => request.method() === 'POST' && new URL(request.url()).pathname === '/api/runs',
+  )
+  await page.getByRole('button', { name: 'Trace source', exact: true }).click()
+  const body = (await submission).postDataJSON()
+  expect(body).toMatchObject({
+    kind: 'source_trace',
+    source_url: 'https://github.com/example/source',
+  })
+  expect(body).not.toHaveProperty('source_sha')
+  await expect(page).toHaveURL(/runs\/fixture-run\/overview/)
+})
+
+test('invalid source SHA blocks submission and retains the form', async ({ page }) => {
+  await mockApi(page)
+  const submissions: string[] = []
+  page.on('request', (request) => {
+    if (request.method() === 'POST') submissions.push(request.url())
+  })
+  await page.goto('/example')
+  await page.getByLabel('Source repository').fill('https://github.com/example/source')
+  await page.getByLabel('What would you like to improve?').fill('Understand retries.')
+  await page.getByRole('button', { name: /Analysis options/ }).click()
+  await page.getByLabel('Source commit SHA').fill('main')
+  await page.getByLabel('Trace source only').check()
+  await page.getByRole('button', { name: 'Trace source', exact: true }).click()
+  await expect(
+    page.getByText('Enter the full commit SHA, or leave it blank to use the latest snapshot.'),
+  ).toBeVisible()
+  await expect(page.getByLabel('Source commit SHA')).toHaveValue('main')
+  expect(submissions).toHaveLength(0)
 })
 
 test('invalid URL preserves the form and never queues work', async ({ page }) => {
@@ -39,8 +78,12 @@ test('invalid URL preserves the form and never queues work', async ({ page }) =>
 test('run creation is idempotent and opens a stable workspace URL', async ({ page }) => {
   await mockApi(page)
   const submissions: string[] = []
+  const sourceShas: string[] = []
   page.on('request', (request) => {
-    if (request.method() === 'POST') submissions.push(request.headers()['idempotency-key'])
+    if (request.method() === 'POST') {
+      submissions.push(request.headers()['idempotency-key'])
+      sourceShas.push(request.postDataJSON().source_sha)
+    }
   })
   await page.goto('/example')
   await page.getByRole('button', { name: 'Use Scrapy example' }).click()
@@ -49,6 +92,7 @@ test('run creation is idempotent and opens a stable workspace URL', async ({ pag
   await expect(page.getByRole('heading', { name: fixtureRun.title })).toBeVisible()
   expect(submissions).toHaveLength(1)
   expect(submissions[0]).toMatch(/^[a-f0-9-]{36}$/)
+  expect(sourceShas).toEqual(['5c7886a3f27dbf8b66f557cc9945dbc4a6aceaac'])
   await page.reload()
   await expect(page.getByRole('heading', { name: fixtureRun.title })).toBeVisible()
   expect(submissions).toHaveLength(1)

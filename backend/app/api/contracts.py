@@ -29,7 +29,12 @@ RunKind = Literal[
 class SourceRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
     source_url: str = Field(max_length=200)
-    source_sha: str
+    source_sha: str | None = Field(
+        default=None,
+        description=(
+            "Full commit SHA; omitted or blank uses the latest default-branch commit at run start."
+        ),
+    )
     target: Literal["crawler-demo"] = "crawler-demo"
     goal: str = Field(min_length=1, max_length=2000)
 
@@ -44,7 +49,9 @@ class SourceRequest(BaseModel):
 
     @field_validator("source_sha")
     @classmethod
-    def full_sha(cls, value: str) -> str:
+    def full_sha(cls, value: str | None) -> str | None:
+        if not value:
+            return None
         if not re.fullmatch(r"[0-9a-f]{40}(?:[0-9a-f]{24})?", value):
             raise ValueError("Enter the full lowercase commit SHA for this source repository.")
         return value

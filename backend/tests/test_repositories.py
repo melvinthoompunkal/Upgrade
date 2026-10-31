@@ -95,9 +95,12 @@ def test_inventory_limits_are_reported(committed_repo, tmp_path):
     "url,sha",
     [
         ("file:///outside", "a" * 40),
+        ("file:///outside", None),
         ("https://token@github.com/org/repo", "a" * 40),
+        ("https://token@github.com/org/repo", None),
         ("https://github.com/org/repo", "main"),
         ("https://evil.test/org/repo", "a" * 40),
+        ("https://evil.test/org/repo", None),
     ],
 )
 def test_public_retrieval_rejects_credentials_protocols_and_unpinned_refs(tmp_path, url, sha):
@@ -113,6 +116,7 @@ def test_public_fetch_pins_exact_requested_commit(committed_repo, tmp_path, monk
     original_run = manager.git.run
 
     def local_transport(*args, **kwargs):
+        assert args[0] != "ls-remote", "An explicit SHA must not look up a mutable revision."
         args = tuple(
             str(root) if arg == "https://github.com/example/fixture" else arg for arg in args
         )
@@ -123,6 +127,61 @@ def test_public_fetch_pins_exact_requested_commit(committed_repo, tmp_path, monk
     assert repo.snapshot.commit_sha == sha
     assert repo.read("src/retry.py").startswith("import time")
     repo.verify()
+
+
+@pytest.mark.parametrize("advance_after_resolution", [False, True])
+def test_omitted_source_sha_pins_default_branch_once(
+    committed_repo, tmp_path, monkeypatch, advance_after_resolution
+):
+    root, git = committed_repo
+    git.run("branch", "-m", "fixture-default", cwd=root)
+    (root / "src/retry.py").write_bytes(b"def retry():\n    return 3\n")
+    git.run("add", "--all", cwd=root)
+    git.run("-c", "commit.gpgSign=false", "commit", "-m", "latest default", cwd=root)
+    sha = git.run("rev-parse", "HEAD", cwd=root).decode().strip()
+    manager = RepositoryManager(tmp_path / "managed")
+    run = manager.git.run
+    resolutions = []
+    fetches = []
+
+    def local_transport(*args, **kwargs):
+        result = run(
+            *(str(root) if a == "https://github.com/example/fixture" else a for a in args),
+            **kwargs,
+        )
+        if args[0] == "ls-remote":
+            resolutions.append(args)
+            if advance_after_resolution:
+                (root / "src/retry.py").write_bytes(b"def retry():\n    return 4\n")
+                git.run("add", "--all", cwd=root)
+                git.run("-c", "commit.gpgSign=false", "commit", "-m", "moved default", cwd=root)
+        if args[0] == "fetch":
+            fetches.append(args[-1])
+        return result
+
+    monkeypatch.setattr(manager.git, "run", local_transport)
+    repo = manager.public_source("https://github.com/example/fixture")
+    assert len(resolutions) == 1
+    assert fetches == [sha]
+    assert repo.snapshot.commit_sha == sha
+    assert repo.read("src/retry.py") == "def retry():\n    return 3\n"
+    if advance_after_resolution:
+        assert git.run("rev-parse", "HEAD", cwd=root).decode().strip() != sha
+    repo.verify()
+
+
+@pytest.mark.parametrize("head", [b"", b"not-a-sha\tHEAD\n", b"a" * 40 + b"\trefs/heads/main\n"])
+def test_missing_or_invalid_default_head_stops_before_fetch(tmp_path, monkeypatch, head):
+    manager = RepositoryManager(tmp_path / "managed")
+
+    def lookup_only(*args, **kwargs):
+        assert args[0] == "ls-remote"
+        return head
+
+    monkeypatch.setattr(manager.git, "run", lookup_only)
+    with pytest.raises(RepositoryError, match="default branch"):
+        manager.public_source("https://github.com/example/fixture")
+    assert not (manager.directory / "source.git").exists()
 
 
 def test_public_target_snapshot_is_independent_and_preserves_project_prefix(

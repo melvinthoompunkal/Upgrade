@@ -15,7 +15,7 @@ class WorkflowContext:
 @dataclass(frozen=True)
 class TraceInputs:
     source_url: str
-    source_sha: str
+    source_sha: str | None
     target: str
     goal: str
 
