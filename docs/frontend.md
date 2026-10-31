@@ -22,7 +22,7 @@ Requires Node 20.19+ or 22.12+ (Node 24 was used for verification), Python 3.12,
 and the existing backend setup. From the project root, use two terminals:
 
 ```powershell
-uv run --project backend --locked uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8000
+uv run --project backend --locked uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8000 --reload --reload-dir backend/app
 ```
 
 ```powershell
@@ -35,6 +35,9 @@ Open <http://127.0.0.1:5173>. Vite proxies `/api` and `/health` to FastAPI. No
 credentials belong in frontend environment variables. Configure Meta in
 `backend/.env`; setup instructions appear in System checks. Docker and the
 reviewed image are needed for selection and baseline checks.
+The development backend reloads source edits automatically. Restart it after changing
+`backend/.env`. A generic **Field required** after a form update can indicate an older
+backend process: restart the backend so its request schema matches the frontend.
 
 For a local production build:
 

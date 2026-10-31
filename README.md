@@ -133,10 +133,13 @@ The adapter targets `https://api.meta.ai/v1` and defaults to `muse-spark-1.3` in
 ## Run the backend
 
 ```powershell
-uv run --project backend --locked uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8000
+uv run --project backend --locked uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8000 --reload --reload-dir backend/app
 ```
 
 Open [health](http://127.0.0.1:8000/health) or [API docs](http://127.0.0.1:8000/docs). `model_configured` reports whether a key is present; it does **not** claim the key works or the model has been verified. The server can start without a key.
+This development command reloads backend source edits. Restart the server after changing
+`backend/.env`. If the UI shows an updated form while the API still requires an old field,
+restart the backend and refresh the page.
 
 ## Verify live Meta access
 

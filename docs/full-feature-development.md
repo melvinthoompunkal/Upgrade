@@ -667,6 +667,11 @@ The optional-SHA update passed 122 backend regressions, a separate source/target
 check, 72 desktop/mobile smoke checks, the production build, Ruff and changed-file
 formatting checks. Default-branch movement and stale inspection/ref responses are covered;
 this verification used controlled Git/provider fixtures rather than fresh public/model calls.
+A subsequent live local check found an older backend still requiring `commit_sha` while
+the frontend already omitted it. After an idle-server restart, URL-only inspection of
+`pallets/itsdangerous` through the frontend proxy returned HTTP 201 with matching resolved
+and saved SHAs. No model calls or target execution were involved. Development startup
+now enables reload for `backend/app` edits to keep the API schema current.
 
 `python-evidence-v1` reports bounded Python definitions, test definitions, imports,
 read-backed symbol citations, explicit project/repository-relative paths, full notices
