@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test'
 import { mockApi, fixtureRun } from './fixtures'
+import { readFile } from 'node:fs/promises'
 import type { Catalog, CatalogFeature, CatalogPage, ProjectSelection } from '../src/api/client'
 
 const id = 'a'.repeat(32)
@@ -149,6 +150,18 @@ test('saved catalog pages and lazy evidence reopen without inference', async ({
     .getByText('src/sequence.py:', { exact: false })
     .click()
   await expect(page.getByText('def unique(items):', { exact: false })).toBeVisible()
+  const downloaded = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Download feature JSON', exact: true }).click()
+  const file = await downloaded
+  const exported = JSON.parse(await readFile((await file.path())!, 'utf8'))
+  expect(exported).toMatchObject({
+    schema_version: 'source-feature-export-v1',
+    catalog_id: id,
+    catalog_revision: 1,
+    source_sha: catalog.source_sha,
+    feature: { feature_id: entries[27].feature_id },
+  })
+  expect(exported.feature.evidence[0].text).toContain('def unique(items)')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
     true,
   )

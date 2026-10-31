@@ -233,6 +233,7 @@ def test_multiple_independent_supported_features_docs_claim_and_missing_tests(li
     assert report["analyzed_feature_count"] == 3
     assert "eligible_feature_count" not in report
     assert "MIT License" in (path.parent / "notices/source-notices.json").read_text()
+    assert json.loads((path.parent / "source-evidence-reads.json").read_text())["tool_events"]
     before = len(provider.requests)
     reopened = CatalogStore(RunStore(library[0].runs.path))
     assert reopened.page(OWNER, view.id, 1).counts == view.counts

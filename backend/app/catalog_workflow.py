@@ -176,10 +176,13 @@ class DiscoveryRun:
                         "failure_code": error.code,
                         "evidence_status": "unverified",
                         "card": None,
-                        "missing_evidence": ["Code corroboration failed; this hint is unverified."],
+                        "missing_evidence": [
+                            "Code corroboration failed; this hint is unverified.",
+                            str(error)[:600],
+                        ],
                     }
                 )
-                receipt.update(state="failed", failure_code=error.code)
+                receipt.update(state="failed", failure_code=error.code, detail=str(error)[:600])
             self.save()
             if budget_exhausted(self.analyzer.client.budget):
                 self.view.limit_reasons.append("model_budget")
@@ -337,7 +340,10 @@ async def record_catalog(
                 await client.__aexit__()
         if evidence:
             try:
-                artifacts.json("source-evidence-reads.json", read_log(evidence, []))
+                artifacts.json(
+                    "source-evidence-reads.json",
+                    read_log(evidence, run.analyzer.tools.events if run else []),
+                )
             except (GraftError, OSError, ValueError, TypeError):
                 report.setdefault("warnings", []).append(
                     "The evidence read log could not be saved."

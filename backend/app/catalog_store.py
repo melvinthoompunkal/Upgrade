@@ -19,7 +19,7 @@ from app.catalog_contracts import (
 from app.errors import EvidenceError
 from app.jobs.control import fence_in
 
-VERSIONS = {"analyzer": "python-catalog-v1", "prompt": "discovery-v1", "schema": "catalog-v1"}
+VERSIONS = {"analyzer": "python-catalog-v1", "prompt": "discovery-v2", "schema": "catalog-v1"}
 TERMINAL = {"complete_for_scope", "partial", "failed", "canceled"}
 CATALOG_LIMIT = 5000
 

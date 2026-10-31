@@ -1,5 +1,5 @@
 import { useRef, useState, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowRight } from '@phosphor-icons/react'
 import { createRun, workflowEnabled, type ProjectSelection } from '../../api/client'
 import { useWorkspace } from '../../app/workspace-context'
@@ -8,8 +8,10 @@ import { CatalogStart } from '../catalog/CatalogStart'
 import { ProjectPin } from './ProjectPin'
 
 export function ProjectRun() {
-  const { capabilities, loading, refresh } = useWorkspace()
+  const { capabilities, loading, refresh, session } = useWorkspace()
   const navigate = useNavigate()
+  const [params, setParams] = useSearchParams()
+  const structureOnly = params.get('view') === 'structure'
   const [source, setSource] = useState<ProjectSelection | null>(null)
   const [target, setTarget] = useState<ProjectSelection | null>(null)
   const [includeTarget, setIncludeTarget] = useState(false)
@@ -29,7 +31,7 @@ export function ProjectRun() {
 
   async function submit(event: FormEvent) {
     event.preventDefault()
-    if (!source || !ready || pending.current) return
+    if (!structureOnly || !source || !ready || pending.current) return
     const request = {
       kind: 'project_analysis' as const,
       source_project: source.id,
@@ -60,93 +62,122 @@ export function ProjectRun() {
   return (
     <div className="page new-run-page">
       <div className="page-intro">
-        <h1>Start with your project.</h1>
+        <h1>Break a repository into features.</h1>
         <p>
-          Inspect pinned Python code, follow its definitions and tests, and see what this workspace
-          supports.
+          Discover what a public Python repository does, how its capabilities work, and where they
+          live in the code. Add your own project later to explore useful extensions.
         </p>
         <Link className="text-action" to="/example">
           Try the crawler example <ArrowRight size={16} />
         </Link>
       </div>
       <form className="surface max-w-4xl p-5 md:p-8" onSubmit={submit}>
-        <h2>Analyze public projects</h2>
-        <p className="mb-5 mt-2 text-sm text-muted">
-          Inspect a source on its own, or add your target. Structural analysis uses no model calls.
-        </p>
-        <ProjectPin role="source" onPin={setSource} />
-        <label className="flex items-center gap-3 py-3">
-          <input
-            type="checkbox"
-            className="project-check"
-            checked={includeTarget}
-            onChange={(event) => {
-              setIncludeTarget(event.target.checked)
-              setTarget(null)
-              setBaseline(false)
-            }}
-          />{' '}
-          Add a target project
-        </label>
-        {includeTarget && (
-          <ProjectPin
-            role="target"
-            onPin={(project) => {
-              setTarget(project)
-              setBaseline(false)
-            }}
-          />
-        )}
-        {includeTarget && target && (
-          <label className="flex items-start gap-3 py-3">
-            <input
-              type="checkbox"
-              className="project-check"
-              checked={baseline}
-              disabled={
-                !target.support.execution_supported ||
-                capabilities?.target_execution_supported === false
-              }
-              onChange={(event) => setBaseline(event.target.checked)}
-            />
-            <span>
-              Run the target’s original tests offline
-              <br />
-              <small className="text-muted">
-                {capabilities?.target_execution_supported === false
-                  ? 'Target tests are unavailable on this deployment.'
-                  : 'Requires the prepared Docker image. Skips and collection errors cannot pass.'}
-              </small>
-            </span>
-          </label>
-        )}
-        <div className="field-group my-5">
-          <label htmlFor="project-goal">Goal or run title (optional)</label>
-          <textarea
-            id="project-goal"
-            value={goal}
-            maxLength={2000}
-            rows={2}
-            onChange={(event) => setGoal(event.target.value)}
-          />
-          <p className="field-help">
-            Saved with the report. Goal-based relevance matching is a later stage.
-          </p>
-        </div>
-        {error && <Notice tone="error">{error}</Notice>}
-        <div className="mt-6 flex flex-wrap items-center gap-4">
-          <button className="button-primary" disabled={!ready || submitting}>
-            {submitting ? 'Starting analysis…' : 'Analyze projects'}
-            <ArrowRight size={18} />
+        <div className="flex flex-wrap gap-3 mb-6" role="group" aria-label="Analysis type">
+          <button
+            type="button"
+            className={!structureOnly ? 'button-primary' : 'button-secondary'}
+            aria-pressed={!structureOnly}
+            onClick={() => setParams({})}
+          >
+            Feature discovery
           </button>
-          <p className="field-help">
-            Public snapshots only. Your original repositories stay intact.
-          </p>
+          <button
+            type="button"
+            className={structureOnly ? 'button-primary' : 'button-secondary'}
+            aria-pressed={structureOnly}
+            onClick={() => setParams({ view: 'structure' })}
+          >
+            Structure only
+          </button>
         </div>
-        {!loading && !capabilities?.worker_available && (
-          <p className="field-help mt-3">Start the backend worker to analyze projects.</p>
+        <h2>{structureOnly ? 'Inspect project structure' : 'Choose a source repository'}</h2>
+        <p className="mb-5 mt-2 text-sm text-muted">
+          {structureOnly
+            ? 'Inspect definitions, imports and test locations without model calls. This does not discover semantic features.'
+            : 'Pin a public repository snapshot, then discover its code-backed capabilities. No target project is required.'}
+        </p>
+        {session?.mode === 'local' && (
+          <p className="field-help mb-4">Local workspace. No GitHub App or sign-in needed.</p>
         )}
-        <CatalogStart source={source} />
+        <ProjectPin role="source" onPin={setSource} />
+        {!structureOnly ? (
+          <CatalogStart source={source} />
+        ) : (
+          <>
+            <label className="flex items-center gap-3 py-3">
+              <input
+                type="checkbox"
+                className="project-check"
+                checked={includeTarget}
+                onChange={(event) => {
+                  setIncludeTarget(event.target.checked)
+                  setTarget(null)
+                  setBaseline(false)
+                }}
+              />{' '}
+              Add a target project
+            </label>
+            {includeTarget && (
+              <ProjectPin
+                role="target"
+                onPin={(project) => {
+                  setTarget(project)
+                  setBaseline(false)
+                }}
+              />
+            )}
+            {includeTarget && target && (
+              <label className="flex items-start gap-3 py-3">
+                <input
+                  type="checkbox"
+                  className="project-check"
+                  checked={baseline}
+                  disabled={
+                    !target.support.execution_supported ||
+                    capabilities?.target_execution_supported === false
+                  }
+                  onChange={(event) => setBaseline(event.target.checked)}
+                />
+                <span>
+                  Run the target’s original tests offline
+                  <br />
+                  <small className="text-muted">
+                    {capabilities?.target_execution_supported === false
+                      ? 'Target tests are unavailable on this deployment.'
+                      : 'Requires the prepared Docker image. Skips and collection errors cannot pass.'}
+                  </small>
+                </span>
+              </label>
+            )}
+            <div className="field-group my-5">
+              <label htmlFor="project-goal">Goal or run title (optional)</label>
+              <textarea
+                id="project-goal"
+                value={goal}
+                maxLength={2000}
+                rows={2}
+                onChange={(event) => setGoal(event.target.value)}
+              />
+              <p className="field-help">
+                Saved with the structure report. Use feature discovery for semantic breakdown and
+                optional target comparison.
+              </p>
+            </div>
+            {error && <Notice tone="error">{error}</Notice>}
+            <div className="mt-6 flex flex-wrap items-center gap-4">
+              <button className="button-primary" disabled={!ready || submitting}>
+                {submitting ? 'Starting analysis…' : 'Analyze projects'}
+                <ArrowRight size={18} />
+              </button>
+              <p className="field-help">
+                Public snapshots only. Your original repositories stay intact.
+              </p>
+            </div>
+            {!loading && !capabilities?.worker_available && (
+              <p className="field-help mt-3">Start the backend worker to analyze projects.</p>
+            )}
+          </>
+        )}
       </form>
     </div>
   )

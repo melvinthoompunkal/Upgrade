@@ -42,7 +42,7 @@ async function fillPin(page: import('@playwright/test').Page, role: 'Source' | '
   await page.getByRole('button', { name: `Inspect ${role.toLowerCase()} project` }).click()
 }
 
-test('public source analysis is the default and needs neither target nor model configuration', async ({
+test('discovery is the default and structure inspection works without a model key', async ({
   page,
 }, testInfo) => {
   await mockApi(page)
@@ -61,7 +61,15 @@ test('public source analysis is the default and needs neither target nor model c
     })
   })
   await page.goto('/')
-  await expect(page.getByRole('heading', { name: 'Start with your project.' })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Break a repository into features.' }),
+  ).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: 'Feature discovery', exact: true }),
+  ).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByRole('button', { name: 'Discover features', exact: true })).toBeDisabled()
+  await expect(page.getByLabel('Add a target project')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Structure only', exact: true }).click()
   await expect(page.getByLabel('Add a target project')).not.toBeChecked()
   await expect(page.getByRole('link', { name: 'Try the crawler example' })).toHaveAttribute(
     'href',
@@ -91,7 +99,7 @@ test('public source analysis is the default and needs neither target nor model c
 test('editing a pinned project invalidates its selection', async ({ page }) => {
   await mockApi(page)
   await page.route('**/api/projects', (route) => route.fulfill({ json: project('source') }))
-  await page.goto('/')
+  await page.goto('/?view=structure')
   await fillPin(page, 'Source')
   await expect(page.getByRole('button', { name: 'Analyze projects' })).toBeEnabled()
   await page.getByLabel('Source project root', { exact: true }).fill('another-library')
@@ -102,7 +110,7 @@ test('editing a pinned project invalidates its selection', async ({ page }) => {
 test('unsupported projects show their blocker and cannot queue analysis', async ({ page }) => {
   await mockApi(page)
   await page.route('**/api/projects', (route) => route.fulfill({ json: project('source', false) }))
-  await page.goto('/')
+  await page.goto('/?view=structure')
   await fillPin(page, 'Source')
   await expect(page.getByText('No Python project manifest at the selected root.')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Analyze projects' })).toBeDisabled()
@@ -119,7 +127,7 @@ test('native baseline uses the explicitly selected target ID', async ({ page }) 
     if (route.request().method() === 'POST') submitted = route.request().postDataJSON()
     return route.fulfill({ json: route.request().method() === 'POST' ? fixtureRun : { items: [] } })
   })
-  await page.goto('/')
+  await page.goto('/?view=structure')
   await fillPin(page, 'Source')
   await page.getByLabel('Add a target project').check()
   await expect(page.getByRole('button', { name: 'Analyze projects' })).toBeDisabled()

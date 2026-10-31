@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { api, type FeatureAssessment } from '../../api/client'
 import { ErrorState, Skeleton } from '../../components/ui'
 import { StartAdaptation } from './StartAdaptation'
+import { ExpansionDetail } from './ExpansionDetail'
 
 export function AssessmentDetail({
   assessmentId,
@@ -31,24 +32,17 @@ export function AssessmentDetail({
   if (!value) return <Skeleton rows={3} />
   return (
     <div className="space-y-3 border-t border-line pt-4">
-      <h3>Saved assessment</h3>
+      <h3>Saved comparison</h3>
       <p>
-        {value.relevance_status.replaceAll('_', ' ')} · {value.target_status.replaceAll('_', ' ')} ·
-        Fit: {value.fit_status}
+        {value.relevance_status.replaceAll('_', ' ')} · {value.target_status.replaceAll('_', ' ')}
       </p>
       <p>
         {value.reason ||
           'This feature has not been assessed. Use Assess this feature to request analysis.'}
       </p>
-      <StartAdaptation
-        key={`${assessmentId}:${featureId}`}
-        assessmentId={assessmentId}
-        feature={value}
-      />
-      {value.fit && (
-        <p>
-          Fit score: {value.fit.total}/100. A rating is a judgment, not a probability of success.
-        </p>
+      <ExpansionDetail value={value} />
+      {!value.expansion && value.target_status === 'already_present' && (
+        <p className="field-help">The inspected target already provides this behavior.</p>
       )}
       {value.failure_code && (
         <p role="alert">
@@ -68,6 +62,28 @@ export function AssessmentDetail({
           <pre className="code-block mt-2">{item.text}</pre>
         </details>
       ))}
+      {value.relevance_status === 'relevant' && (
+        <details>
+          <summary>Implementation and verification</summary>
+          <div className="mt-3 space-y-3">
+            <p className="field-help">
+              Semantic usefulness is separate from readiness to apply a tested patch. Fit:{' '}
+              {value.fit_status}.
+            </p>
+            {value.fit && (
+              <p>
+                Fit score: {value.fit.total}/100. A rating is a judgment, not a probability of
+                success.
+              </p>
+            )}
+            <StartAdaptation
+              key={`${assessmentId}:${featureId}`}
+              assessmentId={assessmentId}
+              feature={value}
+            />
+          </div>
+        </details>
+      )}
       {!!value.gates.length && (
         <details>
           <summary>Fit gates and rejection reasons</summary>

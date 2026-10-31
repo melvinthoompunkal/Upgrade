@@ -25,11 +25,12 @@ The intended journey is:
 4. Present ranked expansion ideas with the benefit, existing target behavior, proposed
    addition, likely integration points, supporting source/target references and uncertainty.
 
-F4 discovery and F5 relevance already implement the foundation. A complete expansion
-recommendation is further work: today's saved relevance judgment has a short reason,
-target status, fit criteria and evidence, rather than a dedicated expansion-plan contract.
-The current UI also separates structural inspection, discovery and target assessment;
-making that journey clear is part of the next milestone.
+F4 discovery and F5 relevance implement the foundation. The default browser journey now
+starts with feature discovery, followed by optional target comparison. Saved expansion
+recommendations describe existing target behavior, the proposed extension, practical benefit,
+integration locations, constraints, uncertainty and read-backed references. Structural
+inspection remains available through **Structure only**. Live semantic quality and applicable
+provider-lifecycle checks remain separate validation work.
 
 Semantic usefulness and readiness to apply a tested patch remain separate judgments.
 An idea can be useful while automatic adaptation is unsupported. Native test execution,
@@ -639,7 +640,7 @@ The requirements below describe that design and the remaining live/F6 release ch
 
 ## 6. Supporting real target and source projects
 
-**F3 local implementation:** the default **Analyze public projects** form pins a full
+**F3 local implementation:** the **Structure only** form's **Analyze projects** action pins a full
 GitHub commit SHA separately for each role, shows inspected manifest roots and support
 reasons, and submits immutable owner-scoped project IDs. `POST /api/projects` and
 `GET /api/projects/{id}` persist the URL, requested SHA, resolved SHA, role, root,
@@ -905,7 +906,7 @@ Schema v7 adds owner-scoped assessment/operation records and saved per-feature s
 projections. Admission, quota enforcement and job creation commit together. Existing runs,
 projects, catalogs, credentials and cursor signing keys survive migration.
 
-The `relevance-v1` policy shortlists at most eight saved summaries using exact goal-token
+The original `relevance-v1` policy shortlists at most eight saved summaries using exact goal-token
 overlap, source evidence state and stable feature ID. It then obtains separate bounded,
 read-backed semantic judgments using pinned source excerpts, a target packet of at most
 twelve file heads and registered read-only range tools. The threshold is 3 of 5 for
@@ -948,6 +949,89 @@ gap gate, even at 100/100 fit ratings. F7 starts a separate explicitly selected 
 job and supplies the missing baseline, frozen acceptance, source-use and scope evidence.
 It does not rewrite earlier F5 judgments or claim that relevance establishes verification.
 Recommendation rows contain only actual eligible IDs in their saved assessment context.
+
+### Local feature discovery and expansion implementation
+
+The default new-run page now starts with **Feature discovery** and a source pin; it needs
+no target, GitHub App, sign-in or runner in local mode. **Discover features** uses the existing
+bounded F4 discovery/corroboration jobs. **Structure only** remains a separate explicit
+no-model workflow at `/?view=structure`, retaining optional native baseline execution.
+**Download feature JSON** saves one selected feature's explanation, evidence, dependencies,
+coverage qualifications and exact pinned catalog/source identity without additional inference.
+Editing a pin invalidates it in either mode. Missing model configuration explains how to
+use structural inspection instead. Source-only catalogs remain fully usable.
+
+Optional **Compare with your project** uses the F5 assessment job and the new
+`relevance-v2` / `expansion-v1` identity. The strict `ExpansionJudgment` model response
+adds a dedicated recommendation only for relevance >=3 with a target and a `potential_gap`.
+Each saved recommendation contains the source capability, existing target behavior,
+proposed extension, benefit, 1–4 existing target integration points, constraints,
+uncertainties and source/target references. All recommendation and integration references
+must validate against exact pinned, previously read production Python code. Missing,
+foreign, unread or changed references fail the feature assessment. Existing behavior,
+unknown cases, unrelated capabilities and goal-only judgments produce no expansion plan.
+
+`FeatureAssessment.expansion` is saved with its hash-checked detail and exported receipt.
+`AssessmentView.expansion_top3` contains at most three lightweight name/benefit/ID summaries,
+ranked by descending relevance then feature ID within the assessed scope. This semantic
+ranking is separate from fit-v1's eligible-only `top3`; no baseline, acceptance test or
+patch eligibility is inferred. Native test support is not required for comparison.
+Existing v1 saved assessments remain readable with no recommendation; continuing them
+under changed policy requires a new explicit context. Saved views and filters perform no inference.
+
+A live probe exposed discovery exhausting its entire turn allowance on tool requests without
+returning hints. The shared evidence protocol now reserves the last existing model request
+for a structured answer, without read tools or additional budget. Missing evidence still
+fails validation or remains partial/unknown. `discovery-v2` prevents reuse of earlier
+discovery-generation cache identities, and catalog read receipts now retain tool events.
+Deep traces receive bounded file heads and exact AST/import identities up front, reducing
+ambiguous symbol/range and dependency citations. Failed traces retain a bounded public
+validation reason. The expanded relevance response uses up to 8,000 completion tokens
+per request within the unchanged 40,000-token job allowance; the earlier 5,000-token
+response limit truncated a live comparison. Failed assessments retain a bounded public reason.
+
+The detail view shows the expansion plan and saved evidence. Patch preparation remains
+behind **Implementation and verification**. Optional account/private-access, publishing and
+hosted modules retain their boundaries and are not prerequisites for this local journey.
+
+October 30 implementation verification:
+
+- The affected discovery/relevance/adaptation/lifecycle suite passed **70** checks with the
+  explicit Docker case skipped. After the evidence-protocol repair, **41** tracing/relevance/
+  adaptation checks passed with that Docker case deselected, followed by **57** catalog,
+  profiler and selection checks. The final recommendation changes passed **19** relevance
+  checks. These suites overlap and their counts are not additive.
+- The final compiled interface passed **44 desktop/mobile browser checks**, including
+  source-only discovery, comparison without native test support, inference-free saved
+  views, legacy assessment display and feature JSON download identity/content. TypeScript,
+  production build, Ruff, formatting and diff checks passed.
+- A live Meta example pinned ItsDangerous
+  `672971d66a2ef9f85151e53283113f33d642dabd` and HTTPX
+  `b5addb64f0161ff6bfe94c124ef76f6a1fba5254` without GitHub App credentials.
+  Discovery was deliberately scoped to `src/itsdangerous/signer.py`: **7 candidates**,
+  **1 corroborated capability**, **6 unverified**. The HMAC signature-generation card
+  cites implementation, source tests and notices. This is a bounded slice, not a complete
+  catalog of either repository.
+- An explicit continuation retained the earlier failed trace and validated that card.
+  Catalog `1f143a75b0e248098f65367cf451f8f0`, revision 2, records 8 requests for the
+  continuation and 18 cumulative requests, 101,470 input / 19,891 output tokens. A separate
+  earlier discovery failure and the truncated comparison remain retained as failed jobs.
+- Assessment `63b7e562373148ae9a2811a84d2db672` used **4 requests**, **99,809 input /
+  6,879 output tokens**, assessing one feature as relevant (4/5) with a saved opt-in URL
+  signing idea and exact existing `URL.__init__` / `URL.copy_with` integration references.
+  Six features remain unassessed, and zero adaptations are eligible. The target's native
+  execution profile is unsupported; it did not block semantic comparison. No patch or
+  source/target tests were executed.
+- Desktop and mobile Chrome reopened this actual result through the real API, switched
+  All/Relevant, reloaded and checked the downloaded feature JSON. Both had **zero write
+  requests**, unchanged saved usage, no page errors or horizontal overflow. The saved-result
+  server had no model key or active worker.
+
+Runtime receipts are retained locally under `data/semantic-live/`, with regression XML
+in `data/semantic-*-tests.xml`, final relevance XML in `data/semantic-final-relevance.xml`,
+and real saved-result browser evidence in `data/semantic-live-browser.json`. These checks
+establish the stated local sample; broader live semantic quality, real cancellation,
+unsupported language/input adapters and deferred release workflows remain open.
 
 Implementation: [contracts](../backend/app/relevance_contracts.py),
 [store](../backend/app/relevance_store.py), [judgment and fit policy](../backend/app/relevance_analysis.py),
@@ -1580,6 +1664,9 @@ estimates excluded this account/catalog/adaptation expansion.
 
 ### F10: Local public-Python v1 validation
 
+This is the deferred account-connected/adaptation release check. Its App/runner requirements
+do not apply to local repository feature discovery or semantic target comparison.
+
 **Status:** local readiness automation and this validation runbook are implemented;
 the live release gate remains open. Existing public Python structural/native-test,
 synchronous JSON-compatible function and standard MIT reuse profiles define the scope.
@@ -1991,9 +2078,9 @@ for the active semantic milestone. No credential values were printed or changed.
 
 | Priority / scope | Next concrete work | Code and acceptance anchor |
 |---|---|---|
-| First: semantic user journey | Make source breakdown, target comparison and expansion recommendations one clear journey using local mode and public URLs. Explain the distinction between structural inspection and AI discovery. | `ProjectRun.tsx`, `CatalogStart.tsx`, `AssessmentPanel.tsx`; no login/App prerequisite and no native baseline requirement for comparison. |
-| First: useful expansion output | Add a dedicated saved recommendation contract and detail view: source capability, existing target counterpart, useful extension, benefit, suggested integration locations, constraints, uncertainty and code references. | Extend `relevance_contracts.py`, `relevance_analysis.py` and `AssessmentDetail.tsx`. The current judgment provides a short reason/status/criteria/evidence, not this full plan. Keep semantic relevance separate from verified-patch eligibility. |
-| First: live semantic quality | Run a real supported public source/target comparison with Meta. Check that capabilities are code-backed, existing target behavior is recognized, suggestions are specific and useful, and unrelated/uncertain ideas stay visible as such. | `catalog_workflow.py`, `relevance_workflow.py`; exact pinned inputs, source/target citations, disclosed coverage, usage and saved all/relevant browsing. No patch, Docker suite or GitHub write is required. |
+| Implemented locally: semantic user journey | Source discovery is the default, followed by optional target comparison and saved expansion ideas. Structural inspection is an explicit secondary workflow. | `ProjectRun.tsx`, `CatalogStart.tsx`, `AssessmentPanel.tsx`; no login/App prerequisite and no native baseline requirement for comparison. |
+| Implemented locally: useful expansion output | Dedicated saved recommendation contract and detail view: source capability, existing target counterpart, useful extension, benefit, suggested integration locations, constraints, uncertainty and code references. | `relevance_contracts.py`, `relevance_analysis.py`, `relevance_store.py`, `AssessmentDetail.tsx`; semantic ranking remains separate from verified-patch eligibility. |
+| Next: broader live semantic quality | One bounded ItsDangerous/HTTPX comparison and real saved-result browser check passed locally. Broaden checks for existing behavior, unrelated goals, uncertain evidence and additional supported public project pairs. | `catalog_workflow.py`, `relevance_workflow.py`; exact pinned inputs, citations, coverage and spend retained in the local sample above. No patch, Docker suite or GitHub write is required. |
 | Current analysis operations | Validate real model cancellation, failure handling and saved-result reopening for the local semantic workflow. | `backend/app/jobs/`; no silent paid replay and no new inference merely from browsing a saved result. |
 | As needed: project inputs | Add local-folder/ZIP ingestion if the user's project should be supplied from disk. Start from the existing public-URL project adapter when URLs are sufficient. | `projects.py`, `project_contracts.py`, `ProjectPin.tsx`; snapshot the selected input without changing the original project. This is separate from GitHub login/private-account integration. |
 | As needed: analysis languages | Add Node/TypeScript or other static/semantic analysis adapters when those repositories are required. | `project_support.py`, `project_adapters.py` and evidence extraction need language-aware inventory, parsing, bounded reads and validated citations. OpenClaw is outside the current Python analysis profile. Do not require executable adaptation support merely to compare ideas. |
@@ -2001,8 +2088,8 @@ for the active semantic milestone. No credential values were printed or changed.
 | Deferred: GitHub account/publishing | Configure and certify the existing App-based account, private snapshot and PR workflows only if those integrations become a milestone. | `backend/app/auth/`, `backend/app/publishing/`, `docs/github-setup.md`; no App setup is needed for current local public analysis. Private analysis still needs its own admitted workflow. |
 | Deferred: hosting/execution | Certify hosted analysis or implement hosted target execution when the product needs those deployment modes. | `backend/app/hosting/` and `docs/hosting.md`; deployment and execution-isolation gates remain applicable to those offerings, not prerequisites for local semantic comparison. |
 
-For the next milestone, complete the first three rows using the existing public-Python
-analysis profile and validate the applicable local analysis operations. Add an input or
+For the next milestone, validate semantic quality and applicable local analysis operations
+using the implemented journey and existing public-Python analysis profile. Add an input or
 language adapter when the intended projects require it. Automatic patching, GitHub App
 setup, PR publishing and hosted execution are not part of the immediate milestone.
 

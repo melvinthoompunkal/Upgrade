@@ -126,7 +126,10 @@ async def record_relevance(
                     feature_id=feature_id,
                     relevance_status="assessment_failed",
                     failure_code=error.code,
-                    reason="Assessment failed; no relevance or eligibility was inferred.",
+                    reason=(
+                        f"Assessment failed: {str(error)[:450]} "
+                        "No relevance or eligibility was inferred."
+                    ),
                 )
             checkpoint(result)
             try:

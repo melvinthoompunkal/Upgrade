@@ -1,6 +1,9 @@
 # Upgrade browser workspace
 
-The local browser application lives in `frontend/`. Optional GitHub sign-in and repository
+The local browser application lives in `frontend/`. Its default workflow breaks a public
+Python repository into features using `AUTH_MODE=local`; no GitHub App or sign-in is needed.
+Only AI discovery/comparison needs `MODEL_API_KEY`. Structural inspection needs no model key,
+and semantic analysis needs no Docker runner. Optional GitHub sign-in and repository
 indexing are available locally; F2 adds installation states and opt-in pinned private
 snapshots. See [GitHub setup](github-setup.md) for configuration and the pending live checks.
 Local mode remains the default and the full connected-analysis release is not complete.
@@ -47,7 +50,10 @@ do not bind it to a public interface. No hosted Site was created.
 
 ## Workflows and results
 
-- **New run:** inspect a public Python source URL/full SHA/root; optionally add a target.
+- **New run:** **Feature discovery** is the default. Inspect a public Python source URL/full SHA/root,
+  then choose **Discover features** to build its code-backed capability catalog. A target is optional
+  and is added later from the catalog. Choose **Structure only** (`/?view=structure`) for definitions,
+  imports and test locations without semantic discovery or model calls.
   Revision type also accepts a branch or tag. **Resolve branch/tag** freezes the returned
   full SHA before inspection; editing the repository/ref invalidates the selection, and
   late responses cannot populate a different repository. Jobs never resolve mutable refs.
@@ -64,13 +70,21 @@ do not bind it to a public interface. No hosted Site was created.
   cursor pages and lazy evidence details use saved data without model calls. **Continue
   discovery** or **Corroborate this feature** creates a new budgeted revision; earlier
   revisions remain readable. Full notices and receipts are linked through job exports.
-  Use **Assess relevance** to add a goal and optional supported public target. Saved
+  **Download feature JSON** in a selected feature saves its explanation, evidence state,
+  excerpts, dependencies and exact source/catalog identity directly from saved data.
+  **Compare with your project** accepts a goal and optional supported public target.
+  **Find expansion ideas** saves the source capability, existing target behavior, proposed extension,
+  benefit, existing integration locations, constraints, uncertainty and code references. Suggestions
+  are ranked by relevance and stable feature ID, separately from verified-patch eligibility.
+  Comparison works even when native target tests are unsupported. A goal without a target uses
+  **Assess relevance** and makes no target-specific recommendation. Saved
   **All features** / **Relevant to your project** views share this catalog revision.
   Search, category, evidence/assessment/fit filters, sorts, paging and feature details perform
   no model calls. Counts distinguish assessed, failed and not-yet-assessed entries.
   **Assess more** or **Assess this feature** explicitly starts a fresh budgeted job; changing
-  the goal or target creates a new context. **Verify adaptation** in a sufficiently assessed
-  feature detail starts a separate F7 job: it prepares/finalizes behavior and frozen tests,
+  the goal or target creates a new context. **Implementation and verification** in a sufficiently assessed
+  feature detail contains the separate **Verify adaptation** action. It
+  starts a separate F7 job: it prepares/finalizes behavior and frozen tests,
   checks the original baseline and meaningful assertion red, then verifies a constrained
   production patch with at most three repairs. The current profile supports existing
   sync/async Python functions, existing-class instance methods, new APIs in existing

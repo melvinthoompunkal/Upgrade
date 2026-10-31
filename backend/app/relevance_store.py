@@ -15,13 +15,14 @@ from app.jobs.control import fence_in
 from app.relevance_contracts import (
     AssessmentCounts,
     AssessmentView,
+    ExpansionSummary,
     FeatureAssessment,
     RelevanceJob,
 )
 from app.relevance_types import AssessmentSummary
 
 TERMINAL = {"complete", "partial", "failed", "canceled"}
-VERSIONS = {"policy": "relevance-v1", "prompt": "relevance-v1", "fit": "fit-v1"}
+VERSIONS = {"policy": "relevance-v2", "prompt": "expansion-v1", "fit": "fit-v1"}
 
 
 def assessment_identity(catalog, target, goal, model):
@@ -225,6 +226,20 @@ class RelevanceStore:
             )
         ]
         view.top3 = [c.feature_id[1:] for c in sorted(scored, key=lambda c: c.ranking_key())[:3]]
+        # Semantic suggestions have their own ranking, independent of patch eligibility.
+        view.expansion_top3 = [
+            ExpansionSummary(feature_id=row[0], name=row[1], benefit=row[2])
+            for row in db.execute(
+                "SELECT r.feature_id,json_extract(c.summary,'$.name'),"
+                "json_extract(r.detail,'$.expansion.benefit') "
+                "FROM relevance_features r JOIN catalog_features c "
+                "ON c.catalog_id=? AND c.revision=? AND c.feature_id=r.feature_id "
+                "WHERE r.assessment_id=? AND r.relevance_status='relevant' "
+                "AND json_extract(r.detail,'$.expansion') IS NOT NULL "
+                "ORDER BY r.relevance_score DESC,r.feature_id ASC LIMIT 3",
+                (view.catalog_id, view.catalog_revision, view.id),
+            )
+        ]
 
     def save(self, owner, view, feature=None, *, access_epoch=None):
         with self.runs.connect() as db:

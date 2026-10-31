@@ -133,17 +133,17 @@ export function ProjectPin({
           <p className="field-help">
             {project.support.python_files} Python files. Project root:{' '}
             {project.requested.project_root || '/'}.{' '}
-            {project.support.execution_supported
-              ? 'Native offline tests supported.'
-              : 'Native tests unsupported.'}
+            {project.support.capability === 'evidence_analysis' &&
+              'Ready for feature discovery and comparison.'}
           </p>
-          {(project.support.reasons ?? []).length > 0 && (
-            <ul className="list-disc space-y-1 pl-5 text-sm">
-              {(project.support.reasons ?? []).map((reason) => (
-                <li key={reason}>{reason}</li>
-              ))}
-            </ul>
-          )}
+          {project.support.capability === 'browse_index' &&
+            (project.support.reasons ?? []).length > 0 && (
+              <ul className="list-disc space-y-1 pl-5 text-sm">
+                {(project.support.reasons ?? []).map((reason) => (
+                  <li key={reason}>{reason}</li>
+                ))}
+              </ul>
+            )}
           {project.root_choices.some((choice) => choice !== project.requested.project_root) && (
             <div className="field-group">
               <label htmlFor={`${role}-roots`}>Inspected Python project roots</label>
@@ -164,7 +164,23 @@ export function ProjectPin({
               </select>
             </div>
           )}
-          <p className="field-help">Adaptation unavailable: {project.support.adaptation_reason}</p>
+          <details className="field-help">
+            <summary>Test and implementation support</summary>
+            <p className="mt-2">
+              {project.support.execution_supported
+                ? 'Native offline tests supported.'
+                : 'Native tests unsupported.'}{' '}
+              This does not block feature analysis.
+            </p>
+            {!!project.support.execution_reasons?.length && (
+              <ul className="list-disc space-y-1 pl-5 mt-2">
+                {project.support.execution_reasons.map((reason) => (
+                  <li key={reason}>{reason}</li>
+                ))}
+              </ul>
+            )}
+            <p className="mt-2">{project.support.adaptation_reason}</p>
+          </details>
         </div>
       )}
     </section>

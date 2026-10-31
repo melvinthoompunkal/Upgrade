@@ -69,7 +69,7 @@ test('hosted source analysis cannot accidentally request target execution', asyn
     submitted = route.request().postDataJSON()
     return route.fulfill({ json: { ...fixtureRun, kind: 'project_analysis' } })
   })
-  await page.goto('/')
+  await page.goto('/?view=structure')
   for (const role of ['Source', 'Target']) {
     if (role === 'Target') await page.getByLabel('Add a target project').check()
     await page.getByLabel(`${role} public repository`).fill('https://github.com/team/library')
@@ -91,8 +91,9 @@ test('missing hosted approval disables job actions while saved views remain acce
     route.fulfill({ json: { ...hosted, kinds: [] } }),
   )
   await page.goto('/')
-  await expect(page.getByRole('button', { name: 'Analyze projects', exact: true })).toBeDisabled()
   await expect(page.getByRole('button', { name: 'Discover features', exact: true })).toBeDisabled()
+  await page.getByRole('button', { name: 'Structure only', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Analyze projects', exact: true })).toBeDisabled()
   await page.goto('/runs/fixture-run/overview')
   await expect(page.getByRole('heading', { name: 'Test fixture: crawler recovery' })).toBeVisible()
 })

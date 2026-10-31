@@ -25,6 +25,7 @@ from app.models.schema import response_format
 from app.relevance_contracts import (
     AssessmentCreate,
     AssessmentOptions,
+    ExpansionJudgment,
     RelevanceJob,
     RelevanceJudgment,
 )
@@ -91,6 +92,21 @@ class SemanticProvider:
             }
         if key == self.fail:
             ref["commit_sha"] = "0" * 40
+        expansion = None
+        if data["target"] and rating >= 3 and status == "potential_gap":
+            expansion = {
+                "source_capability": "Remove repeated sequence entries while preserving order.",
+                "existing_target_behavior": "chunks returns the original sequence as one group.",
+                "proposed_extension": "Offer optional ordered deduplication before chunking.",
+                "benefit": "Avoid repeated work on duplicate input entries.",
+                "integration_points": [
+                    {"target_ref": target_refs[0], "change": "Normalize items before grouping."}
+                ],
+                "constraints": ["Keep existing chunking behavior by default."],
+                "uncertainties": ["Only bounded target code was read; other helpers may exist."],
+                "source_refs": [ref],
+                "target_refs": target_refs,
+            }
         return httpx.Response(
             200,
             json=completion(
@@ -104,6 +120,7 @@ class SemanticProvider:
                     "target_refs": target_refs,
                     "target_status": status,
                     "criteria": criteria,
+                    "expansion": expansion,
                 }
             ),
         )
@@ -173,6 +190,16 @@ def test_high_relevance_already_present_and_full_rejections(library, catalog_con
     assert "MIT License" in (path.parent / "notices/target-notices.json").read_text()
     assert view.usage["requests"] == len(provider.calls) == 3
     assert response_format(RelevanceJudgment)["type"] == "json_schema"
+    assert response_format(ExpansionJudgment)["type"] == "json_schema"
+    assert fit.expansion is None  # Existing behavior is not offered as a new capability.
+    idea_id = view.expansion_top3[0].feature_id
+    idea = store.feature(OWNER, view.id, catalog.id, 1, idea_id)
+    assert view.expansion_top3[0].name == catalogs.feature(OWNER, catalog.id, 1, idea_id).name
+    assert idea.target_status == "potential_gap" and idea.expansion
+    assert idea.expansion.integration_points[0].target_ref.repo_id == "target"
+    assert idea.fit_status == "ineligible"  # Useful ideas require no native test baseline.
+    assert json.loads(path.read_text())["relevance"]["expansion_top3"][0]["feature_id"] == idea_id
+    assert json.loads((path.parent / f"assessments/{idea_id}.json").read_text())["expansion"]
 
 
 def test_shortlist_unassessed_and_explicit_more_are_immutable(library, catalog_context, tmp_path):
@@ -217,6 +244,76 @@ def test_failed_citation_does_not_make_unexplored_features_irrelevant(
     assert len(provider.calls) == 3
 
 
+@pytest.mark.parametrize("tamper", ["commit", "repository", "unread", "missing", "overlap"])
+def test_expansion_cannot_claim_unread_or_foreign_integration_code(
+    library, catalog_context, tmp_path, tamper
+):
+    semantic = SemanticProvider()
+
+    def provider(request):
+        response = semantic(request).json()
+        output = json.loads(response["choices"][0]["message"]["content"])
+        idea = output["expansion"]
+        if idea:
+            point = idea["integration_points"][0]["target_ref"]
+            if tamper == "commit":
+                point["commit_sha"] = "0" * 40
+            elif tamper == "repository":
+                idea["source_refs"] = idea["target_refs"]
+            elif tamper == "unread":
+                point.update(start_line=800, end_line=802, symbol=None)
+            elif tamper == "missing":
+                output["expansion"] = None
+            else:
+                output["target_status"] = "already_present"
+        return httpx.Response(200, json=completion(output))
+
+    store, queued = submit(catalog_context)
+    view, _, _, _ = execute(library, store, queued, tmp_path, provider)
+    assert view.state == "partial" and view.counts.assessment_failed == 1
+    assert view.expansion_top3 == []
+    with store.runs.connect() as db:
+        failure = db.execute(
+            "SELECT detail FROM relevance_features WHERE assessment_id=? "
+            "AND relevance_status='assessment_failed'",
+            (view.id,),
+        ).fetchone()[0]
+    assert json.loads(failure)["failure_code"] == "invalid_evidence"
+
+
+def test_saved_v1_assessments_remain_readable_without_recommendations(
+    library, catalog_context, tmp_path
+):
+    import hashlib
+
+    store, queued = submit(catalog_context)
+    view, _, _, _ = execute(library, store, queued, tmp_path)
+    idea_id = view.expansion_top3[0].feature_id
+    with store.runs.connect() as db:
+        saved = json.loads(
+            db.execute(
+                "SELECT detail FROM relevance_features WHERE assessment_id=? AND feature_id=?",
+                (view.id, idea_id),
+            ).fetchone()[0]
+        )
+        saved.pop("expansion")
+        detail = json.dumps(saved)
+        db.execute(
+            "UPDATE relevance_features SET detail=?,sha256=? "
+            "WHERE assessment_id=? AND feature_id=?",
+            (detail, hashlib.sha256(detail.encode()).hexdigest(), view.id, idea_id),
+        )
+        metadata = view.model_dump(mode="json")
+        metadata.pop("expansion_top3")
+        metadata["identity"].update(policy="relevance-v1", prompt="relevance-v1")
+        db.execute(
+            "UPDATE relevance_assessments SET metadata=? WHERE id=?",
+            (json.dumps(metadata), view.id),
+        )
+    assert store.get(OWNER, view.id).expansion_top3 == []
+    assert store.feature(OWNER, view.id, view.catalog_id, 1, idea_id).expansion is None
+
+
 def test_budget_stops_and_retains_actual_usage(library, catalog_context, tmp_path):
     store, view = submit(catalog_context, options=AssessmentOptions(max_requests=1))
     view, report, _, provider = execute(library, store, view, tmp_path)
@@ -229,6 +326,7 @@ def test_goal_only_unrelated_and_missing_context(library, catalog_context, tmp_p
     store, view = submit(catalog_context, target_project=None, goal="Unrelated goal")
     view, _, _, _ = execute(library, store, view, tmp_path, SemanticProvider(relevance=0))
     assert view.target_sha is None and view.counts.relevant == view.counts.eligible == 0
+    assert view.expansion_top3 == []
     catalogs, catalog, _ = catalog_context
     page = catalogs.page(OWNER, catalog.id, 1, mode="relevant", assessment_id=view.id)
     assert not page.items and page.matching_filter == 0

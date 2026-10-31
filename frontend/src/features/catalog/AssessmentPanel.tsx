@@ -45,6 +45,8 @@ export function AssessmentPanel({
   )
   const ready =
     workflowEnabled(capabilities, 'relevance_assessment') &&
+    capabilities?.worker_available &&
+    capabilities?.model_configured &&
     goal.trim() &&
     (!includeTarget || targetId) &&
     (!includeTarget || useSavedTarget || target?.support.capability === 'evidence_analysis')
@@ -80,7 +82,7 @@ export function AssessmentPanel({
   const running = assessment && !assessmentFinished(assessment)
   return (
     <section className="surface p-5 mb-5 space-y-4" aria-label="Relevance context">
-      <h2>Relevant to your project</h2>
+      <h2>Compare with your project</h2>
       {assessment ? (
         <>
           <p className="text-sm break-words">
@@ -93,8 +95,8 @@ export function AssessmentPanel({
           </p>
           <p role="status">
             {assessment.counts.deeply_assessed} assessed; {assessment.counts.relevant} relevant;{' '}
-            {assessment.counts.eligible} eligible; {assessment.counts.unassessed} not yet assessed;{' '}
-            {assessment.counts.assessment_failed} failed.
+            {assessment.counts.unassessed} not yet assessed; {assessment.counts.assessment_failed}{' '}
+            failed.
           </p>
           {running && (
             <p role="status">Assessment is {assessment.state}. You can return to this saved URL.</p>
@@ -136,7 +138,8 @@ export function AssessmentPanel({
         </>
       ) : (
         <p className="text-muted">
-          All features is usable now. Add a goal and optionally inspect a target to request a saved
+          Browse the source features below. Optionally add your project and a goal to see what it
+          already does and which source capabilities could usefully extend it. A goal alone gives a
           relevance assessment.
         </p>
       )}
@@ -191,7 +194,7 @@ export function AssessmentPanel({
           <p className="field-help">
             Explicit additional allowance: up to 8 features, 32 model attempts, 400,000 input /
             40,000 output tokens and 20 minutes. Public source and target excerpts are sent to Meta.
-            No patch is applied.
+            Comparison needs no Docker image or passing test suite. No patch is applied.
           </p>
           {error && <Notice tone="error">{error}</Notice>}
           <div className="flex flex-wrap gap-3">
@@ -200,7 +203,11 @@ export function AssessmentPanel({
               disabled={!ready || busy || Boolean(running)}
               onClick={() => submit(false)}
             >
-              {busy ? 'Starting assessment…' : 'Assess relevance'}
+              {busy
+                ? 'Starting assessment…'
+                : includeTarget
+                  ? 'Find expansion ideas'
+                  : 'Assess relevance'}
             </button>
             {sameContext && (assessment?.counts.unassessed ?? 0) > 0 && (
               <button

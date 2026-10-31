@@ -13,6 +13,7 @@ import { AssessmentPanel } from './AssessmentPanel'
 import { AssessmentDetail } from './AssessmentDetail'
 import { assessmentFinished, useAssessment } from './useAssessment'
 import { useQueryDraft } from './useQueryDraft'
+import { FeatureDownload } from './FeatureDownload'
 
 const finished = (catalog: CatalogData) => !['queued', 'running'].includes(catalog.state)
 
@@ -315,6 +316,28 @@ export function Catalog() {
               })
             }
           />
+          {assessmentReady && !!assessment?.expansion_top3?.length && (
+            <section className="surface p-5 mb-5 space-y-3" aria-label="Expansion ideas">
+              <h2>Suggested ways to expand your project</h2>
+              <p className="field-help">
+                Ranked by saved relevance in the assessed scope. These are ideas to investigate;
+                implementation has not been verified.
+              </p>
+              <ol className="list-decimal pl-5 space-y-2">
+                {assessment.expansion_top3.map((idea) => (
+                  <li key={idea.feature_id}>
+                    <Link
+                      className="text-action"
+                      to={`?${new URLSearchParams({ ...Object.fromEntries(params), feature: idea.feature_id })}`}
+                    >
+                      {idea.name}
+                    </Link>
+                    <p className="text-sm mt-1">{idea.benefit}</p>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )}
           {assessmentError && <ErrorState message={assessmentError} />}
           {assessment && !matchingAssessment && (
             <Notice tone="error">
@@ -382,8 +405,8 @@ export function Catalog() {
             </div>
             {assessmentReady && assessment?.counts.eligible === 0 && (
               <p className="field-help mb-4">
-                No safe adaptation fit in the assessed scope. Relevant entries may still be useful
-                to investigate.
+                Relevant features can be useful expansion ideas. Automatic implementation requires a
+                separate verification workflow.
               </p>
             )}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 mb-5">
@@ -515,8 +538,9 @@ export function Catalog() {
                         <p className="text-sm my-2 line-clamp-2">{item.summary}</p>
                         {item.assessment && (
                           <p className="text-sm mb-2">
-                            {item.assessment.relevance_status.replaceAll('_', ' ')} · Fit:{' '}
-                            {item.assessment.fit_status}. {item.assessment.reason}
+                            {item.assessment.relevance_status.replaceAll('_', ' ')} ·{' '}
+                            {item.assessment.target_status.replaceAll('_', ' ')}.{' '}
+                            {item.assessment.reason}
                           </p>
                         )}
                         <p className="field-help">
@@ -578,6 +602,7 @@ export function Catalog() {
                 <h2 ref={detailTitle} tabIndex={-1}>
                   {feature.name}
                 </h2>
+                <FeatureDownload catalog={catalog} feature={feature} />
                 <p>{feature.card?.behavior ?? feature.summary}</p>
                 <p className="field-help">{feature.qualification}</p>
                 {feature.card && (

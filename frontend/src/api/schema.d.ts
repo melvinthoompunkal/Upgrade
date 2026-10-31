@@ -1085,6 +1085,8 @@ export interface components {
       counts: components['schemas']['AssessmentCounts']
       /** Top3 */
       top3: string[]
+      /** Expansion Top3 */
+      expansion_top3: components['schemas']['ExpansionSummary'][]
       /** Limit Reasons */
       limit_reasons: string[]
       /** Usage */
@@ -1101,7 +1103,7 @@ export interface components {
       failure_code: string | null
       /**
        * Qualification
-       * @default relevance-v1: ratings of 3–5 are relevant, 0–2 less relevant. Judgments are not probabilities or a claim of global best fit. Only the disclosed shortlist is assessed. General projects have no frozen acceptance/baseline binding or approved adaptation plan; these fit gates cannot pass.
+       * @default relevance-v2: ratings of 3–5 are relevant, 0–2 less relevant. Judgments are not probabilities or a claim of global best fit. Only the disclosed shortlist is assessed. Expansion ideas are ranked by relevance then feature ID and remain unverified suggestions. General projects have no frozen acceptance/baseline binding or approved adaptation plan; these fit gates cannot pass.
        */
       qualification: string
     }
@@ -1571,6 +1573,31 @@ export interface components {
       /** Sha256 */
       sha256: string
     }
+    /** ExpansionRecommendation */
+    ExpansionRecommendation: {
+      /** Source Capability */
+      source_capability: string
+      /** Existing Target Behavior */
+      existing_target_behavior: string
+      /** Proposed Extension */
+      proposed_extension: string
+      /** Benefit */
+      benefit: string
+      integration_points: components['schemas']['FrozenList_IntegrationPoint__MinLen_min_length_1_']
+      constraints: components['schemas']['FrozenList_Annotated_str__FieldInfo_annotation_NoneType__required_True__metadata__MinLen_min_length_1___MaxLen_max_length_600______MaxLen_max_length_8_']
+      uncertainties: components['schemas']['FrozenList_Annotated_str__FieldInfo_annotation_NoneType__required_True__metadata__MinLen_min_length_1___MaxLen_max_length_600______MinLen_min_length_1_']
+      source_refs: components['schemas']['FrozenList_Ref__MinLen_min_length_1_']
+      target_refs: components['schemas']['FrozenList_Ref__MinLen_min_length_1_']
+    }
+    /** ExpansionSummary */
+    ExpansionSummary: {
+      /** Feature Id */
+      feature_id: string
+      /** Name */
+      name: string
+      /** Benefit */
+      benefit: string
+    }
     /** FeatureAssessment */
     FeatureAssessment: {
       /**
@@ -1606,6 +1633,7 @@ export interface components {
       /** Rejections */
       rejections: string[]
       judgment: components['schemas']['RelevanceJudgment'] | null
+      expansion: components['schemas']['ExpansionRecommendation'] | null
       /** Failure Code */
       failure_code: string | null
       /** Evidence */
@@ -1774,6 +1802,8 @@ export interface components {
     FrozenList_Annotated_str__AfterValidator__: string[]
     FrozenList_Annotated_str__AfterValidator___MinLen_min_length_1_: string[]
     FrozenList_Annotated_str__FieldInfo_annotation_NoneType__required_True__metadata__MinLen_min_length_1___MaxLen_max_length_2000______MinLen_min_length_1_: string[]
+    FrozenList_Annotated_str__FieldInfo_annotation_NoneType__required_True__metadata__MinLen_min_length_1___MaxLen_max_length_600______MaxLen_max_length_8_: string[]
+    FrozenList_Annotated_str__FieldInfo_annotation_NoneType__required_True__metadata__MinLen_min_length_1___MaxLen_max_length_600______MinLen_min_length_1_: string[]
     FrozenList_Annotated_str__FieldInfo_annotation_NoneType__required_True__metadata__MinLen_min_length_1_____: string[]
     FrozenList_Annotated_str__FieldInfo_annotation_NoneType__required_True__metadata__MinLen_min_length_1______MinLen_min_length_1_: string[]
     'FrozenList_Annotated_str__FieldInfo_annotation_NoneType__required_True__metadata___PydanticGeneralMetadata_pattern____a-z__a-z0-9_-__0_63________': string[]
@@ -1782,6 +1812,7 @@ export interface components {
     FrozenList_CandidateScore__MinLen_min_length_1_: components['schemas']['CandidateScore'][]
     FrozenList_Dependency_: components['schemas']['Dependency'][]
     FrozenList_GateResult__MinLen_min_length_10_: components['schemas']['GateResult'][]
+    FrozenList_IntegrationPoint__MinLen_min_length_1_: components['schemas']['IntegrationPoint'][]
     FrozenList_ObservedCase__MinLen_min_length_1_: components['schemas']['ObservedCase'][]
     FrozenList_ObservedGapEvidence_: components['schemas']['ObservedGapEvidence'][]
     FrozenList_Ref_: components['schemas']['Ref'][]
@@ -1884,6 +1915,12 @@ export interface components {
       suspended: boolean
       /** Contents Readable */
       contents_readable: boolean
+    }
+    /** IntegrationPoint */
+    IntegrationPoint: {
+      target_ref: components['schemas']['Ref']
+      /** Change */
+      change: string
     }
     /** ModelCall */
     ModelCall: {

@@ -46,7 +46,7 @@ test('branch selection pins one immutable SHA and editing the branch invalidates
   await expect(page.getByLabel('Source commit SHA')).toHaveValue('b'.repeat(40))
   await expect(page.getByLabel('Source commit SHA')).toHaveAttribute('readonly', '')
   await page.getByRole('button', { name: 'Inspect source project' }).click()
-  await expect(page.getByRole('button', { name: 'Analyze projects' })).toBeEnabled()
+  await expect(page.getByRole('button', { name: 'Discover features', exact: true })).toBeEnabled()
   expect(pin).toMatchObject({ commit_sha: 'b'.repeat(40), role: 'source' })
   expect(pin).not.toHaveProperty('branch')
   expect(resolutions).toBe(1)
@@ -57,7 +57,7 @@ test('branch selection pins one immutable SHA and editing the branch invalidates
   })
   await page.getByLabel('Source branch', { exact: true }).fill('another-branch')
   await expect(page.getByLabel('Source commit SHA')).toHaveValue('')
-  await expect(page.getByRole('button', { name: 'Analyze projects' })).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'Discover features', exact: true })).toBeDisabled()
 })
 
 test('late ref resolution cannot populate another repository', async ({ page }) => {

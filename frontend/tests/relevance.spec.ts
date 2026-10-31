@@ -104,6 +104,7 @@ const assessment: Assessment = {
     unassessed: 9992,
   },
   top3: [],
+  expansion_top3: [],
   limit_reasons: ['deep_assessment_shortlist'],
   usage: { requests: 8 },
   cumulative_usage: { requests: 8 },
@@ -145,6 +146,7 @@ async function setup(page: Page) {
         ],
         rejections: ['Frozen acceptance is absent.'],
         judgment: null,
+        expansion: null,
         failure_code: null,
         evidence: [],
         evidence_limit_reached: false,
@@ -210,7 +212,7 @@ test('saved all/relevant views keep honest counts and issue no inference writes'
   const { writes } = await setup(page)
   await page.goto(`/catalogs/${catalogId}?revision=1&assessment=${assessmentId}`)
   await expect(
-    page.getByText('8 assessed; 3 relevant; 0 eligible; 9992 not yet assessed; 0 failed.'),
+    page.getByText('8 assessed; 3 relevant; 9992 not yet assessed; 0 failed.'),
   ).toBeVisible()
   await expect(
     page.getByRole('button', { name: 'Relevant to your project', exact: true }),
@@ -270,6 +272,111 @@ test('requesting relevance and editing a goal are explicit new jobs', async ({ p
   })
 })
 
+test('target comparison works without native tests and saves a readable expansion idea', async ({
+  page,
+}, info) => {
+  const { writes } = await setup(page)
+  const featureId = entries[0].feature_id
+  const targetRef = { ...fixtureRun.references![0].ref, repo_id: 'target', path: 'src/sequence.py' }
+  const saved = {
+    ...assessment,
+    id: 'f'.repeat(32),
+    target_project: 'b'.repeat(32),
+    target_origin: 'https://github.com/team/target-tools',
+    target_sha: 'c'.repeat(40),
+    target_root: '',
+    expansion_top3: [
+      {
+        feature_id: featureId,
+        name: 'Optional deduplication',
+        benefit: 'Process repeated inputs only once.',
+      },
+    ],
+  }
+  await page.route('**/api/projects', (route) =>
+    route.fulfill({
+      json: {
+        id: saved.target_project,
+        requested: { role: 'target', project_root: '' },
+        snapshot: { ...fixtureRun.target },
+        support: {
+          name: 'target-tools',
+          capability: 'evidence_analysis',
+          python_files: 2,
+          execution_supported: false,
+          adaptation_reason: 'Native tests unavailable.',
+        },
+        root_choices: [''],
+      },
+    }),
+  )
+  await page.route(`**/api/relevance-assessments/${saved.id}`, (route) =>
+    route.fulfill({ json: saved }),
+  )
+  await page.route('**/api/relevance-assessments/*/features/*', (route) =>
+    route.fulfill({
+      json: {
+        feature_id: featureId,
+        relevance_status: 'relevant',
+        target_status: 'potential_gap',
+        fit_status: 'ineligible',
+        reason: 'Optional deduplication can avoid repeated work.',
+        expansion: {
+          source_capability: 'Ordered deduplication.',
+          existing_target_behavior: 'Groups the input without removing duplicates.',
+          proposed_extension: 'Offer optional deduplication before grouping.',
+          benefit: 'Process repeated inputs only once.',
+          integration_points: [
+            { target_ref: targetRef, change: 'Normalize input before grouping.' },
+          ],
+          constraints: ['Preserve grouping defaults.'],
+          uncertainties: ['Only a bounded portion of the target was inspected.'],
+          source_refs: [fixtureRun.references![0].ref],
+          target_refs: [targetRef],
+        },
+        evidence: [
+          { ref: targetRef, text: 'def chunks(items): return [items]', sha256: 'd'.repeat(64) },
+        ],
+        gates: [],
+        rejections: [],
+        judgment: null,
+      },
+    }),
+  )
+  await page.goto(`/catalogs/${catalogId}?revision=1`)
+  await page.getByLabel('Your goal').fill(saved.goal)
+  await page.getByLabel('Include a target project').check()
+  await page.getByLabel('Target public repository').fill(saved.target_origin!)
+  await page.getByLabel('Target commit SHA').fill(saved.target_sha!)
+  await page.getByRole('button', { name: 'Inspect target project', exact: true }).click()
+  await page.getByText('Test and implementation support', { exact: true }).click()
+  await expect(page.getByText('Native tests unsupported.', { exact: false })).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: 'Find expansion ideas', exact: true }),
+  ).toBeEnabled()
+  expect(writes).toHaveLength(0)
+  await page.getByRole('button', { name: 'Find expansion ideas', exact: true }).click()
+  await expect(page).toHaveURL(/assessment=f{32}/)
+  expect(writes).toHaveLength(1)
+  expect(writes[0].body).toMatchObject({ target_project: saved.target_project, goal: saved.goal })
+  expect(writes[0].body).not.toHaveProperty('run_baseline')
+  await page.getByRole('region', { name: 'Expansion ideas', exact: true }).getByRole('link').click()
+  const idea = page.getByRole('region', { name: 'Expansion recommendation', exact: true })
+  await expect(idea.getByText('Process repeated inputs only once.')).toBeVisible()
+  await expect(idea.getByText('Groups the input without removing duplicates.')).toBeVisible()
+  await expect(idea.getByText('Normalize input before grouping.')).toBeVisible()
+  await expect(idea.getByText('Only a bounded portion of the target was inspected.')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Verify adaptation', exact: true })).toHaveCount(0)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+  await page.screenshot({
+    path: `../data/frontend-qa/semantic-${info.project.name}-expansion.png`,
+    fullPage: true,
+  })
+  await page.reload()
+  await expect(idea.getByText('Process repeated inputs only once.')).toBeVisible()
+  expect(writes).toHaveLength(1)
+})
+
 test('a selected assessment shows failed gates and supports keyboard return at tablet width', async ({
   page,
 }) => {
@@ -327,6 +434,7 @@ test('adaptation starts explicitly from a saved feature and retries with the sam
   await page.goto(`/catalogs/${catalogId}?revision=1&assessment=${assessmentId}`)
   await page.getByRole('link', { name: 'Capability 00001', exact: true }).click()
   expect(requests).toHaveLength(0)
+  await page.getByText('Implementation and verification', { exact: true }).click()
   await page.getByRole('button', { name: 'Verify adaptation', exact: true }).click()
   await expect(page.getByRole('alert').filter({ hasText: 'Temporary queue outage.' })).toBeVisible()
   await page.getByRole('button', { name: 'Verify adaptation', exact: true }).click()

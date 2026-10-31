@@ -128,20 +128,37 @@ async def collect_evidence[T: BaseModel](
 ) -> T:
     definitions, formatting = tools.schemas(), response_format(schema)
     for turn in range(1, turns + 1):
+        final = turn == turns
+        if final:
+            messages.append(
+                {
+                    "role": "developer",
+                    "content": (
+                        "The evidence-read allowance is finished. Return the final structured "
+                        "answer now using only evidence already read. Do not request more tools "
+                        "or invent citations. Disclose missing evidence and uncertainty; omit "
+                        "unsupported discovery hints or use the contract's partial/unknown state."
+                    ),
+                }
+            )
         completion, call = await client.request(
             stage=f"{stage}.{turn}",
             messages=messages,
             reasoning="medium",
             output_tokens=output_tokens,
-            tools=definitions,
-            tool_choice="auto",
-            parallel_tool_calls=False,
             response_format=formatting,
+            **(
+                {"tools": definitions, "tool_choice": "auto", "parallel_tool_calls": False}
+                if not final
+                else {}
+            ),
         )
         message = completion.choices[0].message
         if not message.tool_calls:
             return client.parse(completion, call, schema)
         if completion.choices[0].finish_reason != "tool_calls":
             raise ModelOutputError("Invalid evidence tool-call response.", call=call)
+        if final:
+            break  # Never execute a read that cannot be consumed within this allowance.
         messages.extend(tools.respond(message, turn, call))
     raise EvidenceError(f"{stage} exceeded its {turns}-turn evidence limit.")

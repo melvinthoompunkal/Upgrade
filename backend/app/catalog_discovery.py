@@ -36,8 +36,13 @@ TRACE_PROMPT = (
     "and implementation symbols, not documentation or tests. Include all direct runtime "
     "imports of cited implementation modules, citing actual import lines; classify stdlib "
     "correctly. Missing source tests must be disclosed; never invent or claim execution. "
-    "Imports do not prove full dependency closure. Preserve notices, but do not approve "
-    "reuse or adaptation. Give included/excluded behavior and missing evidence concisely. "
+    "Imports do not prove full dependency closure. "
+    "Use the packet's exact AST symbol names and boundaries; a read window can span several "
+    "symbols, but a named citation must stay inside its symbol. Dependency names must match "
+    "the packet/index import identities. Include relative source imports as runtime imports "
+    "even when they are not used directly by the selected method. "
+    "Preserve notices, but do not approve reuse or adaptation. Give included/excluded "
+    "behavior and missing evidence concisely. "
     "At most 15 files, 200 lines per read, 24 references total. Return empty coverage arrays; "
     "the controller derives coverage. Configuration values must never be extracted."
 )
@@ -159,6 +164,10 @@ class CatalogAnalyzer:
                                 **feature.model_dump(mode="json", exclude={"evidence"}),
                                 "feature_id": "f" + feature.feature_id,
                             },
+                            "source_packet": packet(
+                                self.evidence,
+                                sorted({r.path for r in feature.discovery_refs})[:8],
+                            ),
                             "test_paths": [f.path for f in repo.inventory.files if is_test(f.path)][
                                 :80
                             ],

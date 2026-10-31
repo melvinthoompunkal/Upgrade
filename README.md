@@ -7,9 +7,13 @@ is in [tech_breakdown.md](tech_breakdown.md).
 
 The current milestone is local semantic discovery and comparison. Use `AUTH_MODE=local`
 with supported public source/target repository URLs; no GitHub App registration is
-required. F4 feature catalogs and F5 target/goal assessments provide the existing
-foundation. More detailed expansion recommendations and live semantic quality checks
-are the next work. Automatic implementation, PR publishing, account integration and
+required. The browser starts with **Feature discovery**: inspect a public Python snapshot,
+then choose **Discover features** to save its capabilities and code references. No target
+is required. Open a feature and use **Download feature JSON** to keep its explanation,
+evidence and pinned source identity. Optionally compare the catalog with your project to save expansion ideas,
+including existing behavior, benefits, integration points, constraints and uncertainty.
+**Structure only** inspects definitions/imports without a model key. Live semantic quality
+validation remains separate from controlled regression checks. Automatic implementation, PR publishing, account integration and
 hosted execution are later extensions. See [the active scope and priorities](docs/full-feature-development.md#active-milestone-local-semantic-discovery-and-expansion).
 
 Start with [project status, audits and the development plan](docs/full-feature-development.md)
@@ -48,7 +52,7 @@ and provider revocation/current-access checks. Private retrieval defaults off; r
 validation remains pending. Live general-discovery and adaptation validation remain pending.
 
 F3 adds public Python project inspection and structural analysis with optional native
-offline tests. The browser starts with your own pinned source and optional target;
+offline tests under **Structure only** (`/?view=structure`). The browser starts with source feature discovery;
 the crawler is available through **Try the crawler example**. Structural analysis needs
 no model key. Supported profiles and limits are documented in
 [the F3 implementation record](docs/full-feature-development.md#6-supporting-real-target-and-source-projects).
@@ -65,7 +69,10 @@ F4 adds **Discover features** on a supported source pin: persistent source-only 
 bounded Meta discovery/corroboration, immutable paginated revisions, saved evidence and
 explicit continuation. Saved browsing performs no model calls. F5 adds explicit target/goal assessments,
 honest assessed/unassessed counts and saved All/Relevant modes with global filters and
-sorts. General-project eligibility requires the separate F7 acceptance/verification gates.
+sorts. **Find expansion ideas** compares a supported pinned target with the source; it does
+not require Docker, a native test adapter or GitHub App credentials in local mode.
+Expansion recommendations are saved separately from automatic patch eligibility.
+General-project eligibility requires the separate F7 acceptance/verification gates.
 See [the F4 implementation record](docs/full-feature-development.md#f4-local-implementation).
 
 F6 adds local fenced job ownership, fair scheduling, active cancellation, shared quotas,

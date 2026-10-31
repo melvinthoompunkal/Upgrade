@@ -18,8 +18,10 @@ test('local backend serves recorded analysis and all evidence views without infe
   const detail = (await (await request.get(`/api/runs/${recorded!.id}`)).json()) as Run
   page.on('pageerror', (error) => pageErrors.push(error.message))
   await page.goto('/')
-  await expect(page.getByRole('heading', { name: 'Start with your project.' })).toBeVisible()
-  await expect(page.getByLabel('Add a target project')).not.toBeChecked()
+  await expect(
+    page.getByRole('heading', { name: 'Break a repository into features.' }),
+  ).toBeVisible()
+  await expect(page.getByLabel('Add a target project')).toHaveCount(0)
   await expect(page.getByText('Local connection', { exact: true })).toBeVisible()
   await page.screenshot({
     path: `../data/frontend-qa/${testInfo.project.name}-new-run.png`,

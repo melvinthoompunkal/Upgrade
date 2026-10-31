@@ -6,8 +6,10 @@ import pytest
 from test_evidence import card
 from test_meta_client import completion, settings
 
+from app.catalog_contracts import CandidateBatch
 from app.contracts import Ref
 from app.errors import EvidenceError
+from app.evidence_tools import EvidenceTools, collect_evidence
 from app.models.meta_client import MetaClient
 from app.tracer import SourceTracer
 
@@ -100,3 +102,79 @@ def test_unregistered_tools_and_invalid_ranges_are_never_executed(session):
         with pytest.raises(EvidenceError):
             tracer.dispatch(name, args)
     assert session.windows == []
+
+
+def test_final_evidence_turn_returns_a_result_within_the_existing_budget(session):
+    requests = []
+    tools = EvidenceTools(session, ("src/retry.py",))
+
+    def handler(request):
+        body = json.loads(request.content)
+        requests.append(body)
+        if len(requests) < 3:
+            return httpx.Response(
+                200,
+                json=completion(
+                    calls=[
+                        {
+                            "id": f"read-{len(requests)}",
+                            "type": "function",
+                            "function": {
+                                "name": "read_range",
+                                "arguments": json.dumps(
+                                    {
+                                        "path": "src/retry.py",
+                                        "start_line": 1,
+                                        "end_line": 4,
+                                    }
+                                ),
+                            },
+                        }
+                    ]
+                ),
+            )
+        assert "tools" not in body and "tool_choice" not in body
+        assert "final structured" in body["messages"][-1]["content"]
+        assert len([m for m in body["messages"] if m["role"] == "tool"]) == 2
+        return httpx.Response(
+            200,
+            json=completion(
+                {
+                    "candidates": [
+                        {
+                            "behavior_key": "retry-count",
+                            "name": "Retry count",
+                            "summary": "Returns a count.",
+                            "category": "retry",
+                            "parent_key": None,
+                            "discovery_refs": [
+                                {
+                                    "repo_id": "source",
+                                    "commit_sha": session.repo.snapshot.commit_sha,
+                                    "path": "src/retry.py",
+                                    "start_line": 3,
+                                    "end_line": 4,
+                                    "symbol": "retry",
+                                }
+                            ],
+                        }
+                    ]
+                }
+            ),
+        )
+
+    async def run():
+        transport = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+        async with MetaClient(settings(), http_client=transport) as client:
+            result = await collect_evidence(
+                client,
+                tools,
+                [{"role": "user", "content": "Discover"}],
+                CandidateBatch,
+                stage="catalog.discover",
+                turns=3,
+            )
+            session.validate_ref(result.candidates[0].discovery_refs[0])
+            assert client.budget.requests == 3 and len(tools.events) == 2
+
+    asyncio.run(run())

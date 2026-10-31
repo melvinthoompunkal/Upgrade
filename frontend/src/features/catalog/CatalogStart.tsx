@@ -42,8 +42,9 @@ export function CatalogStart({ source }: { source: ProjectSelection | null }) {
     <section className="border-t border-line mt-8 pt-6" aria-label="Source feature discovery">
       <h2>Discover source features</h2>
       <p className="field-help mt-2">
-        Build a saved catalog from this pinned source. Bounded public code excerpts and notices are
-        sent to Meta. Target relevance and adaptation are unassessed.
+        AI discovery explains behavior and saves a feature catalog with code references, evidence
+        and coverage. Bounded public code excerpts and notices are sent to Meta. You can browse
+        features on their own or compare them with your project after discovery.
       </p>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 my-4">
         <div className="field-group">
@@ -75,7 +76,7 @@ export function CatalogStart({ source }: { source: ProjectSelection | null }) {
       </p>
       <button
         type="button"
-        className="button-secondary"
+        className="button-primary"
         onClick={discover}
         disabled={
           busy ||
@@ -84,8 +85,10 @@ export function CatalogStart({ source }: { source: ProjectSelection | null }) {
           !capabilities?.model_configured ||
           !capabilities?.worker_available ||
           !workflowEnabled(capabilities, 'catalog_discovery') ||
+          !Number.isInteger(files) ||
           files < 1 ||
           files > 256 ||
+          !Number.isInteger(traces) ||
           traces < 0 ||
           traces > 8
         }
@@ -94,9 +97,13 @@ export function CatalogStart({ source }: { source: ProjectSelection | null }) {
       </button>
       {!capabilities?.model_configured && (
         <p className="field-help mt-3">
-          Configure the backend model key to discover features. Structural analysis remains
-          available.
+          Configure MODEL_API_KEY in the backend to discover features, or choose Structure only to
+          inspect code without AI.
         </p>
+      )}
+      {!source && <p className="field-help mt-3">Inspect a source snapshot to enable discovery.</p>}
+      {!capabilities?.worker_available && (
+        <p className="field-help mt-3">Start the backend worker to discover features.</p>
       )}
       {error && (
         <div className="mt-4">
