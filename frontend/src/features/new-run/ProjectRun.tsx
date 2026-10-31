@@ -94,7 +94,7 @@ export function ProjectRun() {
         <p className="mb-5 mt-2 text-sm text-muted">
           {structureOnly
             ? 'Inspect definitions, imports and test locations without model calls. This does not discover semantic features.'
-            : 'Pin a public repository snapshot, then discover its code-backed capabilities. No target project is required.'}
+            : 'Enter a public repository URL to inspect its latest snapshot, then discover its code-backed capabilities. No target project is required.'}
         </p>
         {session?.mode === 'local' && (
           <p className="field-help mb-4">Local workspace. No GitHub App or sign-in needed.</p>

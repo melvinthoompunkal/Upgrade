@@ -347,6 +347,7 @@ test('target comparison works without native tests and saves a readable expansio
   await page.getByLabel('Your goal').fill(saved.goal)
   await page.getByLabel('Include a target project').check()
   await page.getByLabel('Target public repository').fill(saved.target_origin!)
+  await page.getByLabel('Target revision type').selectOption('commit')
   await page.getByLabel('Target commit SHA').fill(saved.target_sha!)
   await page.getByRole('button', { name: 'Inspect target project', exact: true }).click()
   await page.getByText('Test and implementation support', { exact: true }).click()

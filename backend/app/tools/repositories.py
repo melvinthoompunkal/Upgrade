@@ -119,20 +119,10 @@ class RepositoryManager:
 
     def public_source(self, url: str, sha: str | None = None) -> PinnedRepository:
         """Resolve an omitted source revision once, then fetch only that immutable commit."""
-        if sha is None:
-            if not re.fullmatch(
-                r"https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(?:\.git)?", url
-            ):
-                raise RepositoryError("Only public HTTPS GitHub repository URLs are supported.")
-            head = self.git.run("ls-remote", "--exit-code", url, "HEAD", max_bytes=200)
-            match = re.fullmatch(rb"([0-9a-f]{40}(?:[0-9a-f]{24})?)\tHEAD\n?", head)
-            if match is None:
-                raise RepositoryError("The source default branch has no supported commit snapshot.")
-            sha = match[1].decode("ascii")
         return self.public_snapshot(url, sha, role="source")
 
     def public_snapshot(
-        self, url: str, sha: str, *, role: str, prefix: str = ""
+        self, url: str, sha: str | None = None, *, role: str, prefix: str = ""
     ) -> PinnedRepository:
         """Pin public project data for either role, without enabling executable support."""
         if role not in {"source", "target"}:
@@ -141,6 +131,14 @@ class RepositoryManager:
             validate_repo_path(prefix)
         if not re.fullmatch(r"https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(?:\.git)?", url):
             raise RepositoryError("Only public HTTPS GitHub repository URLs are supported.")
+        if sha is None:
+            head = self.git.run("ls-remote", "--exit-code", url, "HEAD", max_bytes=200)
+            match = re.fullmatch(rb"([0-9a-f]{40}(?:[0-9a-f]{24})?)\tHEAD\n?", head)
+            if match is None:
+                raise RepositoryError(
+                    "The repository default branch has no supported commit snapshot."
+                )
+            sha = match[1].decode("ascii")
         if not re.fullmatch(r"[0-9a-f]{40}(?:[0-9a-f]{24})?", sha):
             raise RepositoryError("Source revision must be a full commit SHA.")
         return self.fetch_snapshot(url, sha, role=role, prefix=prefix)

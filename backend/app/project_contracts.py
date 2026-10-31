@@ -4,7 +4,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.contracts import Ref, RepoSnapshot, validate_repo_path
+from app.contracts import CommitSHA, Ref, RepoSnapshot, validate_repo_path
 from app.evidence_contracts import Coverage
 from app.project_support import ProjectSupport
 
@@ -14,9 +14,17 @@ class ProjectRequest(BaseModel):
     url: str = Field(
         max_length=200, pattern=r"^https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
     )
-    commit_sha: str = Field(pattern=r"^[0-9a-f]{40}(?:[0-9a-f]{24})?$")
+    commit_sha: CommitSHA | None = Field(
+        default=None,
+        description="Omit or leave blank to inspect the latest default-branch snapshot.",
+    )
     role: Literal["source", "target"]
     project_root: str = Field(default="", max_length=300)
+
+    @field_validator("commit_sha", mode="before")
+    @classmethod
+    def optional_sha(cls, value):
+        return None if isinstance(value, str) and not value.strip() else value
 
     @field_validator("project_root")
     @classmethod
@@ -26,9 +34,15 @@ class ProjectRequest(BaseModel):
         return value
 
 
+class PinnedProjectRequest(ProjectRequest):
+    """Saved project descriptors always name the exact inspected commit."""
+
+    commit_sha: CommitSHA
+
+
 class ProjectSelection(BaseModel):
     id: str
-    requested: ProjectRequest
+    requested: PinnedProjectRequest
     snapshot: RepoSnapshot
     support: ProjectSupport
     inventory_sha256: str

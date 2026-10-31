@@ -13,7 +13,7 @@ from app.errors import EvidenceError
 from app.main import create_app
 from app.project_adapters import test_dependency_reasons as dependency_reasons
 from app.project_analysis import record_project_analysis
-from app.project_contracts import ProjectAnalysisRequest, ProjectRequest
+from app.project_contracts import PinnedProjectRequest, ProjectAnalysisRequest, ProjectRequest
 from app.project_support import inspect_project
 from app.projects import ProjectStore
 from app.tools import runner
@@ -59,7 +59,20 @@ def independent(tmp_path, monkeypatch):
         manager.git.run("clone", "--bare", "--no-local", "--template=", str(root), str(storage))
         return manager._inventory(storage, role, url, commit, prefix)
 
-    monkeypatch.setattr(RepositoryManager, "public_snapshot", fetch)
+    run = Git.run
+
+    def local_transport(git, *args, **kwargs):
+        return run(
+            git,
+            *(
+                str(root) if arg == "https://github.com/team/sequence-tools" else arg
+                for arg in args
+            ),
+            **kwargs,
+        )
+
+    monkeypatch.setattr(Git, "run", local_transport)
+    monkeypatch.setattr(RepositoryManager, "fetch_snapshot", fetch)
     runs = RunStore(tmp_path / "web/runs.sqlite3")
     projects = ProjectStore(runs, tmp_path / "projects")
     return projects, root, git, sha, fetches
@@ -124,6 +137,80 @@ def test_named_ref_resolves_once_before_pin_and_never_during_reopen(
         matrix = client.get("/api/projects/support-matrix").json()
         assert matrix["runtime_profile"] == "python312-http-v2"
         assert not matrix["private_analysis_enabled"]
+
+
+@pytest.mark.parametrize("role", ["source", "target"])
+@pytest.mark.parametrize("revision", [{}, {"commit_sha": None}, {"commit_sha": "   "}])
+def test_api_latest_snapshot_is_optional_but_saved_pin_stays_immutable(
+    independent, tmp_path, role, revision
+):
+    _, root, git, sha, fetches = independent
+    git.run("branch", "-m", "project-default", cwd=root)
+    original = git.run("show", f"{sha}:library/src/sequence.py", cwd=root).decode()
+    app = create_app(
+        Settings(_env_file=None), data_root=tmp_path / "latest-api", start_worker=False
+    )
+    with TestClient(app) as client:
+        response = client.post(
+            "/api/projects",
+            json={
+                "url": "https://github.com/team/sequence-tools",
+                "role": role,
+                "project_root": "library",
+                **revision,
+            },
+        )
+        assert response.status_code == 201, response.text
+        selected = response.json()
+        assert selected["snapshot"]["commit_sha"] == selected["requested"]["commit_sha"] == sha
+        assert selected["support"]["capability"] == "evidence_analysis"
+        assert fetches == [(role, sha, "library")]
+        (root / "library/src/sequence.py").write_text("def chunks(items):\n    return []\n")
+        git.run("add", "--all", cwd=root)
+        git.run("-c", "commit.gpgSign=false", "commit", "-m", "default moved", cwd=root)
+        assert git.run("rev-parse", "HEAD", cwd=root).decode().strip() != sha
+        store = ProjectStore(app.state.runs, app.state.project_root)
+        pinned, repo = store.open("local-workspace", selected["id"])
+        assert pinned.requested.commit_sha == sha
+        assert repo.read("src/sequence.py") == original
+        assert len(fetches) == 1
+        assert client.get(f"/api/projects/{selected['id']}").json() == selected
+
+
+def test_saved_project_request_cannot_have_a_mutable_or_missing_revision():
+    from pydantic import ValidationError
+
+    values = {"url": "https://github.com/team/sequence-tools", "role": "source"}
+    assert ProjectRequest(**values).commit_sha is None
+    for revision in ({}, {"commit_sha": None}, {"commit_sha": ""}, {"commit_sha": "main"}):
+        with pytest.raises(ValidationError):
+            PinnedProjectRequest(**values, **revision)
+
+
+def test_project_cli_can_inspect_source_and_target_without_shas(
+    independent, tmp_path, monkeypatch, capsys
+):
+    from app import project_cli
+
+    _, _, _, sha, fetches = independent
+    monkeypatch.setattr(project_cli, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "graft-project-analyze",
+            "--source-url",
+            "https://github.com/team/sequence-tools",
+            "--source-root",
+            "library",
+            "--target-url",
+            "https://github.com/team/sequence-tools",
+            "--target-root",
+            "library",
+        ],
+    )
+    assert project_cli.main() == 0
+    assert json.loads(capsys.readouterr().out)["status"] == "passed"
+    assert fetches == [("source", sha, "library"), ("target", sha, "library")]
 
 
 def test_independent_source_only_has_read_backed_structure_and_no_crawler(independent, tmp_path):

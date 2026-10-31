@@ -73,6 +73,7 @@ test('hosted source analysis cannot accidentally request target execution', asyn
   for (const role of ['Source', 'Target']) {
     if (role === 'Target') await page.getByLabel('Add a target project').check()
     await page.getByLabel(`${role} public repository`).fill('https://github.com/team/library')
+    await page.getByLabel(`${role} revision type`).selectOption('commit')
     await page.getByLabel(`${role} commit SHA`).fill('c'.repeat(40))
     await page.getByRole('button', { name: `Inspect ${role.toLowerCase()} project` }).click()
   }

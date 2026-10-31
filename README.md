@@ -56,14 +56,17 @@ offline tests under **Structure only** (`/?view=structure`). The browser starts 
 the crawler is available through **Try the crawler example**. Structural analysis needs
 no model key. Supported profiles and limits are documented in
 [the F3 implementation record](docs/full-feature-development.md#6-supporting-real-target-and-source-projects).
+Source and target inspection default to the latest default-branch snapshot; no SHA needs
+to be entered. Inspection saves the exact commit for consistent breakdown and discovery.
 
 ```powershell
-uv run --project backend --locked graft-project-analyze --source-url https://github.com/pallets/itsdangerous --source-sha 672971d66a2ef9f85151e53283113f33d642dabd
+uv run --project backend --locked graft-project-analyze --source-url https://github.com/pallets/itsdangerous
 ```
 
 Add `--source-root` for a monorepo, or `--target-url`, `--target-sha`, `--target-root`
 and optional `--run-baseline`. Native tests need the rebuilt prepared runner; incompatible
 dependencies, collection requirements and skipped/failed tests cannot produce green evidence.
+Both `--source-sha` and `--target-sha` are optional; supply one to choose an exact commit.
 
 F4 adds **Discover features** on a supported source pin: persistent source-only catalogs,
 bounded Meta discovery/corroboration, immutable paginated revisions, saved evidence and

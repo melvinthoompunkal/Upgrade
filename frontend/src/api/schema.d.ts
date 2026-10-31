@@ -1964,6 +1964,26 @@ export interface components {
       capture_id: string
       cases: components['schemas']['FrozenList_ObservedCase__MinLen_min_length_1_']
     }
+    /**
+     * PinnedProjectRequest
+     * @description Saved project descriptors always name the exact inspected commit.
+     */
+    PinnedProjectRequest: {
+      /** Url */
+      url: string
+      /** Commit Sha */
+      commit_sha: string
+      /**
+       * Role
+       * @enum {string}
+       */
+      role: 'source' | 'target'
+      /**
+       * Project Root
+       * @default
+       */
+      project_root: string
+    }
     /** Problem */
     Problem: {
       /** Code */
@@ -2046,8 +2066,11 @@ export interface components {
     ProjectRequest: {
       /** Url */
       url: string
-      /** Commit Sha */
-      commit_sha: string
+      /**
+       * Commit Sha
+       * @description Omit or leave blank to inspect the latest default-branch snapshot.
+       */
+      commit_sha?: string | null
       /**
        * Role
        * @enum {string}
@@ -2063,7 +2086,7 @@ export interface components {
     ProjectSelection: {
       /** Id */
       id: string
-      requested: components['schemas']['ProjectRequest']
+      requested: components['schemas']['PinnedProjectRequest']
       snapshot: components['schemas']['RepoSnapshot']
       support: components['schemas']['ProjectSupport']
       /** Inventory Sha256 */

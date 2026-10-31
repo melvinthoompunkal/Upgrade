@@ -281,6 +281,7 @@ test('source discovery is an explicit action on a supported pin', async ({ page 
   await page.goto('/')
   await expect(page.getByRole('button', { name: 'Discover features', exact: true })).toBeDisabled()
   await page.getByLabel('Source public repository').fill(project.requested.url)
+  await page.getByLabel('Source revision type').selectOption('commit')
   await page.getByLabel('Source commit SHA').fill(project.requested.commit_sha)
   await page.getByRole('button', { name: 'Inspect source project' }).click()
   await page.getByLabel('Features to corroborate deeply').fill('2')

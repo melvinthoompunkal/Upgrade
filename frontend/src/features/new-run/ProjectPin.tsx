@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { GitBranch, GithubLogo } from '@phosphor-icons/react'
 import { api, shortSha, type ProjectSelection } from '../../api/client'
 import { Notice } from '../../components/ui'
-import { RevisionInput } from './RevisionInput'
+import { RevisionInput, type RevisionSelection } from './RevisionInput'
 
 export function ProjectPin({
   role,
@@ -12,7 +12,7 @@ export function ProjectPin({
   onPin: (project: ProjectSelection | null) => void
 }) {
   const [url, setUrl] = useState('')
-  const [sha, setSha] = useState('')
+  const [revision, setRevision] = useState<RevisionSelection>({ kind: 'latest' })
   const [root, setRoot] = useState('')
   const [project, setProject] = useState<ProjectSelection | null>(null)
   const [busy, setBusy] = useState(false)
@@ -27,11 +27,17 @@ export function ProjectPin({
     setError('')
   }
   async function pin() {
-    if (
-      !/^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(url.trim()) ||
-      !/^[a-f0-9]{40}(?:[a-f0-9]{24})?$/.test(sha.trim())
-    ) {
-      setError('Enter a public GitHub URL and its full lowercase commit SHA.')
+    if (!/^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(url.trim())) {
+      setError('Enter a public GitHub repository URL.')
+      return
+    }
+    const sha = revision.kind === 'latest' ? '' : revision.sha.trim()
+    if ((revision.kind === 'branch' || revision.kind === 'tag') && !sha) {
+      setError(`Resolve the selected ${revision.kind} before inspecting the project.`)
+      return
+    }
+    if (sha && !/^[a-f0-9]{40}(?:[a-f0-9]{24})?$/.test(sha)) {
+      setError('Enter the full lowercase commit SHA, or leave it blank for the latest snapshot.')
       return
     }
     const current = ++generation.current
@@ -42,7 +48,7 @@ export function ProjectPin({
         method: 'POST',
         body: JSON.stringify({
           url: url.trim(),
-          commit_sha: sha.trim(),
+          commit_sha: sha || undefined,
           project_root: root.trim(),
           role,
         }),
@@ -75,7 +81,9 @@ export function ProjectPin({
             onChange={(event) =>
               edit(() => {
                 setUrl(event.target.value)
-                setSha('')
+                setRevision((previous) =>
+                  previous.kind === 'latest' ? previous : { ...previous, sha: '' },
+                )
               })
             }
           />
@@ -84,9 +92,10 @@ export function ProjectPin({
       <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
         <RevisionInput
           label={role === 'source' ? 'Source' : 'Target'}
-          value={sha}
+          value={revision}
           repository={{ url: url.trim() }}
-          onChange={(value) => edit(() => setSha(value))}
+          onChange={(value) => edit(() => setRevision(value))}
+          allowLatest
         />
         <div className="field-group">
           <label htmlFor={`${role}-root`}>
@@ -125,7 +134,9 @@ export function ProjectPin({
           <p className="flex flex-wrap items-center gap-2">
             <GitBranch size={16} />
             <strong>{project.support.name ?? 'Project inspected'}</strong>
-            <span className="font-mono text-xs">{shortSha(project.snapshot.commit_sha)}</span>
+            <span className="font-mono text-xs" title={project.snapshot.commit_sha}>
+              Snapshot {shortSha(project.snapshot.commit_sha)}
+            </span>
             <span className="badge">
               {project.support.capability === 'browse_index' ? 'Browse only' : 'Evidence analysis'}
             </span>

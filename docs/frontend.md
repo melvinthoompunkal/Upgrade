@@ -50,8 +50,13 @@ do not bind it to a public interface. No hosted Site was created.
 
 ## Workflows and results
 
-- **New run:** **Feature discovery** is the default. Inspect a public Python source URL/full SHA/root,
-  then choose **Discover features** to build its code-backed capability catalog. A target is optional
+- **New run:** **Feature discovery** is the default. Enter a public Python source URL and inspect it;
+  **Latest snapshot (default branch)** is selected automatically. No SHA is needed. Inspection
+  resolves the current default-branch commit once and saves its exact SHA, so the breakdown and
+  feature discovery use the same code even if the branch later moves. The **Commit SHA** option
+  accepts an explicit full SHA; leaving it blank also selects the latest snapshot. A project root
+  is optional for monorepos. After inspection,
+  choose **Discover features** to build its code-backed capability catalog. A target is optional
   and is added later from the catalog. Choose **Structure only** (`/?view=structure`) for definitions,
   imports and test locations without semantic discovery or model calls.
   Revision type also accepts a branch or tag. **Resolve branch/tag** freezes the returned

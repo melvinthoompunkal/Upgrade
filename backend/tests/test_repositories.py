@@ -130,8 +130,9 @@ def test_public_fetch_pins_exact_requested_commit(committed_repo, tmp_path, monk
 
 
 @pytest.mark.parametrize("advance_after_resolution", [False, True])
+@pytest.mark.parametrize("role,prefix", [("source", ""), ("target", "src")])
 def test_omitted_source_sha_pins_default_branch_once(
-    committed_repo, tmp_path, monkeypatch, advance_after_resolution
+    committed_repo, tmp_path, monkeypatch, advance_after_resolution, role, prefix
 ):
     root, git = committed_repo
     git.run("branch", "-m", "fixture-default", cwd=root)
@@ -160,11 +161,12 @@ def test_omitted_source_sha_pins_default_branch_once(
         return result
 
     monkeypatch.setattr(manager.git, "run", local_transport)
-    repo = manager.public_source("https://github.com/example/fixture")
+    repo = manager.public_snapshot("https://github.com/example/fixture", role=role, prefix=prefix)
     assert len(resolutions) == 1
     assert fetches == [sha]
     assert repo.snapshot.commit_sha == sha
-    assert repo.read("src/retry.py") == "def retry():\n    return 3\n"
+    assert repo.snapshot.repo_id == role and repo.prefix == prefix
+    assert repo.read("retry.py" if prefix else "src/retry.py") == "def retry():\n    return 3\n"
     if advance_after_resolution:
         assert git.run("rev-parse", "HEAD", cwd=root).decode().strip() != sha
     repo.verify()

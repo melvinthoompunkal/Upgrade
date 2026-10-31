@@ -656,9 +656,17 @@ GitHub commit SHA separately for each role, shows inspected manifest roots and s
 reasons, and submits immutable owner-scoped project IDs. `POST /api/projects` and
 `GET /api/projects/{id}` persist the URL, requested SHA, resolved SHA, role, root,
 inventory digest, manifest digest and capability assessment in schema v5. Only full
-commit SHAs are accepted; branch/tag lookup is not performed or replayed by a worker.
+commit SHAs are retained in saved selections. The public source/target forms default to
+**Latest snapshot (default branch)**; `POST /api/projects` accepts an omitted, null or blank
+`commit_sha` and resolves default-branch HEAD once during inspection. Explicit full SHAs
+still select that version. Branch/tag selection is resolved separately before inspection;
+no mutable reference lookup is performed or replayed by an analysis worker.
 The worker reopens the independent Git storage, rechecks inventory/HEAD/object integrity
 and recomputes current adapter support. Original checkouts and dirty files are not inputs.
+The optional-SHA update passed 122 backend regressions, a separate source/target CLI
+check, 72 desktop/mobile smoke checks, the production build, Ruff and changed-file
+formatting checks. Default-branch movement and stale inspection/ref responses are covered;
+this verification used controlled Git/provider fixtures rather than fresh public/model calls.
 
 `python-evidence-v1` reports bounded Python definitions, test definitions, imports,
 read-backed symbol citations, explicit project/repository-relative paths, full notices
@@ -1752,7 +1760,7 @@ remain open; consent records do not enable private jobs.
 | Acceptance | Existing function-v1; `python-integration-plan-v2` / `python-integration-acceptance-v2` adds sync/async functions, plain existing-class instance methods with JSON constructors and absent new functions/methods in existing integration modules/classes | JSON inputs/results or exact supported built-in exceptions. Every rule needs a frozen case. Decorated methods/classes, new methods that could shadow inherited APIs, new entry-point modules/classes, properties/dunder APIs and arbitrary generated test code are unsupported |
 | HTTP | A named HTTPX client parameter receives a controller-owned sync/async client and MockTransport, with at most twelve ordered method/URL/request-JSON/response exchanges | Complete exchange consumption and exact requests are checked even when target code catches transport assertions. No real network, server startup, streaming or ASGI acceptance |
 | Source reuse | Complete standard MIT and exact standard BSD-2-Clause grants, retaining all original notices in the actual tested patch and downloads | Modified grants, mixed/unreviewed notice obligations and other licenses are rejected; classification alone never authorizes reuse |
-| Revision selection | Public URL or freshly authorized numeric repository ID; explicit branch, lightweight tag or bounded annotated-tag peeling | Resolution happens only on the explicit browser action. Inspection stores the returned full SHA; reopening/jobs never resolve or follow a mutable ref |
+| Revision selection | Public URLs default to the latest default-branch snapshot, with optional full SHA or named branch/tag selection; authorized numeric repository IDs retain explicit revisions | Latest HEAD resolves during inspection; named branches/tags resolve on their explicit browser action. Saved selections retain a full SHA; reopening/jobs never follow a mutable ref |
 | Private projects | Existing F2 snapshots can be inspected as owner-scoped project descriptors without duplicating code. Browser actions show preflight support and F6 disclosure/consent for exact source/target snapshots | Fresh access is required for inspection and every descriptor read. All snapshot-backed analysis/catalog/relevance/adaptation entry points and worker opens remain fenced pending live validation; there is no enabling environment switch |
 
 The matrix is available through `GET /api/projects/support-matrix` and System checks →

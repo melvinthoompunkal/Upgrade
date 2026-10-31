@@ -17,7 +17,12 @@ from app.execution import ProcessLock
 from app.hosting.release import require_release
 from app.jobs.control import CURRENT
 from app.jobs.resources import Resources
-from app.project_contracts import ProjectAnalysisRequest, ProjectRequest, ProjectSelection
+from app.project_contracts import (
+    PinnedProjectRequest,
+    ProjectAnalysisRequest,
+    ProjectRequest,
+    ProjectSelection,
+)
 from app.project_privacy import require_project_analysis
 from app.project_refs import RefRequest, ResolvedRef, resolve_ref
 from app.project_support import inspect_project
@@ -66,7 +71,7 @@ class ProjectStore:
         view, repo = self.snapshots.open(owner, snapshot_id)
         selection = ProjectSelection(
             id=uuid4().hex,
-            requested=ProjectRequest(
+            requested=PinnedProjectRequest(
                 url=f"https://github.com/{view.full_name}",
                 commit_sha=view.commit_sha,
                 role=view.role,
@@ -137,7 +142,9 @@ class ProjectStore:
         repo.verify()
         selection = ProjectSelection(
             id=directory.name,
-            requested=inputs,
+            requested=PinnedProjectRequest(
+                **{**inputs.model_dump(), "commit_sha": repo.snapshot.commit_sha}
+            ),
             snapshot=repo.snapshot,
             support=inspect_project(repo),
             inventory_sha256=inventory_digest(repo),

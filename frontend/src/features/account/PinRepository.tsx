@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { api, type RepositoryPage, type Snapshot } from '../../api/client'
 import { ErrorState, Notice } from '../../components/ui'
-import { RevisionInput } from '../new-run/RevisionInput'
+import { RevisionInput, type RevisionSelection } from '../new-run/RevisionInput'
 import { SnapshotPreflight } from './SnapshotPreflight'
 
 export function PinRepository({ repo }: { repo: RepositoryPage['items'][number] }) {
-  const [sha, setSha] = useState('')
+  const [revision, setRevision] = useState<RevisionSelection>({ kind: 'commit', sha: '' })
+  const sha = revision.kind === 'latest' ? '' : revision.sha
   const [role, setRole] = useState<'source' | 'target'>('source')
   const [root, setRoot] = useState('')
   const [busy, setBusy] = useState(false)
@@ -51,8 +52,8 @@ export function PinRepository({ repo }: { repo: RepositoryPage['items'][number] 
         </p>
         <RevisionInput
           label="Repository"
-          value={sha}
-          onChange={setSha}
+          value={revision}
+          onChange={setRevision}
           repository={{ repository_id: repo.id }}
           disabled={busy}
         />

@@ -18,7 +18,9 @@ from app.tools.runner import PROJECT_ROOT
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source-url", required=True)
-    parser.add_argument("--source-sha", required=True)
+    parser.add_argument(
+        "--source-sha", help="Full commit SHA; omit for the latest default snapshot."
+    )
     parser.add_argument("--source-root", default="")
     parser.add_argument("--target-url")
     parser.add_argument("--target-sha")
@@ -26,8 +28,8 @@ def main() -> int:
     parser.add_argument("--goal", default="")
     parser.add_argument("--run-baseline", action="store_true")
     args = parser.parse_args()
-    if bool(args.target_url) != bool(args.target_sha) or args.run_baseline and not args.target_url:
-        parser.error("A target needs both --target-url and --target-sha; baseline needs a target.")
+    if args.target_sha and not args.target_url or args.run_baseline and not args.target_url:
+        parser.error("--target-sha and --run-baseline require --target-url.")
     try:
         inputs = [
             (

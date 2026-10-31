@@ -12,6 +12,7 @@ test('real public source and target analysis needs no model and retains citation
   page.on('pageerror', (error) => errors.push(error.message))
   await page.goto('/?view=structure')
   await page.getByLabel('Source public repository').fill('https://github.com/pallets/itsdangerous')
+  await page.getByLabel('Source revision type').selectOption('commit')
   await page.getByLabel('Source commit SHA').fill('672971d66a2ef9f85151e53283113f33d642dabd')
   await page.getByRole('button', { name: 'Inspect source project' }).click()
   await expect(page.getByText('itsdangerous', { exact: true })).toBeVisible({ timeout: 30_000 })
@@ -19,6 +20,7 @@ test('real public source and target analysis needs no model and retains citation
   await page
     .getByLabel('Target public repository')
     .fill('https://github.com/more-itertools/more-itertools')
+  await page.getByLabel('Target revision type').selectOption('commit')
   await page.getByLabel('Target commit SHA').fill('8c1a6ef241b51ff055e89219f050ccf4f15f37f6')
   await page.getByRole('button', { name: 'Inspect target project' }).click()
   await expect(page.getByText('more-itertools', { exact: true })).toBeVisible({ timeout: 30_000 })
